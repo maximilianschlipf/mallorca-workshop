@@ -17,3 +17,4 @@
 - [Feature 3: Abwesenheit erfassen](feature-briefings/03-abwesenheit-erfassen.md)
 - [Model Lab](exercises/model-lab.md)
 - [Feature Learning Log](templates/feature-learning-log.md)
+- [Pilotcheck](pilot-checklist.md)
