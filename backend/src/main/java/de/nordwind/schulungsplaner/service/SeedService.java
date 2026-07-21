@@ -7,12 +7,12 @@ import de.nordwind.schulungsplaner.domain.Termin;
 import de.nordwind.schulungsplaner.domain.Trainer;
 import de.nordwind.schulungsplaner.seed.SchulungenSeedRoot;
 import de.nordwind.schulungsplaner.seed.TrainerSeedRoot;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class SeedService {
     }
 
     private void importTrainer() {
-        TrainerSeedRoot seedRoot = readFromRepoRoot("trainer.json", TrainerSeedRoot.class);
+        TrainerSeedRoot seedRoot = readFromClasspath("trainer.json", TrainerSeedRoot.class);
         if (seedRoot == null || seedRoot.trainer() == null) {
             return;
         }
@@ -68,7 +68,7 @@ public class SeedService {
     }
 
     private void importSchulungen() {
-        SchulungenSeedRoot seedRoot = readFromRepoRoot("schulungen.json", SchulungenSeedRoot.class);
+        SchulungenSeedRoot seedRoot = readFromClasspath("schulungen.json", SchulungenSeedRoot.class);
         if (seedRoot == null || seedRoot.schulungen() == null) {
             return;
         }
@@ -111,15 +111,15 @@ public class SeedService {
         }
     }
 
-    private <T> T readFromRepoRoot(String fileName, Class<T> type) {
-        Path rootFile = Path.of("..", fileName).toAbsolutePath().normalize();
-        if (!Files.exists(rootFile)) {
-            throw new IllegalStateException("Seed-Datei nicht gefunden: " + rootFile);
-        }
-        try {
-            return objectMapper.readValue(rootFile.toFile(), type);
+    private <T> T readFromClasspath(String fileName, Class<T> type) {
+        ClassPathResource resource = new ClassPathResource("seed/" + fileName);
+        try (InputStream input = resource.getInputStream()) {
+            return objectMapper.readValue(input, type);
         } catch (IOException ex) {
-            throw new IllegalStateException("Seed-Datei konnte nicht gelesen werden: " + rootFile, ex);
+            throw new IllegalStateException(
+                    "Seed-Datei konnte nicht aus dem Classpath gelesen werden: " + resource.getPath(),
+                    ex
+            );
         }
     }
 }
