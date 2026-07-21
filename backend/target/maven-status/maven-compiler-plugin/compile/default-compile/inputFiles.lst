@@ -1,0 +1,12 @@
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/SchulungsplanerApplication.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/api/SchulungController.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/config/SeedInitializationConfig.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/config/WebConfig.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/domain/Abwesenheit.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/domain/Schulung.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/domain/Termin.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/domain/Trainer.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/seed/SchulungenSeedRoot.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/seed/TrainerSeedRoot.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/service/SchulungsQueryService.java
+/Users/philippe/Documents/Projects/assisted-coding/schulungsplaner/backend/src/main/java/de/nordwind/schulungsplaner/service/SeedService.java
