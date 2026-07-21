@@ -28,12 +28,17 @@ public class SeedService {
     }
 
     public void resetAndSeed() {
+        TrainerSeedRoot trainerSeed = readFromClasspath("trainer.json", TrainerSeedRoot.class);
+        SchulungenSeedRoot schulungenSeed = readFromClasspath("schulungen.json", SchulungenSeedRoot.class);
+
         clearData();
-        importTrainer();
-        importSchulungen();
+        importTrainer(trainerSeed);
+        importSchulungen(schulungenSeed);
+        importTrainerQualifikationen(trainerSeed);
     }
 
     private void clearData() {
+        jdbcTemplate.update("DELETE FROM trainer_qualifikation");
         jdbcTemplate.update("DELETE FROM termin");
         jdbcTemplate.update("DELETE FROM voraussetzung");
         jdbcTemplate.update("DELETE FROM abwesenheit");
@@ -41,8 +46,7 @@ public class SeedService {
         jdbcTemplate.update("DELETE FROM trainer");
     }
 
-    private void importTrainer() {
-        TrainerSeedRoot seedRoot = readFromClasspath("trainer.json", TrainerSeedRoot.class);
+    private void importTrainer(TrainerSeedRoot seedRoot) {
         if (seedRoot == null || seedRoot.trainer() == null) {
             return;
         }
@@ -67,8 +71,7 @@ public class SeedService {
         }
     }
 
-    private void importSchulungen() {
-        SchulungenSeedRoot seedRoot = readFromClasspath("schulungen.json", SchulungenSeedRoot.class);
+    private void importSchulungen(SchulungenSeedRoot seedRoot) {
         if (seedRoot == null || seedRoot.schulungen() == null) {
             return;
         }
@@ -107,6 +110,25 @@ public class SeedService {
                             termin.trainerId()
                     );
                 }
+            }
+        }
+    }
+
+    private void importTrainerQualifikationen(TrainerSeedRoot seedRoot) {
+        if (seedRoot == null || seedRoot.trainer() == null) {
+            return;
+        }
+        for (Trainer trainer : seedRoot.trainer()) {
+            List<String> qualifikationen = trainer.qualifikationen();
+            if (qualifikationen == null) {
+                continue;
+            }
+            for (String schulungId : qualifikationen) {
+                jdbcTemplate.update(
+                        "INSERT INTO trainer_qualifikation (trainer_id, schulung_id) VALUES (?, ?)",
+                        trainer.id(),
+                        schulungId
+                );
             }
         }
     }
