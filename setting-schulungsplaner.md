@@ -11,7 +11,7 @@ Es soll eine Webanwendung zur **Planung von Schulungen** entstehen. Das Projekt 
 - **Kommunikation:** REST-API mit JSON
 - **Entwicklungsumgebung:** Visual Studio Code in Verbindung mit GitHub Copilot
 
-Alles andere – Domainmodell, Architektur innerhalb dieser Leitplanken, Persistenzlösung, UI-Umsetzung – ist bewusst offen und Teil der Übung.
+Das Repository enthält bereits eine lauffähige Referenzarchitektur mit Spring Boot, Spring JDBC, H2, Vue 3 und REST. Diese Architektur ist für den Workshop verbindlich. Die Teilnehmenden analysieren und erweitern sie, statt ein neues Grundgerüst oder eine alternative Persistenz aufzusetzen.
 
 ### 1.1 Projektzielbild für die Demo
 
@@ -28,12 +28,12 @@ Ziel ist ein stabiles Grundgerüst mit geringem Setup-Aufwand, damit Teilnehmend
 
 Das Projekt soll den kompletten Lebenszyklus einer KI-unterstützten Umsetzung abdecken:
 
-1. **Anforderungsanalyse:** Aus diesem Setting-Dokument gemeinsam mit einer KI User Stories bzw. ein Backlog ableiten und priorisieren.
-2. **Architektur & Entwurf:** Domainmodell, Schichtenarchitektur und API-Design mit KI als Sparringspartner erarbeiten und begründen lassen.
-3. **API-Vertrag:** Optional eine OpenAPI-Spezifikation erstellen bzw. von der KI generieren lassen, um Frontend und Backend zu entkoppeln.
-4. **Umsetzung mit programmierenden Agenten:** Features schrittweise von einem KI-Coding-Agenten implementieren lassen, inklusive geeigneter Prompting- und Review-Strategien.
-5. **Qualitätssicherung:** Unit- und Integrationstests von der KI generieren und kritisch prüfen lassen.
-6. **Reflexion:** Bewusst machen, wo die KI gut unterstützt hat und wo manuelles Eingreifen nötig war.
+1. **Anforderungsanalyse:** Feature-Briefings mit KI untersuchen, offene Fragen erkennen und Akzeptanzkriterien präzisieren.
+2. **Prompting und Kontext:** Ziele, Grenzen und relevante Dateien bewusst auswählen und den Einfluss des Kontexts beobachten.
+3. **Planung:** Implementierungspläne getrennt von der Umsetzung erzeugen und fachlich wie technisch prüfen.
+4. **Agentennutzung:** Freigegebene Features schrittweise im Agent-Modus umsetzen lassen.
+5. **Qualitätssicherung:** Tests, Diff-Review und Playwright MCP zur Überprüfung von KI-Ergebnissen einsetzen.
+6. **Modellauswahl und Reflexion:** Modelle und Effort-Level anhand derselben Aufgabe vergleichen sowie übernommene und verworfene Vorschläge dokumentieren.
 
 ## 3. Das Szenario
 
@@ -76,7 +76,7 @@ Der Katalog zeigt alle angebotenen Schulungen mit:
 
 ## 5. Datenmodell & Datengrundlage
 
-Als Ausgangsdatengrundlage werden zwei JSON-Dateien mitgeliefert: `schulungen.json` und `trainer.json`. Sie können z. B. beim Start des Backends eingelesen werden (Seed-Daten) – die eigentliche Persistenzlösung (Datenbank, JPA-Entities o. Ä.) entwerfen die Teilnehmenden selbst.
+Als Ausgangsdatengrundlage werden `backend/src/main/resources/seed/schulungen.json` und `backend/src/main/resources/seed/trainer.json` mitgeliefert. Das vorbereitete Backend liest sie beim Start in eine H2-In-Memory-Datenbank ein.
 
 ### 5.1 Schema `schulungen.json`
 
@@ -122,31 +122,29 @@ Verschachteltes Objekt `Abwesenheit`:
 | `bis` | string (ISO-Datum) | ja | Ende der Abwesenheit |
 | `grund` | string | optional | z. B. `"Urlaub"`, `"Konferenz"`, `"Krankheit"` |
 
-Die Felder `format` bei Terminen sowie das generelle Aufbrechen in weitere Felder (z. B. Preis, Sprache) sind bewusst als **optionale, erweiterbare Beispiele** zu verstehen – die Teilnehmenden dürfen das Modell im Rahmen der Übung sinnvoll ergänzen oder anpassen.
+Die Feature-Briefings legen fest, welche Teile dieses Modells im Workshop erweitert werden.
 
 ## 6. Technische Leitplanken
 
-- **Backend:** Spring Boot, REST-API. Persistenz frei wählbar; für den Demo-Kontext reicht z. B. eine H2-In-Memory-Datenbank mit Import der mitgelieferten JSON-Dateien als Seed-Daten.
+- **Backend:** Spring Boot, Spring JDBC, REST-API und H2-In-Memory-Datenbank mit Seed-Import.
 - **Frontend:** Vue 3 mit TypeScript und Vite.
 - Kommunikation zwischen Frontend und Backend ausschließlich über eine REST-Schnittstelle (JSON).
-- Empfehlenswert (optional): eine OpenAPI-Spezifikation als Vertrag zwischen Frontend und Backend definieren – lässt sich gut mit KI-Unterstützung erstellen und pflegen.
-- Kein vorgegebener Styleguide – übliche Clean-Code-Prinzipien gelten trotzdem.
+- Repositoryweite Regeln stehen in `.github/copilot-instructions.md`.
 
 ### 6.1 Lokale Laufzeitkonventionen für die Schulung
 
 - Standard-Port Backend: `18081`
 - Standard-Port Frontend (Vite): `15173`
 - Start erfolgt bewusst mit **zwei Kommandos** (Backend und Frontend getrennt).
-- Abweichende Portbelegungen sind erlaubt und sollen über Umgebungsvariablen oder Startparameter überschreibbar sein.
+- Beide Ports müssen vor dem Start frei sein.
 
 ## 7. Nicht-funktionale Anforderungen
 
-- **Rollen-/Rechtekonzept:** mindestens zwei fachliche Rollen unterscheiden – *Trainer* (pflegt eigene Abwesenheiten und Qualifikationen) und *Planer/Admin* (pflegt Katalog und Termine). Ein einfacher Login-Mechanismus genügt; SSO/OAuth ist nicht erforderlich.
-- **Responsive Bedienbarkeit** ist wünschenswert, aber für die erste Version kein Muss.
-- **Mehrsprachigkeit** ist nicht erforderlich – Deutsch reicht aus.
-- **Performance/Skalierung:** keine besonderen Anforderungen, da reiner Lern-/Demo-Kontext ohne echte Last.
-- **Reproduzierbarkeit:** Setup und Start sollen auf einer frischen Maschine in kurzer Zeit nachvollziehbar sein.
-- **Lokalität:** Für die erste Iteration keine Cloud-Abhängigkeit erforderlich; lokale Ausführung ist ausreichend.
+- Fachliche Rollen dienen nur zur Einordnung der Anforderungen; ein technischer Login und eine Rechteprüfung sind kein Bestandteil des Workshops.
+- Responsive Bedienbarkeit ist wünschenswert, aber kein Abnahmekriterium.
+- Deutsch ist die einzige benötigte Sprache.
+- Cloud-Betrieb, besondere Last und externe Persistenz sind nicht erforderlich.
+- Setup, Start und Tests müssen auf einer frischen Workshopmaschine reproduzierbar sein.
 
 ## 8. Abgrenzung – was NICHT gebraucht wird
 
@@ -163,25 +161,25 @@ Zusätzlich für die erste Iteration außerhalb des Scopes:
 - Vollständige Kalender-UI
 - Pflege-Workflows für Trainer-Abwesenheiten und Qualifikationen
 
-## 9. Empfohlener Ablauf für die Teilnehmenden
+## 9. Workshopablauf im Repository
 
-1. Anforderungen aus diesem Dokument mit KI-Unterstützung in User Stories bzw. ein Backlog übersetzen und priorisieren.
-2. Domainmodell, Architektur und API-Design entwerfen – KI als Sparringspartner nutzen und Entscheidungen begründen lassen.
-3. Grundgerüst im Monorepo aufsetzen (Backend + Frontend + docs) und dokumentierte Setup-Befehle verifizieren.
-4. MVP Iteration 1 umsetzen: Seed laden, `GET /api/schulungen`, einfache Schulungsliste im Frontend.
-5. Smoke-Tests einrichten (Backend, Frontend/Vitest, Playwright) und kritisch reviewen.
-6. Weitere Features schrittweise erweitern (z. B. Kalender, Trainerverwaltung).
-7. Kurze Retrospektive: Wo hat die KI gut unterstützt, wo musste manuell nachgesteuert werden?
+1. Vorhandenes System mit Copilot untersuchen und Aussagen am Code verifizieren.
+2. Katalogsuche und Kategorie-Filter als geführten KI-Arbeitszyklus umsetzen.
+3. Trainerverfügbarkeit mit bewusstem Kontext- und Modellvergleich planen und implementieren.
+4. Abwesenheitspflege als zunehmend selbstständiges Agentenfeature bearbeiten.
+5. Features mit Tests, Playwright MCP, Diff-Review und Git absichern.
+6. Pro Feature festhalten, welche KI-Vorschläge übernommen, korrigiert oder verworfen wurden.
 
-## 10. MVP Iteration 1 (verbindlich)
+## 10. Vorbereitete Ausgangsbasis
 
-In der ersten Iteration wird bewusst nur der minimale Katalog-Read umgesetzt:
+Der minimale Katalog-Read ist bereits implementiert:
 
-- Backend lädt Seed-Daten aus `schulungen.json` und `trainer.json`.
+- Das Backend lädt die Seed-Daten aus dem Classpath.
 - `GET /api/schulungen` liefert den Schulungskatalog als JSON.
-- Frontend zeigt eine einfache Liste von Schulungen.
+- Das Frontend zeigt eine einfache Liste von Schulungen.
+- Backend-, Frontend- und Playwright-Smoke-Tests sind vorhanden.
 
-Nicht Teil von Iteration 1 sind Kalender-Interaktionen und Trainer-Pflegeworkflows.
+Kalenderinteraktionen, Trainer-Matching und Pflege von Abwesenheiten sind noch nicht implementiert.
 
 ## 11. Smoke-Test Anforderungen
 
@@ -201,5 +199,5 @@ Da eine H2-In-Memory-Datenbank genutzt wird, gilt:
 ## 13. Gelieferte Artefakte
 
 - Dieses Setting-Dokument
-- `schulungen.json` – Beispiel-Schulungskatalog inkl. öffentlicher Termine
-- `trainer.json` – Beispiel-Trainerdaten inkl. Qualifikationen und Abwesenheiten
+- `backend/src/main/resources/seed/schulungen.json` – Beispiel-Schulungskatalog inkl. öffentlicher Termine
+- `backend/src/main/resources/seed/trainer.json` – Beispiel-Trainerdaten inkl. Qualifikationen und Abwesenheiten

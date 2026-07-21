@@ -1,32 +1,15 @@
-# Schulungsplaner Docs
+# Schulungsplaner-Dokumentation
 
-Diese Dokumentation beschreibt das Demo-Grundgeruest fuer den Schulungsplaner.
+## Technische Referenz
 
-## Ziel
+- [Setup](setup.md)
+- [Runbook](runbook.md)
+- [Architekturüberblick](architecture-overview.md)
+- [Testing](testing.md)
+- [Scope-Entscheidung](adr/ADR-001-mvp-scope.md)
 
-Schneller, reproduzierbarer lokaler Start mit:
+## Workshop
 
-- Backend: Spring Boot + H2 In-Memory + Seed-Daten
-- Frontend: Vue 3 + TypeScript + Vite
-- Verifikation: Backend-Smoke, Frontend-Smoke (Vitest), Playwright-Smoke
-
-## Schnellstart (2 Kommandos)
-
-1. Backend starten (Port 18081)
-2. Frontend starten (Port 15173)
-
-Details stehen in:
-
-- [setup.md](setup.md)
-- [runbook.md](runbook.md)
-- [testing.md](testing.md)
-- [../RUNBOOK.md](../RUNBOOK.md)
-
-## Dokumente
-
-- [setup.md](setup.md): Voraussetzungen, Installation, Start
-- [runbook.md](runbook.md): Alltagsablaeufe, Seed-Reset, Troubleshooting
-- [architecture-overview.md](architecture-overview.md): Monorepo und Datenfluss
-- [testing.md](testing.md): Smoke-Test Strategie und Kommandos
-- [feature-briefings/mvp-katalog-read.md](feature-briefings/mvp-katalog-read.md): MVP Scope und Demo-Skript
-- [adr/ADR-001-mvp-scope.md](adr/ADR-001-mvp-scope.md): Scope-Entscheidung
+- [KI-Arbeitszyklus](workshop/arbeitszyklus.md)
+- [Feature-Briefings](feature-briefings/)
+- [Model Lab](exercises/model-lab.md)

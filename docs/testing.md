@@ -1,50 +1,35 @@
 # Testing
 
-## Ziel
-
-Mit minimalem Aufwand den Tool-Stack verifizieren.
-
-## 1. Backend-Smoke
-
-Kriterium:
-
-- `GET /api/schulungen` liefert HTTP 200 und eine nicht-leere Liste.
-
-Beispiel:
+## Backend
 
 ```bash
-curl -i http://localhost:18081/api/schulungen
+cd backend
+./mvnw test
 ```
 
-## 2. Frontend-Smoke (Vitest)
+Erwartung: Seed-Ressourcen, Datenbankinhalt und `GET /api/schulungen` werden erfolgreich geprüft.
 
-Kriterium:
-
-- Mindestens ein Unit-/Component-Test fuer die Katalogdarstellung laeuft gruen.
-
-Beispiel:
+## Frontend
 
 ```bash
 cd frontend
 npm run test
+npm run build
 ```
 
-## 3. Playwright E2E-Smoke
+Erwartung: Der Vitest-Komponententest und der TypeScript-/Produktionsbuild laufen grün.
 
-Kriterium:
-
-- API-Antwort 200 ist vorhanden.
-- Katalogliste ist im UI sichtbar.
-
-Beispiel:
+## Ende-zu-Ende
 
 ```bash
 cd frontend
-npx playwright test
+npm run test:e2e
 ```
 
-## Fehlerinterpretation
+Playwright startet Backend und Frontend selbst. Der Smoke-Test prüft die API über den Frontend-Proxy und einen sichtbaren Katalogeintrag.
 
-- Backend-Smoke rot: API oder Seed-Import pruefen.
-- Frontend-Smoke rot: Rendering/State der Liste pruefen.
-- Playwright rot: Selektoren, API-Erreichbarkeit, Ladezeiten pruefen.
+## Fehler eingrenzen
+
+- Backend rot: Seed-Import, Schema und API prüfen.
+- Frontend rot: Rendering, Typfehler und API-State prüfen.
+- Playwright rot: Backend-Health, Vite-Proxy, Selektoren und Trace prüfen.

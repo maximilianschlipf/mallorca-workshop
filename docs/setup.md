@@ -3,60 +3,43 @@
 ## Voraussetzungen
 
 - Java 21
-- Node.js 22 LTS
-- npm
-- Maven Wrapper (im spaeteren backend/ erwartet)
-- VS Code mit GitHub Copilot
+- Node.js 22 LTS und npm
+- Maven Wrapper unter `backend/mvnw`
+- Visual Studio Code mit GitHub Copilot
 
-## Standard-Ports
+Die festen Workshopports `18081` für das Backend und `15173` für das Frontend müssen frei sein.
 
-- Backend: 18081
-- Frontend (Vite): 15173
-
-Hinweis: Ports koennen bei Bedarf ueberschrieben werden.
-
-## Start (2 Kommandos)
-
-Aus dem Repo-Root (copy-paste faehig):
-
-```bash
-(cd backend && ./mvnw spring-boot:run)
-```
-
-```bash
-(cd frontend && npm install && npm run dev -- --port 15173)
-```
-
-### Terminal 1: Backend
-
-```bash
-cd backend
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=18081
-```
-
-### Terminal 2: Frontend
+## Einmalige Installation
 
 ```bash
 cd frontend
-npm install
-npm run dev -- --port 15173
+npm ci
+npx playwright install chromium
 ```
 
-## Port-Override Beispiele
+## Anwendung starten
 
-Backend:
+Terminal 1:
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=19081
+cd backend
+./mvnw spring-boot:run
 ```
 
-Frontend:
+Terminal 2:
 
 ```bash
-npm run dev -- --port 16173
+cd frontend
+npm run dev
 ```
 
-## Erwartung nach Start
+Danach sind die API unter http://localhost:18081/api/schulungen und das Frontend unter http://localhost:15173 erreichbar.
 
-- API ist unter http://localhost:18081/api/schulungen erreichbar
-- Frontend ist unter http://localhost:15173 erreichbar
+## Setup verifizieren
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
+Playwright startet Backend und Frontend für diesen Test selbst. Ein manueller Anwendungsstart ist dafür nicht erforderlich.

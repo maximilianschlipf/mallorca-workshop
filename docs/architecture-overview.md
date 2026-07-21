@@ -1,26 +1,23 @@
-# Architecture Overview
+# Architekturüberblick
 
-## Monorepo Zielstruktur
+## Monorepo
 
-- backend/: Spring Boot Anwendung
-- frontend/: Vue 3 + TypeScript + Vite Anwendung
-- docs/: Projektdokumentation
-- .github/: Copilot-Instruktionen und spaetere Erweiterungen
+- `backend/`: Spring Boot, Spring JDBC und H2 In-Memory
+- `frontend/`: Vue 3, TypeScript und Vite
+- `docs/`: technische Referenz und Workshopaufgaben
+- `.github/copilot-instructions.md`: repositoryweiter Kontext für GitHub Copilot
 
 ## Datenquellen
 
-- schulungen.json
-- trainer.json
+- `backend/src/main/resources/seed/schulungen.json`
+- `backend/src/main/resources/seed/trainer.json`
 
-Diese Dateien werden beim Backend-Start als Seed-Daten eingelesen.
+Der `SeedService` liest beide Classpath-Ressourcen beim Backend-Start und befüllt H2 einschließlich Trainerqualifikationen.
 
-## MVP Datenfluss
+## Datenfluss
 
-1. Frontend ruft `GET /api/schulungen` auf.
-2. Backend liefert den Katalog aus dem initialisierten Datenbestand.
-3. Frontend rendert eine einfache Schulungsliste.
+1. Das Frontend ruft `/api/schulungen` über den Vite-Proxy auf.
+2. Das Backend liest den initialisierten Datenbestand über Spring JDBC.
+3. Das Frontend rendert den Schulungskatalog.
 
-## Nicht-Ziel in Iteration 1
-
-- Kein vollstaendiger Kalender-Workflow
-- Keine Trainer-Pflegeoberflaeche
+Die vorhandene Katalogansicht ist die vorbereitete Ausgangsbasis. Weitere Funktionen werden über die Feature-Briefings ergänzt.

@@ -2,42 +2,20 @@
 
 ## Tagesstart
 
-1. Backend mit Port 18081 starten.
-2. Frontend mit Port 15173 starten.
-3. API kurz pruefen:
+1. Backend starten: `cd backend && ./mvnw spring-boot:run`
+2. Frontend starten: `cd frontend && npm run dev`
+3. API prüfen: `curl -i http://localhost:18081/api/schulungen`
+4. http://localhost:15173 öffnen und den Schulungskatalog prüfen.
 
-```bash
-curl -i http://localhost:18081/api/schulungen
-```
+## Seed-Zustand zurücksetzen
 
-4. Frontend im Browser oeffnen und Katalogsicht pruefen.
-
-## Seed-Reset
-
-Es wird eine H2 In-Memory-Datenbank verwendet.
-
-Regel:
-
-- Ein Neustart des Backends stellt den sauberen Seed-Zustand wieder her.
-
-Vorgehen:
-
-1. Backend-Prozess stoppen.
-2. Backend erneut starten.
-3. API erneut mit curl pruefen.
+Die Anwendung verwendet eine H2-In-Memory-Datenbank. Ein Neustart des Backends lädt den vollständigen Seed-Zustand erneut.
 
 ## Troubleshooting
 
-### Port belegt
-
-- Backend oder Frontend auf freie Ports starten (siehe setup.md).
-
-### API nicht erreichbar
-
-- Pruefen, ob Backend wirklich laeuft.
-- Logs auf Startfehler pruefen.
-
-### Leere Liste in API
-
-- Seed-Import beim Start pruefen.
-- JSON-Dateien auf gueltiges Format pruefen.
+1. Mit `java -version` Java 21 und mit `node --version` Node.js 22 prüfen.
+2. Prüfen, ob die festen Ports `18081` und `15173` bereits belegt sind; den störenden Prozess beenden.
+3. Backend-Log auf Fehler beim Import aus `backend/src/main/resources/seed` prüfen.
+4. Mit `curl -i http://localhost:18081/api/health` den Backend-Status prüfen.
+5. Bei leerer oder fehlerhafter UI den Vite-Proxy für `/api` prüfen.
+6. Bei einem E2E-Fehler den erzeugten Playwright-Trace öffnen.
