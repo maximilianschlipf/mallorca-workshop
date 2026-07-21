@@ -17,6 +17,16 @@ Hinweis: Ports koennen bei Bedarf ueberschrieben werden.
 
 ## Start (2 Kommandos)
 
+Aus dem Repo-Root (copy-paste faehig):
+
+```bash
+(cd backend && ./mvnw spring-boot:run)
+```
+
+```bash
+(cd frontend && npm install && npm run dev -- --port 15173)
+```
+
 ### Terminal 1: Backend
 
 ```bash
