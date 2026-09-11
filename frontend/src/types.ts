@@ -19,3 +19,9 @@ export interface Schulung {
   maxTeilnehmerOeffentlich?: number | null
   oeffentlicheTermine: Termin[]
 }
+
+export interface Trainer {
+  id: string
+  name: string
+  email: string
+}

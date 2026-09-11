@@ -2,6 +2,7 @@ package de.nordwind.schulungsplaner.service;
 
 import de.nordwind.schulungsplaner.domain.Schulung;
 import de.nordwind.schulungsplaner.domain.Termin;
+import de.nordwind.schulungsplaner.domain.VerfuegbarerTrainer;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,16 @@ public class SchulungsQueryService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Schulung> findAllSchulungen() {
+    public List<Schulung> findSchulungen(String suche, String kategorie) {
+        String titelFilter = normalize(suche);
+        String kategorieFilter = normalize(kategorie);
+
+        List<String> matchingIds = findMatchingIds(titelFilter, kategorieFilter);
+        if (matchingIds.isEmpty()) {
+            return List.of();
+        }
+
+        String placeholders = String.join(", ", matchingIds.stream().map(id -> "?").toList());
         String sql = """
                 SELECT s.id,
                        s.titel,
@@ -41,14 +51,15 @@ public class SchulungsQueryService {
                 FROM schulung s
                 LEFT JOIN termin t ON t.schulung_id = s.id
                 LEFT JOIN voraussetzung v ON v.schulung_id = s.id
+                WHERE s.id IN (%s)
                 ORDER BY s.id, t.startdatum, t.termin_id
-                """;
+                """.formatted(placeholders);
 
         Map<String, SchulungBuilder> byId = new LinkedHashMap<>();
         jdbcTemplate.query(sql, rs -> {
             String id = rs.getString("id");
             String titel = rs.getString("titel");
-            String kategorie = rs.getString("kategorie");
+            String kategorieWert = rs.getString("kategorie");
             String kurzbeschreibung = rs.getString("kurzbeschreibung");
             int dauerInTagen = rs.getInt("dauer_in_tagen");
             int mindestteilnehmerExklusiv = rs.getInt("mindestteilnehmer_exklusiv");
@@ -57,7 +68,7 @@ public class SchulungsQueryService {
             SchulungBuilder builder = byId.computeIfAbsent(id, key -> new SchulungBuilder(
                 id,
                 titel,
-                kategorie,
+                kategorieWert,
                 kurzbeschreibung,
                 dauerInTagen,
                 mindestteilnehmerExklusiv,
@@ -82,9 +93,70 @@ public class SchulungsQueryService {
                         rs.getString("trainer_id")
                 ));
             }
-        });
+        }, matchingIds.toArray());
 
         return byId.values().stream().map(SchulungBuilder::build).toList();
+    }
+
+    public List<String> findKategorien() {
+        return jdbcTemplate.queryForList(
+                "SELECT DISTINCT kategorie FROM schulung ORDER BY kategorie",
+                String.class
+        );
+    }
+
+    public List<VerfuegbarerTrainer> findVerfuegbareTrainer(
+            String schulungId, LocalDate von, LocalDate bis) {
+        return jdbcTemplate.query("""
+                SELECT t.id, t.name, t.email
+                FROM trainer t
+                JOIN trainer_qualifikation q ON q.trainer_id = t.id
+                WHERE q.schulung_id = ?
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM abwesenheit a
+                    WHERE a.trainer_id = t.id
+                      AND a.von <= ?
+                      AND a.bis >= ?
+                  )
+                ORDER BY LOWER(t.name), t.name
+                """,
+                (rs, rowNum) -> new VerfuegbarerTrainer(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getString("email")
+                ),
+                schulungId, bis, von
+        );
+    }
+
+    private List<String> findMatchingIds(String titelFilter, String kategorieFilter) {
+        StringBuilder sql = new StringBuilder("SELECT id FROM schulung WHERE 1 = 1");
+        List<Object> args = new ArrayList<>();
+        if (titelFilter != null) {
+            sql.append(" AND LOWER(titel) LIKE LOWER(?) ESCAPE '\\'");
+            args.add("%" + escapeLike(titelFilter) + "%");
+        }
+        if (kategorieFilter != null) {
+            sql.append(" AND LOWER(kategorie) = LOWER(?)");
+            args.add(kategorieFilter);
+        }
+        sql.append(" ORDER BY id");
+        return jdbcTemplate.queryForList(sql.toString(), String.class, args.toArray());
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     private String toDateString(Date date) {
