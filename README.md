@@ -64,6 +64,7 @@ Der E2E-Befehl startet Backend und Frontend bei Bedarf selbst.
 ## Dokumentation
 
 - [Fachsprache](CONTEXT.md)
+- [Anforderungen](docs/source/anforderungen/index.rst) (Quelle; gebaut unter `docs/build/html/`)
 
 Die Anforderungsdokumentation liegt unter `docs/` und wird mit Sphinx und
 sphinx-needs gebaut. `docs/source/conf.py` ist bereits fertig konfiguriert
@@ -141,21 +142,27 @@ make html SPHINXOPTS=
 - Planung von Schulungsterminen und Zuweisung qualifizierter Trainer
 - Schulungs- und Abwesenheitskalender
 - Traineransicht für passende zukünftige Termine und Vormerkungen
-- validierter JSON-Import für Schulungsdaten
+- dateibasierte JSON-Speicherschicht als maßgebliche Datenquelle
 
-Die bestehende Architektur bleibt bestehen. Bei der jeweiligen Umsetzung kommen nur `spring-boot-starter-security`, `spring-boot-starter-validation` und `vue-router` hinzu. H2 bleibt für lokale, reproduzierbare Workshop-Instanzen ausreichend.
+Bei der Umsetzung kommen `spring-boot-starter-security`, `spring-boot-starter-validation` und `vue-router` hinzu.
 
-Importierte JSON-Dateien sind nur Eingabe. Nach Validierung und Bestätigung ist die Datenbank die maßgebliche Datenquelle; eine Ablage der Originaldateien ist vorerst nicht vorgesehen.
+Die Datenhaltung wechselt von H2 auf eine dateibasierte Ablage: Je Schulung wird eine JSON-Datei geführt, und diese Dateien sind die maßgebliche Datenquelle — nicht mehr nur Eingabeformat. Bei den erwarteten Nutzerzahlen reicht die Leistung des Dateisystems aus, und Schema, Migrationen sowie Betriebsaufwand der Datenbank entfallen. Im Gegenzug gibt es keine Transaktionen und keine Abfragesprache; gleichzeitige Schreibzugriffe zu serialisieren ist Aufgabe der Anwendung. Die Entscheidung ist als `DEC_DAT_ABLAGE_01` in den Anforderungen festgehalten.
+
+An der Schulung wird vermerkt, welche Trainer für sie qualifiziert sind.
 
 ### Berechtigungen
+
+Ein Benutzerkonto trägt die Rolle Trainer, die Rolle Administrator oder **beide**. Die Tabelle beschreibt die einzelne Rolle; wer beide trägt, erhält die Summe beider Spalten. Ein Administrator kann damit auch Schulungen halten — er braucht dafür zusätzlich die Rolle Trainer samt Trainerprofil, Qualifikationen und eigenen Abwesenheiten.
 
 | Aktion                                 | Administrator | Trainer |
 | -------------------------------------- | :-----------: | :-----: |
 | Schulungen und Termine ansehen         |      ja       |   ja    |
-| Schulungen verwalten oder importieren  |      ja       |  nein   |
+| Schulungen verwalten                   |      ja       |  nein   |
 | Termine planen und Trainer zuweisen    |      ja       |  nein   |
-| Qualifikation anfragen                 |     nein      |   ja    |
 | Freigabeanfrage entscheiden            |      ja       |  nein   |
+| Rolle Administrator erteilen           |      ja       |  nein   |
+| Abwesenheitsantrag entscheiden         |      ja       |  nein   |
+| Qualifikation anfragen                 |     nein      |   ja    |
 | Eigene Abwesenheiten verwalten         |     nein      |   ja    |
 | Passende Termine ansehen und vormerken |     nein      |   ja    |
 
