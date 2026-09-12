@@ -12,6 +12,10 @@ _Avoid_: Nutzerprofil, Account
 Ein Benutzerkonto, das Schulungen und Termine verwaltet, Trainer zuweist und Freigabeanfragen entscheidet.
 _Avoid_: Planer, Admin-User
 
+**Eigentümer**:
+Das eine Benutzerkonto, das eine Instanz dauerhaft handlungsfähig hält. Es trägt stets auch die Administratorrolle, kann weder stillgelegt noch gelöscht werden und gibt die Rolle nur weiter, statt sie abzulegen. Zu jedem Zeitpunkt gibt es genau einen.
+_Avoid_: Owner, Superadmin, Hauptadministrator
+
 **Trainerprofil**:
 Die fachlichen Daten eines Trainers einschließlich Qualifikationen und Abwesenheiten. Ein Trainerprofil gehört zu genau einem Benutzerkonto.
 _Avoid_: Trainerkonto, Trainer-User

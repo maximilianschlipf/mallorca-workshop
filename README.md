@@ -137,33 +137,55 @@ make html SPHINXOPTS=
 
 ## Geplanter Ausbau
 
-- Benutzerkonten mit den Rollen Administrator und Trainer
+- Benutzerkonten mit den Rollen Trainer, Administrator und Eigentümer
 - Freigabeanfragen für Trainerqualifikationen
 - Planung von Schulungsterminen und Zuweisung qualifizierter Trainer
+- Assistenzplätze an Terminen als Weg zum Anlernen
 - Schulungs- und Abwesenheitskalender
 - Traineransicht für passende zukünftige Termine und Vormerkungen
-- dateibasierte JSON-Speicherschicht als maßgebliche Datenquelle
+- Übernahmeanfragen zwischen Trainern
+- Teilnehmerbuchungen mit Aufbewahrungsfrist
 
 Bei der Umsetzung kommen `spring-boot-starter-security`, `spring-boot-starter-validation` und `vue-router` hinzu.
 
-Die Datenhaltung wechselt von H2 auf eine dateibasierte Ablage: Je Schulung wird eine JSON-Datei geführt, und diese Dateien sind die maßgebliche Datenquelle — nicht mehr nur Eingabeformat. Bei den erwarteten Nutzerzahlen reicht die Leistung des Dateisystems aus, und Schema, Migrationen sowie Betriebsaufwand der Datenbank entfallen. Im Gegenzug gibt es keine Transaktionen und keine Abfragesprache; gleichzeitige Schreibzugriffe zu serialisieren ist Aufgabe der Anwendung. Die Entscheidung ist als `DEC_DAT_ABLAGE_01` in den Anforderungen festgehalten.
+### Datenhaltung
 
-An der Schulung wird vermerkt, welche Trainer für sie qualifiziert sind.
+Die Daten liegen an zwei Orten, getrennt entlang der Frage, ob etwas versioniert gehört:
+
+- **Der Schulungskatalog** bleibt in JSON-Dateien, je Schulung eine, im Repository versioniert. Er enthält nur die Beschreibung — Titel, Kategorie, Kurzbeschreibung, Voraussetzungen, Dauer und die beiden Teilnehmergrenzen. Eine Änderung daran schreibt die Datei und sichert sie mit einem Commit.
+- **Alles Veränderliche** — Benutzerkonten, Termine, Trainerzuweisungen, Qualifikationen, Abwesenheiten, Teilnehmerbuchungen und Benachrichtigungen — liegt in einer eingebetteten H2-Datenbank im Dateimodus. Sie braucht keine eigene Installation und keinen Serverprozess.
+
+Der Grund für die Trennung: Eine Katalogänderung ist eine seltene, bewusste Handlung und gehört in die Versionsgeschichte. Laufender Betriebszustand nicht — Benachrichtigungen allein würden die Historie mit Commits fluten. Die Schulungs-ID ist die Klammer zwischen beiden Ablagen.
+
+Gleichzeitiges Bearbeiten wird optimistisch aufgelöst: Jeder Datensatz führt einen Änderungszähler, und ein Speichern auf einem überholten Stand wird abgewiesen. Gesperrt wird nichts; wer einen Datensatz offen hat, erscheint als Hinweis.
+
+Qualifikationen werden an der Schulung geführt, nicht am Trainerprofil.
+
+Die Entscheidungen dazu stehen als `DEC_DAT_ABLAGE_02`, `DEC_DAT_SCHNITT_01`, `DEC_DAT_SCHEMA_01` und `DEC_DAT_NEBEN_01` in den Anforderungen.
 
 ### Berechtigungen
 
-Ein Benutzerkonto trägt die Rolle Trainer, die Rolle Administrator oder **beide**. Die Tabelle beschreibt die einzelne Rolle; wer beide trägt, erhält die Summe beider Spalten. Ein Administrator kann damit auch Schulungen halten — er braucht dafür zusätzlich die Rolle Trainer samt Trainerprofil, Qualifikationen und eigenen Abwesenheiten.
+Ein Benutzerkonto trägt eine **Menge** von Rollen: Trainer, Administrator, oder beide. Die Tabelle beschreibt die einzelne Rolle; wer mehrere trägt, erhält die Summe der Spalten. Der Normalfall für einen Administrator ist, zusätzlich Trainer zu sein — nur so hat er ein Trainerprofil, Qualifikationen und eigene Abwesenheiten.
 
-| Aktion                                 | Administrator | Trainer |
-| -------------------------------------- | :-----------: | :-----: |
-| Schulungen und Termine ansehen         |      ja       |   ja    |
-| Schulungen verwalten                   |      ja       |  nein   |
-| Termine planen und Trainer zuweisen    |      ja       |  nein   |
-| Freigabeanfrage entscheiden            |      ja       |  nein   |
-| Rolle Administrator erteilen           |      ja       |  nein   |
-| Abwesenheitsantrag entscheiden         |      ja       |  nein   |
-| Qualifikation anfragen                 |     nein      |   ja    |
-| Eigene Abwesenheiten verwalten         |     nein      |   ja    |
-| Passende Termine ansehen und vormerken |     nein      |   ja    |
+| Aktion                                  | Eigentümer | Administrator | Trainer |
+| --------------------------------------- | :--------: | :-----------: | :-----: |
+| Schulungen und Termine ansehen          |     ja     |      ja       |   ja    |
+| Schulungen verwalten                    |     ja     |      ja       |  nein   |
+| Termine planen und Trainer zuweisen     |     ja     |      ja       |  nein   |
+| Freigabeanfrage entscheiden             |     ja     |      ja       |  nein   |
+| Abwesenheitsantrag entscheiden          |     ja     |      ja       |  nein   |
+| Teilnehmerbuchungen pflegen             |     ja     |      ja       |  nein   |
+| Rollen erteilen und entziehen           |     ja     |      ja       |  nein   |
+| Eigentümerrolle weitergeben             |     ja     |     nein      |  nein   |
+| Qualifikation anfragen                  |    nein    |     nein      |   ja    |
+| Auf einen Assistenzplatz bewerben       |    nein    |     nein      |   ja    |
+| Eigene Abwesenheiten verwalten          |    nein    |     nein      |   ja    |
+| Passende Termine ansehen und vormerken  |    nein    |     nein      |   ja    |
+| Übernahme anbieten und entscheiden      |    nein    |     nein      |   ja    |
+| Eigenen Termin abschließen              |    nein    |      ja       |   ja    |
 
-„Buchung“ bezeichnet künftig ausschließlich eine Teilnehmerbuchung. Administratoren planen Termine; Trainer können sich dafür vormerken, aber nicht selbst zuweisen.
+Die Rolle **Eigentümer** trägt genau ein Konto. Sie sichert eine Instanz dagegen, sich selbst auszusperren: Ihr Träger behält zwingend die Administratorrolle, kann weder stillgelegt noch gelöscht werden, und gibt die Rolle nur weiter, statt sie abzulegen. Das erste registrierte Konto erhält alle drei Rollen.
+
+Ein Administrator entscheidet auch über Vorgänge, die er selbst ausgelöst hat — sonst wäre eine Instanz mit einem einzigen Administrator blockiert.
+
+„Buchung“ bezeichnet ausschließlich eine Teilnehmerbuchung. Administratoren planen Termine; Trainer können sich dafür vormerken, aber nicht selbst zuweisen.
