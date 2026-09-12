@@ -1,0 +1,26 @@
+# Python-Toolchain für die Doku (docs/). Installation aus dem Projektwurzel-
+# Verzeichnis in eine venv:
+#
+#   python3 -m venv .venv
+#   .venv/bin/python -m pip install -U pip
+#   .venv/bin/pip install -r docs/requirements.txt
+#
+# Zusätzlich nötig, aber kein Python-Paket: PlantUML samt Java
+# (macOS: brew install plantuml). Sphinx findet es über den PATH.
+
+sphinx==9.1.0
+sphinx-needs==8.5.0
+sphinxcontrib-plantuml==0.31
+
+# Pillow ist optional, aber ohne sie warnt sphinxcontrib-plantuml bei jedem
+# needflow-Diagramm über nicht unterstützte Skalierung.
+Pillow==12.3.0
+
+# Corporate-Design-Theme (html_theme = "st"). Lokal als Checkout daneben:
+#
+#   pip install -e ../st-sphinx-theme
+#
+# Der Pfad ist maschinenabhängig und steht deshalb nicht als Pin hier. Für
+# CI oder Teilnehmer ohne Checkout stattdessen versionsgepinnt aus GitLab:
+#
+#   st-sphinx-theme @ git+ssh://git@<gitlab-host>/<gruppe>/st-sphinx-theme.git@v0.1.0

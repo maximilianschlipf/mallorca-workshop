@@ -1,2 +1,10 @@
 .DS_Store
 .fallow/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Sphinx
+docs/build/

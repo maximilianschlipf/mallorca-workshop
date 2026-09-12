@@ -2,9 +2,21 @@
 
 ## Voraussetzungen
 
-- Java 21
+- Java 21 (wird auch von PlantUML benötigt)
 - Node.js 22 LTS und npm
+- Python 3.12 oder neuer (Sphinx 9 setzt mindestens 3.12 voraus)
+- PlantUML (rendert die Diagramme der Doku)
 - Visual Studio Code mit GitHub Copilot
+
+PlantUML installieren:
+
+| Plattform | Befehl |
+| --------- | ------ |
+| macOS | `brew install plantuml` |
+| Windows | `choco install plantuml` oder `scoop install plantuml` |
+| Linux (Debian/Ubuntu) | `sudo apt install plantuml` |
+
+Sphinx findet das Programm über den PATH; in der `conf.py` ist nichts zu setzen.
 
 ## Einmalige Installation
 
@@ -52,6 +64,75 @@ Der E2E-Befehl startet Backend und Frontend bei Bedarf selbst.
 ## Dokumentation
 
 - [Fachsprache](CONTEXT.md)
+
+Die Anforderungsdokumentation liegt unter `docs/` und wird mit Sphinx und
+sphinx-needs gebaut. `docs/source/conf.py` ist bereits fertig konfiguriert
+(Need-Typen, ID-Schema, Link-Typen) und im Repository enthalten -- es ist kein
+`sphinx-quickstart` nötig, der würde die Konfiguration überschreiben.
+
+### Einmalige Installation
+
+Virtuelle Umgebung im Projektwurzel-Verzeichnis anlegen und aktivieren:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Unter Windows stattdessen (PowerShell):
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+Unter Linux heißt der Interpreter je nach Distribution `python3.12`; das
+Paket `python3-venv` muss dort gegebenenfalls separat installiert sein
+(`sudo apt install python3.12-venv`).
+
+Danach plattformunabhängig die gepinnten Abhängigkeiten installieren:
+
+```bash
+python -m pip install -U pip
+python -m pip install -r docs/requirements.txt
+```
+
+Fehlt in der frischen Umgebung `pip` (manche Python-Installationen legen die
+venv ohne an), hilft `python -m ensurepip --upgrade` vor den beiden Befehlen.
+
+Das Corporate-Design-Theme `st-sphinx-theme` wird separat verteilt und ist
+deshalb nicht in `docs/requirements.txt` gepinnt. Aus einem lokalen Checkout:
+
+```bash
+python -m pip install -e ../st-sphinx-theme
+```
+
+### Doku bauen
+
+Bei aktivierter venv:
+
+```bash
+cd docs
+make html
+```
+
+Unter Windows im Verzeichnis `docs`:
+
+```powershell
+.\make.bat html
+```
+
+Das Ergebnis liegt in `docs/build/html/index.html`, der Needs-Export für
+Konsistenzchecks in `docs/build/html/needs.json`.
+
+Der Build läuft mit `-W`, Warnungen sind also Fehler: Eine ID, die nicht dem
+Schema in `conf.py` entspricht, oder ein Status außerhalb des erlaubten
+Lebenszyklus bricht den Build ab. Zum Bauen eines Zwischenstands lässt sich
+das überschreiben:
+
+```bash
+make html SPHINXOPTS=
+```
 
 ## Geplanter Ausbau
 
