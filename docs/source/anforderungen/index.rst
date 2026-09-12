@@ -1,3 +1,5 @@
+.. _anforderungen:
+
 Anforderungen
 =============
 
@@ -14,6 +16,7 @@ Kürzel     Bereich
 ``ABW``    Abwesenheiten
 ``KAT``    Schulungskatalog
 ``TER``    Terminplanung
+``ASS``    Assistenz
 ``VOR``    Vormerkungen
 ``UEB``    Übernahmeanfragen zwischen Trainern
 ``TLN``    Teilnehmerbuchungen
@@ -29,9 +32,11 @@ Kürzel     Bereich
    abwesenheiten
    katalog
    terminplanung
+   assistenz
    vormerkungen
    uebernahme
    teilnehmerbuchungen
+   traceability
 
 Gesamtübersicht
 ---------------

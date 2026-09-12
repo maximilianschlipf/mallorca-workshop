@@ -15,6 +15,13 @@ durch einen Administrator macht daraus eine.
    vormerken, dessen Schulung er aufgrund seiner Qualifikationen halten
    könnte.
 
+Was an der Vormerkung hängt:
+
+.. needflow::
+   :root_id: REQ_VOR_ABG_01
+   :root_depth: 1
+   :direction: LR
+
 .. req:: Vormerkung ist unverbindlich
    :id: REQ_VOR_ABG_02
    :status: draft
@@ -68,14 +75,16 @@ durch einen Administrator macht daraus eine.
    Ein Administrator kann eine Vormerkung ablehnen, ohne einen Trainer
    zuzuweisen.
 
-.. req:: Zuweisung eines anderen Trainers lehnt Vormerkungen ab
+.. req:: Eine Zuweisung lehnt die übrigen Vormerkungen ab
    :id: REQ_VOR_ABL_02
    :status: draft
    :priority: high
    :links: REQ_VOR_ABG_01
 
-   Wird einem Termin ein anderer als ein vorgemerkter Trainer zugewiesen,
-   gelten alle offenen Vormerkungen zu diesem Termin als abgelehnt.
+   Sobald einem Termin ein Trainer zugewiesen ist, gelten alle übrigen
+   offenen Vormerkungen zu diesem Termin als abgelehnt. Das gilt unabhängig
+   davon, wie die Zuweisung zustande kam -- durch Bestätigung einer
+   Vormerkung, durch direkte Zuweisung oder durch eine Übernahme.
 
 .. req:: Benachrichtigung über die Ablehnung
    :id: REQ_VOR_ABL_03
@@ -86,12 +95,60 @@ durch einen Administrator macht daraus eine.
    unabhängig davon, ob sie direkt abgelehnt wurde oder durch die Zuweisung
    eines anderen Trainers entfallen ist.
 
-.. req:: Keine Bestätigung bei Abwesenheit
+.. req:: Ablehnung mit Begründung
+   :id: REQ_VOR_ABL_04
+   :status: draft
+   :links: REQ_VOR_ABL_01
+
+   Lehnt ein Administrator eine Vormerkung ab, gibt er dazu eine Begründung
+   an. Sie erreicht den Trainer mit der Benachrichtigung. Für eine Ablehnung
+   nach :need:`REQ_VOR_ABL_02` entfällt die Begründung -- dort ist der Grund
+   die Zuweisung selbst.
+
+.. req:: Sperrfrist nach einer Ablehnung
+   :id: REQ_VOR_ABL_05
+   :status: draft
+   :priority: high
+   :links: REQ_VOR_ABL_01
+
+   Nach einer abgelehnten Vormerkung kann sich ein Trainer für denselben
+   Termin einen Tag lang nicht erneut vormerken.
+
+.. req:: Keine Bestätigung bei Abwesenheit oder Doppelbuchung
    :id: REQ_VOR_BEST_03
    :status: draft
-   :links: REQ_VOR_BEST_01, REQ_TER_ZUW_01
+   :priority: high
+   :links: REQ_VOR_BEST_01, REQ_TER_ZUW_01, REQ_TER_ZUW_03
 
    Eine Vormerkung kann nicht bestätigt werden, wenn im Zeitraum des Termins
-   inzwischen eine aktive Abwesenheit des vorgemerkten Trainers liegt. Damit
-   gilt für den Weg über die Vormerkung dieselbe Regel wie für die direkte
-   Trainerzuweisung.
+   inzwischen eine aktive Abwesenheit des vorgemerkten Trainers liegt oder
+   er dort bereits einem anderen Termin zugewiesen ist -- als Trainer oder
+   als Assistent.
+
+   Für den Weg über die Vormerkung gelten damit dieselben harten Sperren wie
+   für die direkte Trainerzuweisung. Ohne diese Regel wäre die Vormerkung
+   der Weg, sie zu umgehen.
+
+Zusammentreffen mit der Assistenz
+---------------------------------
+
+.. req:: Vormerkung und Assistenzbewerbung nebeneinander
+   :id: REQ_VOR_ASS_01
+   :status: draft
+   :priority: high
+   :links: REQ_VOR_ABG_01, REQ_ASS_BEW_01
+
+   Ein Trainer kann sich für denselben Termin vormerken und zugleich auf
+   einen Assistenzplatz bewerben. Wird ein anderer Trainer gesetzt und er
+   selbst als Assistent angenommen, ist das ein gültiges Ergebnis.
+
+.. req:: Zuweisung als Trainer beendet die Assistenz
+   :id: REQ_VOR_ASS_02
+   :status: draft
+   :priority: high
+   :links: REQ_VOR_ASS_01
+
+   Wird ein Trainer einem Termin als ausführender Trainer zugewiesen,
+   erlöschen seine Assistenzbewerbung und eine bereits bestehende
+   Assistenzzuweisung für denselben Termin. Der Assistenzplatz wird wieder
+   frei.
