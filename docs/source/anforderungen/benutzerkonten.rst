@@ -189,21 +189,37 @@ Rollenmodell
    :links: REQ_USR_ROLLE_09
 
    Ein Konto, dem die Trainerrolle entzogen wurde, ist ein reines
-   Administratorkonto: ohne Qualifikationen, weder als Trainer noch als
-   Assistent einem Termin zuweisbar. Der Weg dorthin führt über
-   Registrieren, Ernennen zum Administrator und Ablegen der Trainerrolle.
+   Administratorkonto: Es kann vorhandene Qualifikationen nicht nutzen und
+   ist weder als Trainer noch als Assistent einem Termin zuweisbar.
+   Qualifikationen, Anfragen und Abwesenheiten bleiben gespeichert und werden
+   bei einer erneuten Vergabe der Trainerrolle wieder nutzbar. Der Weg dorthin
+   führt über Registrieren, Ernennen zum Administrator und Ablegen der
+   Trainerrolle.
 
 .. req:: Entzug der Trainerrolle löst Zuweisungen
    :id: REQ_USR_ROLLE_07
    :status: approved
    :priority: high
-   :links: REQ_USR_ROLLE_06, REQ_ASS_PLATZ_01
+   :links: REQ_USR_ROLLE_06, REQ_ASS_PLATZ_01, REQ_TER_STAT_01, REQ_TER_ZEIT_01
 
    Wird einem Konto die Trainerrolle entzogen, wird es aus allen zukünftigen
    Terminen herausgenommen, denen es zugewiesen ist -- als ausführender
    Trainer wie als Assistent. Termine ohne Trainer wechseln in den Zustand
    "nicht zugewiesen", frei gewordene Assistenzplätze stehen wieder offen.
    Bei abgeschlossenen Terminen bleibt es eingetragen.
+
+.. req:: Kontoverwaltung erfordert Administratorrechte
+   :id: REQ_USR_ROLLE_10
+   :status: approved
+   :priority: high
+   :links: REQ_USR_ROLLE_01
+
+   Nur ein Administrator darf fremde Konten verwalten, Passwörter anderer
+   Konten setzen, Rollen vergeben oder entziehen sowie Konten stilllegen,
+   reaktivieren oder löschen. Die ausdrücklich dem Eigentümer vorbehaltenen
+   Vorgänge bleiben auch für andere Administratoren gesperrt. Ein Benutzer
+   darf ausschließlich den Namen und das Passwort seines eigenen Kontos
+   ändern.
 
 Eigentümer
 ----------
@@ -216,7 +232,9 @@ Eigentümer
 
    Das erste Benutzerkonto einer Instanz erhält bei seiner Registrierung die
    Rollen Trainer, Administrator und Eigentümer. Damit ist eine frische
-   Instanz ohne weiteres Zutun handlungsfähig.
+   Instanz ohne weiteres Zutun handlungsfähig. Auch bei gleichzeitig
+   eintreffenden Registrierungen entsteht genau ein erstes Konto mit diesen
+   Rollen; alle weiteren erhalten ausschließlich die Trainerrolle.
 
 .. req:: Genau ein Eigentümer
    :id: REQ_USR_EIGT_02
@@ -224,7 +242,8 @@ Eigentümer
    :priority: high
    :links: DEC_USR_EIGT_01
 
-   Zu jedem Zeitpunkt trägt genau ein Benutzerkonto die Rolle Eigentümer.
+   Sobald mindestens ein Benutzerkonto existiert, trägt genau ein aktives
+   Benutzerkonto die Rolle Eigentümer.
 
 .. req:: Eigentümerrolle weitergeben
    :id: REQ_USR_EIGT_03
@@ -232,9 +251,11 @@ Eigentümer
    :priority: high
    :links: REQ_USR_EIGT_02
 
-   Der Eigentümer kann die Rolle an ein anderes Benutzerkonto übergeben.
-   Mit der Übergabe verliert er sie selbst; es gibt keinen Weg, sie
-   abzulegen, ohne sie weiterzugeben.
+   Der Eigentümer kann die Rolle an ein anderes aktives Benutzerkonto
+   übergeben. Mit der Übergabe verliert er sie selbst; es gibt keinen Weg,
+   sie abzulegen, ohne sie weiterzugeben. Vergabe und Entzug erfolgen in
+   einem einzigen Vorgang, sodass zu keinem Zeitpunkt zwei Eigentümer oder
+   gar kein Eigentümer existieren.
 
 .. req:: Eigentümer behält die Administratorrolle
    :id: REQ_USR_EIGT_04
@@ -242,7 +263,9 @@ Eigentümer
    :links: REQ_USR_EIGT_02
 
    Solange ein Konto die Rolle Eigentümer trägt, trägt es auch die Rolle
-   Administrator. Sie kann ihm nicht entzogen werden.
+   Administrator. Sie kann ihm nicht entzogen werden. Erhält ein reines
+   Trainerkonto die Eigentümerrolle, erhält es deshalb im selben Vorgang
+   zusätzlich die Administratorrolle.
 
 .. req:: Eigentümerkonto ist geschützt
    :id: REQ_USR_EIGT_05
@@ -287,7 +310,9 @@ Anmeldung
    :priority: high
    :links: REQ_USR_LOGIN_01
 
-   Ohne erfolgreiche Anmeldung ist keine Ansicht der Anwendung erreichbar.
+   Ohne erfolgreiche Anmeldung sind ausschließlich Anmeldung und
+   Registrierung erreichbar. Alle fachlichen Ansichten und Schnittstellen
+   erfordern eine Anmeldung.
 
 .. req:: Passwörter nur als gesalzener Hash
    :id: REQ_USR_LOGIN_03
@@ -329,6 +354,26 @@ Anmeldung
    Eine Anmeldung gilt, bis der Browser geschlossen wird. Es gibt keine
    darüber hinausgehende Ablauffrist und kein "angemeldet bleiben".
 
+.. req:: Stilllegen und Löschen beenden laufende Sitzungen
+   :id: REQ_USR_LOGIN_08
+   :status: approved
+   :priority: high
+   :links: REQ_USR_PROF_02
+
+   Wird ein Konto stillgelegt oder gelöscht, enden alle seine laufenden
+   Sitzungen sofort. Ein bereits angemeldetes Konto behält dadurch keinen
+   Zugriff.
+
+.. req:: Rollenänderungen gelten sofort
+   :id: REQ_USR_LOGIN_09
+   :status: approved
+   :priority: high
+   :links: REQ_USR_ROLLE_01
+
+   Werden die Rollen eines Kontos geändert, gelten seine neuen Berechtigungen
+   spätestens beim nächsten Aufruf. Eine bestehende Sitzung behält keine
+   entzogenen Rechte.
+
 .. req:: Abmelden
    :id: REQ_USR_LOGIN_05
    :status: approved
@@ -336,6 +381,18 @@ Anmeldung
 
    Ein angemeldeter Benutzer kann sich abmelden, ohne den Browser zu
    schließen.
+
+.. req:: Anwendung ist standardmäßig nur lokal erreichbar
+   :id: REQ_USR_SICHER_01
+   :status: approved
+   :priority: high
+   :component: backend
+   :links: DEC_USR_SICHER_01
+
+   Die Anwendung lauscht in der Standardkonfiguration ausschließlich auf
+   der Loopback-Schnittstelle. Die H2-Konsole ist im Standardbetrieb
+   abgeschaltet. Eine Erreichbarkeit von anderen Rechnern erfordert eine
+   bewusst geänderte Sicherheitskonfiguration.
 
 Passwort
 --------
@@ -348,7 +405,8 @@ Passwort
 
    Ein angemeldeter Benutzer kann sein eigenes Passwort ändern. Dabei gibt
    er sein bisheriges Passwort an; stimmt es nicht, wird die Änderung
-   abgewiesen.
+   abgewiesen. Nach erfolgreicher Änderung enden alle anderen laufenden
+   Sitzungen dieses Kontos.
 
 .. req:: Passwort durch Administrator setzen
    :id: REQ_USR_PWD_02
@@ -356,9 +414,10 @@ Passwort
    :priority: high
    :links: DEC_USR_SICHER_01
 
-   Ein Administrator kann für ein Benutzerkonto ein neues Passwort setzen,
-   ohne das bisherige zu kennen. Das ist der einzige Weg zurück in ein Konto
-   mit vergessenem Passwort.
+   Ein Administrator kann für ein anderes Benutzerkonto ein neues Passwort
+   setzen, ohne das bisherige zu kennen. Das ist der einzige Weg zurück in ein
+   Konto mit vergessenem Passwort. Nach dem Setzen enden alle laufenden
+   Sitzungen des betroffenen Kontos.
 
 .. req:: Das Eigentümerpasswort setzt nur der Eigentümer
    :id: REQ_USR_PWD_03
@@ -400,9 +459,12 @@ Registrierung
    :priority: high
    :links: REQ_USR_REG_04, REQ_USR_LOGIN_01
 
-   Ist die angegebene E-Mail-Adresse bereits vergeben, wird die
-   Registrierung abgewiesen und darauf hingewiesen. Es entsteht kein
-   zweites Konto zur selben Adresse.
+   Vor der Speicherung werden Leerzeichen am Anfang und Ende der
+   E-Mail-Adresse entfernt. E-Mail-Adressen werden bei Registrierung und
+   Anmeldung unabhängig von Groß- und Kleinschreibung verglichen. Ist die
+   angegebene E-Mail-Adresse danach bereits vergeben, wird die Registrierung
+   abgewiesen und darauf hingewiesen. Es entsteht kein zweites Konto zur
+   selben Adresse.
 
 .. req:: Konto ist sofort nutzbar
    :id: REQ_USR_REG_02
@@ -432,14 +494,15 @@ Konto beenden
    :links: REQ_USR_PROF_02
 
    Ein Administrator kann ein Benutzerkonto stilllegen. Ein stillgelegtes
-   Konto kann sich nicht mehr anmelden, bleibt aber mit allen Daten
-   erhalten.
+   Konto kann sich nicht mehr anmelden. Seine Profildaten und Vorgänge
+   bleiben erhalten; ausschließlich zukünftige Trainer- und
+   Assistenzzuweisungen werden nach :need:`REQ_USR_ENDE_04` entfernt.
 
 .. req:: Stilllegen löst zukünftige Zuweisungen
    :id: REQ_USR_ENDE_04
    :status: approved
    :priority: high
-   :links: REQ_USR_ENDE_01, REQ_ASS_PLATZ_01
+   :links: REQ_USR_ENDE_01, REQ_ASS_PLATZ_01, REQ_TER_STAT_01, REQ_TER_ZEIT_01
 
    Beim Stilllegen wird das Konto aus allen zukünftigen Terminen
    herausgenommen, denen es zugewiesen ist -- als ausführender Trainer wie
@@ -473,7 +536,7 @@ Konto beenden
    :id: REQ_USR_ENDE_03
    :status: approved
    :priority: low
-   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01
+   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01, REQ_TER_ZEIT_01
 
    War das gelöschte Konto einem zukünftigen Termin zugewiesen, wechselt
    dieser in den Zustand "nicht zugewiesen"; war es dort Assistent, wird der
@@ -483,10 +546,11 @@ Konto beenden
    :id: REQ_USR_ENDE_06
    :status: approved
    :priority: high
-   :links: REQ_USR_ENDE_02
+   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01, REQ_TER_STAT_01
 
-   Bei abgeschlossenen Terminen wird die Zuweisung beim Löschen von einem
-   Verweis auf das Konto in den reinen Namen umgeschrieben. Die Angabe, wer
-   eine Schulung gehalten hat, überlebt damit das Löschen, ohne dass das
-   Konto selbst weiterbestehen muss. Das Löschen wird deswegen nicht
-   verweigert.
+   Bei abgeschlossenen Terminen werden die Zuweisungen als ausführender
+   Trainer und als Assistent beim Löschen von einem Verweis auf das Konto in
+   einen unveränderlichen Namens-Snapshot umgeschrieben. Die Angabe, wer eine
+   Schulung gehalten oder assistiert hat, überlebt damit das Löschen, ohne
+   dass das Konto selbst weiterbestehen muss. Das Löschen wird deswegen
+   nicht verweigert.

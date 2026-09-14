@@ -17,7 +17,7 @@ Trainerzuweisung.
 
 .. req:: Qualifikation gilt für die Schulung
    :id: REQ_QUA_UMF_01
-   :status: draft
+   :status: approved
    :priority: high
 
    Eine Qualifikation gilt für eine Schulung als Ganzes und damit für alle

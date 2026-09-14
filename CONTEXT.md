@@ -13,7 +13,7 @@ Ein Benutzerkonto, das Schulungen und Termine verwaltet, Trainer zuweist und Fre
 _Avoid_: Planer, Admin-User
 
 **Eigentümer**:
-Das eine Benutzerkonto, das eine Instanz dauerhaft handlungsfähig hält. Es trägt stets auch die Administratorrolle, kann weder stillgelegt noch gelöscht werden und gibt die Rolle nur weiter, statt sie abzulegen. Zu jedem Zeitpunkt gibt es genau einen.
+Das eine aktive Benutzerkonto, das eine Instanz dauerhaft handlungsfähig hält. Es trägt stets auch die Administratorrolle, kann weder stillgelegt noch gelöscht werden und gibt die Rolle nur weiter, statt sie abzulegen. Sobald ein Benutzerkonto existiert, gibt es genau einen Eigentümer.
 _Avoid_: Owner, Superadmin, Hauptadministrator
 
 **Trainer**:

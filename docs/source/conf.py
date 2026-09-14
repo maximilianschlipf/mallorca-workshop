@@ -39,7 +39,6 @@ extensions = [
 ]
 
 html_theme = "st"
-html_static_path = ['_static']
 html_logo = st_theme.asset("img/st-logo.svg")
 html_favicon = st_theme.asset("img/favicon.ico")
 
