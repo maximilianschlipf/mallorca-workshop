@@ -6,6 +6,11 @@ JSON-Dateien im Repository, alles Veränderliche wandert in eine Datenbank.
 Die Trennlinie verläuft entlang der Frage, ob ein Datum versioniert gehören
 will oder nicht.
 
+Dieser Bereich beschreibt die Entscheidungen dahinter und die Datenbankseite.
+Wie der Katalog abgelegt ist, welche Felder er führt und wie die Schulungs-ID
+die Termine anbindet, steht bei den Anforderungen an den
+:ref:`Schulungskatalog <schulungskatalog>` -- dort, wo damit gearbeitet wird.
+
 Grundsatzentscheidungen
 -----------------------
 
@@ -78,95 +83,6 @@ Grundsatzentscheidungen
    denen er vorkommt. Ebenso hängen Freigabeanfragen an der Schulung, um die
    es geht, nicht am anfragenden Trainer.
 
-Schulungskatalog als JSON
--------------------------
-
-.. req:: Eine JSON-Datei je Schulung
-   :id: REQ_DAT_KAT_01
-   :status: draft
-   :component: backend
-   :links: DEC_DAT_ABLAGE_02
-
-   Der Schulungskatalog wird in JSON-Dateien gehalten, je Schulung eine
-   Datei.
-
-Was am Katalog hängt:
-
-.. needflow::
-   :root_id: REQ_DAT_KAT_01
-   :root_depth: 1
-   :direction: LR
-
-.. req:: Nur Basisdaten im Katalog
-   :id: REQ_DAT_KAT_02
-   :status: draft
-   :priority: high
-   :component: backend
-   :links: REQ_DAT_KAT_01
-
-   Eine Katalogdatei enthält ausschließlich die Beschreibung einer Schulung:
-
-   * Titel,
-   * Kategorie,
-   * Kurzbeschreibung,
-   * Voraussetzungen,
-   * Dauer in Tagen,
-   * Mindestteilnehmerzahl für exklusive Termine,
-   * Höchstteilnehmerzahl für öffentliche Termine.
-
-   Der Katalog ist reine Beschreibung. Alles, was sich im Betrieb ändert --
-   auch der Zustand aktiv oder archiviert -- steht nicht darin, sondern in
-   der Datenbank.
-
-.. req:: Ablageverzeichnis im Projekt
-   :id: REQ_DAT_KAT_03
-   :status: draft
-   :component: backend
-   :links: REQ_DAT_KAT_01
-
-   Die Katalogdateien liegen an einem festen Ort im Projektverzeichnis. Jede
-   Instanz wird lokal betrieben.
-
-.. req:: Schulungs-ID wird vom Menschen vergeben
-   :id: REQ_DAT_KAT_04
-   :status: draft
-   :links: REQ_DAT_KAT_01
-
-   Beim Anlegen einer Schulung vergibt der Administrator die ID selbst. Das
-   System vergibt keine ID automatisch, zeigt aber beim Anlegen an, nach
-   welchem Schema die bestehenden Schulungen benannt sind.
-
-.. req:: Eindeutigkeit der Schulungs-ID
-   :id: REQ_DAT_KAT_05
-   :status: draft
-   :links: REQ_DAT_KAT_04
-
-   Eine ID, die bereits vergeben ist, wird beim Anlegen abgewiesen.
-
-.. req:: Katalogänderung wird als Commit gesichert
-   :id: REQ_DAT_GIT_01
-   :status: draft
-   :priority: high
-   :component: backend
-   :links: REQ_DAT_KAT_01
-
-   Ändert ein Administrator die Beschreibung einer Schulung, schreibt die
-   Anwendung die betroffene JSON-Datei und sichert die Änderung mit einem
-   Commit im Repository.
-
-   Das Archivieren und Reaktivieren einer Schulung gehört nicht dazu: Es
-   ändert nur den Zustand in der Datenbank und lässt die Katalogdatei
-   unberührt.
-
-.. req:: Abgleich des Katalogs über das Repository
-   :id: REQ_DAT_GIT_02
-   :status: draft
-   :links: REQ_DAT_GIT_01
-
-   Ein Abgleich von Katalogdaten zwischen zwei Instanzen erfolgt über die
-   üblichen Git-Vorgänge am Repository, nicht über eine Funktion der
-   Anwendung. Datenbankinhalte werden dabei nicht übertragen.
-
 Veränderliche Daten in der Datenbank
 ------------------------------------
 
@@ -198,25 +114,6 @@ Veränderliche Daten in der Datenbank
    * Qualifikationen und Freigabeanfragen,
    * Vormerkungen und Übernahmeanfragen,
    * Benachrichtigungen.
-
-.. req:: Termin verweist auf die Schulung des Katalogs
-   :id: REQ_DAT_DB_03
-   :status: draft
-   :priority: high
-   :links: REQ_DAT_DB_02, REQ_DAT_KAT_04
-
-   Ein Termin in der Datenbank verweist über die Schulungs-ID auf seine
-   Schulung im Katalog. Die ID ist damit die Klammer zwischen beiden
-   Ablagen.
-
-.. req:: Verweis auf eine fehlende Schulung wird erkannt
-   :id: REQ_DAT_DB_04
-   :status: draft
-   :links: REQ_DAT_DB_03
-
-   Verweist ein Termin auf eine Schulungs-ID, zu der es keine Katalogdatei
-   gibt, erkennt die Anwendung das und meldet es, statt den Termin
-   stillschweigend ohne Schulungsdaten anzuzeigen.
 
 .. req:: Datenbankdatei ist lokaler Zustand
    :id: REQ_DAT_DB_05

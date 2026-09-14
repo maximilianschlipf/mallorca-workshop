@@ -32,6 +32,7 @@ Kürzel     Bereich
    trainersicht
    abwesenheiten
    katalog
+   katalog-umsetzung
    terminplanung
    assistenz
    vormerkungen
