@@ -102,7 +102,7 @@ class SchulungLebenszyklusApiTest extends KatalogSchreibTest {
 
         assertThat(commitsFuer(katalogdatei("SCH-009"))).hasSize(2);
         assertThat(commits().getFirst().getFullMessage())
-                .isEqualTo("Schulung SCH-009 geloescht");
+                .isEqualTo("Schulung SCH-009 gelöscht");
     }
 
     /**

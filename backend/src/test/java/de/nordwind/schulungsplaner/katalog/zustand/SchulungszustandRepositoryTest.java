@@ -76,6 +76,28 @@ class SchulungszustandRepositoryTest {
                 });
     }
 
+    /**
+     * Ein Zustandssatz kann ohne Katalogdatei zurueckbleiben: Wer den Katalog
+     * ueber das Repository abgleicht (REQ_KAT_ABL_04), entfernt Dateien an der
+     * Anwendung vorbei. Wird die Kennung danach neu angelegt, darf das nicht
+     * an einem Schluesselkonflikt scheitern -- der Katalog entscheidet, was es
+     * gibt, die Datenbank haelt nur fest, was davon angeboten wird.
+     */
+    @Test
+    void shouldReuseALeftoverStateRowInsteadOfFailing() {
+        repository.legeAn(NEU);
+        repository.archiviere(NEU, LocalDate.of(2026, 3, 1));
+
+        repository.legeAn(NEU);
+
+        assertThat(repository.lade(NEU))
+                .get()
+                .satisfies(eintrag -> {
+                    assertThat(eintrag.zustand()).isEqualTo(Schulungszustand.AKTIV);
+                    assertThat(eintrag.archiviertAm()).isNull();
+                });
+    }
+
     @Test
     void shouldRemoveTheState() {
         repository.legeAn(NEU);

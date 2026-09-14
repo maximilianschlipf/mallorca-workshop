@@ -137,7 +137,7 @@ class KategorienApiTest extends KatalogSchreibTest {
 
         assertThat(commitsFuer(kategorienDatei())).hasSize(1);
         assertThat(commits().getFirst().getFullMessage())
-                .isEqualTo("Kategorie 'Cloud & DevOps' geloescht");
+                .isEqualTo("Kategorie 'Cloud & DevOps' gelöscht");
     }
 
     @Test

@@ -107,13 +107,13 @@ public class KategoriePflegeService {
                     Fehlercode.KATEGORIE_IN_GEBRAUCH,
                     "Die Kategorie '" + zuLoeschen + "' ist noch " + zugeordnet.size()
                             + " Schulungen zugeordnet: " + String.join(", ", zugeordnet)
-                            + ". Haenge sie um oder benenne die Kategorie um."));
+                            + ". Hänge sie um oder benenne die Kategorie um."));
         }
 
         Path datei = kategorien.speichere(bestand.stream()
                 .filter(vorhanden -> !vorhanden.equals(zuLoeschen))
                 .toList());
-        committer.sichere("Kategorie '" + zuLoeschen + "' geloescht", List.of(datei));
+        committer.sichere("Kategorie '" + zuLoeschen + "' gelöscht", List.of(datei));
     }
 
     private static void verlangeVorhanden(List<String> bestand, String name) {

@@ -89,7 +89,7 @@ class SchulungBearbeitenApiTest extends KatalogSchreibTest {
 
         assertThat(commitsFuer(katalogdatei("SCH-009"))).hasSize(2);
         assertThat(commits().getFirst().getFullMessage())
-                .isEqualTo("Schulung SCH-009 geaendert");
+                .isEqualTo("Schulung SCH-009 geändert");
     }
 
     @Test

@@ -6,7 +6,7 @@ import java.nio.file.Path;
 public class KatalogSchreibfehler extends RuntimeException {
 
     public KatalogSchreibfehler(Path datei, Throwable ursache) {
-        super("Die Katalogdatei '" + datei + "' liess sich nicht schreiben: "
+        super("Die Katalogdatei '" + datei + "' ließ sich nicht schreiben: "
                 + ursache.getMessage(), ursache);
     }
 }

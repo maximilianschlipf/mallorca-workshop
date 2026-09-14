@@ -80,7 +80,7 @@ public class KatalogRepository {
                     .toList();
         } catch (IOException ex) {
             throw new UncheckedIOException(
-                    "Das Katalogverzeichnis '" + verzeichnis + "' liess sich nicht lesen.", ex);
+                    "Das Katalogverzeichnis '" + verzeichnis + "' ließ sich nicht lesen.", ex);
         }
     }
 

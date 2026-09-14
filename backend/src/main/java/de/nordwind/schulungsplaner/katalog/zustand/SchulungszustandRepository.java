@@ -54,8 +54,24 @@ public class SchulungszustandRepository {
         return nachId;
     }
 
-    /** Eine neu angelegte Schulung ist aktiv (REQ_KAT_PFLEG_01). */
+    /**
+     * Eine neu angelegte Schulung ist aktiv (REQ_KAT_PFLEG_01).
+     *
+     * <p>Ein Zustandssatz zu dieser Kennung kann bereits bestehen, obwohl es
+     * die Schulung im Katalog nicht gibt: Wer den Katalog über das Repository
+     * abgleicht (REQ_KAT_ABL_04), entfernt Dateien an der Anwendung vorbei.
+     * Ein solcher Rest wird übernommen statt zum Fehler zu führen -- der
+     * Katalog entscheidet, was es gibt, die Datenbank hält nur fest, was davon
+     * angeboten wird.
+     */
     public void legeAn(SchulungId id) {
+        int uebernommen = jdbcTemplate.update(
+                "UPDATE schulung_zustand SET zustand = ?, archiviert_am = NULL, "
+                        + "version = version + 1 WHERE schulung_id = ?",
+                Schulungszustand.AKTIV.name(), id.wert());
+        if (uebernommen > 0) {
+            return;
+        }
         jdbcTemplate.update(
                 "INSERT INTO schulung_zustand (schulung_id, zustand, archiviert_am, version) "
                         + "VALUES (?, ?, NULL, 0)",

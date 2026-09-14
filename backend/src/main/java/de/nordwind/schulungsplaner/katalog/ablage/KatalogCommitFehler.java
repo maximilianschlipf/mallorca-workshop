@@ -5,6 +5,6 @@ public class KatalogCommitFehler extends RuntimeException {
 
     public KatalogCommitFehler(String nachricht, Throwable ursache) {
         super("Die Katalogaenderung '" + nachricht
-                + "' liess sich nicht als Commit sichern: " + ursache.getMessage(), ursache);
+                + "' ließ sich nicht als Commit sichern: " + ursache.getMessage(), ursache);
     }
 }

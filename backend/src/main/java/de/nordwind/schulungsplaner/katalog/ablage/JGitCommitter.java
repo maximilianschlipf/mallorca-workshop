@@ -97,7 +97,7 @@ public class JGitCommitter implements KatalogCommitter {
                 .build();
         if (repository.getDirectory() == null || repository.isBare()) {
             repository.close();
-            throw new IOException("Ueber '" + katalogverzeichnis
+            throw new IOException("Über '" + katalogverzeichnis
                     + "' liegt kein Git-Repository mit Arbeitsbaum.");
         }
         return repository;

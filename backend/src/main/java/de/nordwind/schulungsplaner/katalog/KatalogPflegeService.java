@@ -85,7 +85,7 @@ public class KatalogPflegeService {
         if (eingabe.id() != null && !eingabe.id().equals(id.wert())) {
             throw KatalogFehler.abgewiesen(List.of(new Feldfehler(
                     "id", Fehlercode.ID_UNVERAENDERLICH,
-                    "Die Kennung einer Schulung kann nach dem Anlegen nicht geaendert werden. "
+                    "Die Kennung einer Schulung kann nach dem Anlegen nicht geändert werden. "
                             + "Sie benennt die Katalogdatei und bindet die Termine an.")));
         }
 
@@ -93,7 +93,7 @@ public class KatalogPflegeService {
         List<Warnung> warnungen = warneBeiGeaenderterDauer(bisher, geaendert);
 
         Path datei = katalog.speichere(geaendert);
-        committer.sichere("Schulung " + id + " geaendert", List.of(datei));
+        committer.sichere("Schulung " + id + " geändert", List.of(datei));
 
         return new Katalogantwort(ansicht.findeSchulung(id).orElseThrow(), warnungen);
     }
@@ -113,9 +113,9 @@ public class KatalogPflegeService {
         if (termine > 0) {
             warnungen.add(new Warnung(Warnung.Warncode.DAUER_GEAENDERT_MIT_TERMINEN,
                     "Die Dauer wurde von " + bisher.dauerInTagen() + " auf "
-                            + geaendert.dauerInTagen() + " Tage geaendert. Zu dieser Schulung "
+                            + geaendert.dauerInTagen() + " Tage geändert. Zu dieser Schulung "
                             + "bestehen bereits " + termine + " Termine; sie behalten ihren "
-                            + "Zeitraum. Die neue Dauer gilt fuer neu angelegte Termine."));
+                            + "Zeitraum. Die neue Dauer gilt für neu angelegte Termine."));
         }
         return warnungen;
     }
@@ -170,7 +170,7 @@ public class KatalogPflegeService {
 
         Path datei = katalog.dateiFuer(id);
         katalog.loesche(id);
-        committer.sichere("Schulung " + id + " geloescht", List.of(datei));
+        committer.sichere("Schulung " + id + " gelöscht", List.of(datei));
     }
 
     private void verlangeLoeschbar(SchulungId id, Katalogschulung schulung) {
@@ -188,10 +188,10 @@ public class KatalogPflegeService {
         }
         throw KatalogFehler.konflikt(new Feldfehler("id",
                 Fehlercode.SCHULUNG_NICHT_LOESCHBAR,
-                "Zur Schulung '" + schulung.id() + "' bestehen Termine. Loeschen ist nur "
-                        + "moeglich, solange kein Termin besteht, oder wenn die Schulung "
+                "Zur Schulung '" + schulung.id() + "' bestehen Termine. Löschen ist nur "
+                        + "möglich, solange kein Termin besteht, oder wenn die Schulung "
                         + "seit mindestens sechs Monaten archiviert ist. Eine aktive "
-                        + "Schulung mit Terminen wird archiviert, nicht geloescht."));
+                        + "Schulung mit Terminen wird archiviert, nicht gelöscht."));
     }
 
     private void verlangeImKatalog(SchulungId id) {

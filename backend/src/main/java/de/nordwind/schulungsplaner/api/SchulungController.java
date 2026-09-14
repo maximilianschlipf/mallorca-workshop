@@ -111,7 +111,7 @@ public class SchulungController {
             return new String(datei.getBytes(), StandardCharsets.UTF_8);
         } catch (IOException ex) {
             throw new UncheckedIOException(
-                    "Die Datei '" + datei.getOriginalFilename() + "' liess sich nicht lesen.",
+                    "Die Datei '" + datei.getOriginalFilename() + "' ließ sich nicht lesen.",
                     ex);
         }
     }

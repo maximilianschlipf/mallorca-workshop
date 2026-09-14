@@ -41,7 +41,7 @@ public class KatalogRegeln {
             throw KatalogFehler.konflikt(new Feldfehler("schulungId",
                     Fehlercode.SCHULUNG_ARCHIVIERT,
                     "Die Schulung '" + id + "' ist archiviert. Zu einer archivierten "
-                            + "Schulung koennen keine neuen Termine angelegt werden."));
+                            + "Schulung können keine neuen Termine angelegt werden."));
         }
     }
 

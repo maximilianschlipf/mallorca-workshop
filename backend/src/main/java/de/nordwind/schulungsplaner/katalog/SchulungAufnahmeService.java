@@ -88,8 +88,8 @@ public class SchulungAufnahmeService {
             return Aufnahmebericht.Eintrag.entscheidungOffen(datei.dateiname(), schulung.id(),
                     new Feldfehler("id", Fehlercode.ID_VERGEBEN,
                             "Die Schulungs-ID '" + schulung.id() + "' ist bereits vergeben. "
-                                    + "Die bestehende Schulung bleibt unveraendert, bis Du "
-                                    + "das Ersetzen ausdruecklich verlangst."));
+                                    + "Die bestehende Schulung bleibt unverändert, bis Du "
+                                    + "das Ersetzen ausdrücklich verlangst."));
         }
 
         geschrieben.add(katalog.speichere(schulung));

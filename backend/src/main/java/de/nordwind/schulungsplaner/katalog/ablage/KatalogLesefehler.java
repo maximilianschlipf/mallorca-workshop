@@ -15,7 +15,7 @@ public class KatalogLesefehler extends RuntimeException {
     private final transient Path datei;
 
     public KatalogLesefehler(Path datei, Throwable ursache) {
-        super("Die Katalogdatei '" + datei + "' liess sich nicht lesen: "
+        super("Die Katalogdatei '" + datei + "' ließ sich nicht lesen: "
                 + ursache.getMessage(), ursache);
         this.datei = datei;
     }

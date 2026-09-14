@@ -111,7 +111,7 @@ class SchulungPruefungTest {
                     .satisfies(f -> {
                         assertThat(f.feld()).isEqualTo("id");
                         assertThat(f.code()).isEqualTo(Fehlercode.ID_UNERLAUBTE_ZEICHEN);
-                        assertThat(f.meldung()).contains("Grossbuchstaben", "Ziffern", "Bindestriche");
+                        assertThat(f.meldung()).contains("Großbuchstaben", "Ziffern", "Bindestriche");
                     });
         }
     }

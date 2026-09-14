@@ -51,7 +51,7 @@ public final class SchulungPruefung {
         }
         if (!SchulungId.istGueltig(wert)) {
             fehler.add(new Feldfehler("id", Fehlercode.ID_UNERLAUBTE_ZEICHEN,
-                    "Die Schulungs-ID '" + wert + "' ist unzulaessig. " + SchulungId.REGEL));
+                    "Die Schulungs-ID '" + wert + "' ist unzulässig. " + SchulungId.REGEL));
             return null;
         }
         return SchulungId.von(wert);
@@ -68,7 +68,7 @@ public final class SchulungPruefung {
         if (!bekannte.contains(getrimmt)) {
             fehler.add(new Feldfehler("kategorie", Fehlercode.KATEGORIE_UNBEKANNT,
                     "Die Kategorie '" + getrimmt + "' steht nicht in der Kategorienliste. "
-                            + "Eine neue Kategorie entsteht nur ueber die Pflege der Liste."));
+                            + "Eine neue Kategorie entsteht nur über die Pflege der Liste."));
             return null;
         }
         return getrimmt;
@@ -81,7 +81,7 @@ public final class SchulungPruefung {
         }
         if (werte.stream().anyMatch(SchulungPruefung::istLeer)) {
             fehler.add(new Feldfehler("voraussetzungen", Fehlercode.VORAUSSETZUNG_LEER,
-                    "Eine Voraussetzung ohne Text ist nicht zulaessig. "
+                    "Eine Voraussetzung ohne Text ist nicht zulässig. "
                             + "Ohne Voraussetzungen bleibt die Liste leer."));
             return List.of();
         }
@@ -96,7 +96,7 @@ public final class SchulungPruefung {
         }
         if (wert < 1) {
             fehler.add(new Feldfehler("dauerInTagen", Fehlercode.DAUER_ZU_KLEIN,
-                    "Die Dauer betraegt mindestens einen Tag, angegeben war " + wert + "."));
+                    "Die Dauer beträgt mindestens einen Tag, angegeben war " + wert + "."));
             return null;
         }
         return wert;
@@ -131,14 +131,14 @@ public final class SchulungPruefung {
         if (wert < 0) {
             fehler.add(new Feldfehler("maxTeilnehmerOeffentlich",
                     Fehlercode.TEILNEHMERZAHL_NEGATIV,
-                    "Die Hoechstteilnehmerzahl kann nicht negativ sein, angegeben war "
+                    "Die Höchstteilnehmerzahl kann nicht negativ sein, angegeben war "
                             + wert + "."));
             return null;
         }
         if (mindest != null && wert <= mindest) {
             fehler.add(new Feldfehler("maxTeilnehmerOeffentlich",
                     Fehlercode.HOECHSTZAHL_NICHT_UEBER_MINDESTZAHL,
-                    "Die Hoechstteilnehmerzahl " + wert + " muss ueber der "
+                    "Die Höchstteilnehmerzahl " + wert + " muss über der "
                             + "Mindestteilnehmerzahl " + mindest + " liegen."));
             return null;
         }

@@ -22,12 +22,12 @@ public record SchulungId(String wert) implements Comparable<SchulungId> {
     public SchulungId {
         if (!istGueltig(wert)) {
             throw new IllegalArgumentException(
-                    "Unzulaessige Schulungs-ID: '" + wert + "'. " + REGEL);
+                    "Unzulässige Schulungs-ID: '" + wert + "'. " + REGEL);
         }
     }
 
     public static final String REGEL =
-            "Erlaubt sind Grossbuchstaben, Ziffern und Bindestriche, hoechstens "
+            "Erlaubt sind Großbuchstaben, Ziffern und Bindestriche, höchstens "
                     + MAX_LAENGE + " Zeichen.";
 
     public static SchulungId von(String wert) {
