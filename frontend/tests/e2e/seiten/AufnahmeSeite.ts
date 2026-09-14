@@ -38,8 +38,13 @@ export class AufnahmeSeite extends Seite {
     return this.page.getByTestId("aufnahmebericht");
   }
 
+  /**
+   * Der Bericht zu einer Datei. Über das Datenmerkmal und nicht über die
+   * Rolle: Die Begründungen darunter sind selbst Listeneinträge, und der
+   * Dateiname steht in beiden.
+   */
   eintrag(dateiname: string): Locator {
-    return this.bericht.getByRole("listitem").filter({ hasText: dateiname });
+    return this.bericht.locator(`[data-datei="${dateiname}"]`);
   }
 }
 
