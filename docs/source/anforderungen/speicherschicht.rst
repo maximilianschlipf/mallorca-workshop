@@ -190,7 +190,7 @@ Veränderliche Daten in der Datenbank
 
    In der Datenbank liegen alle veränderlichen Daten:
 
-   * Benutzerkonten, Rollen und Trainerprofile,
+   * Benutzerkonten und ihre Rollen,
    * Abwesenheiten und Abwesenheitsanträge,
    * den Zustand einer Schulung (aktiv oder archiviert),
    * Termine und Trainerzuweisungen,

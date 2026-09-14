@@ -16,9 +16,9 @@ _Avoid_: Planer, Admin-User
 Das eine Benutzerkonto, das eine Instanz dauerhaft handlungsfähig hält. Es trägt stets auch die Administratorrolle, kann weder stillgelegt noch gelöscht werden und gibt die Rolle nur weiter, statt sie abzulegen. Zu jedem Zeitpunkt gibt es genau einen.
 _Avoid_: Owner, Superadmin, Hauptadministrator
 
-**Trainerprofil**:
-Die fachlichen Daten eines Trainers einschließlich Qualifikationen und Abwesenheiten. Ein Trainerprofil gehört zu genau einem Benutzerkonto.
-_Avoid_: Trainerkonto, Trainer-User
+**Trainer**:
+Ein Benutzerkonto mit der Rolle Trainer. Es kann jederzeit assistieren und eine Schulung halten, sobald es für sie qualifiziert ist. Ein gesondertes Trainerprofil gibt es nicht — Qualifikationen stehen an der Schulung, Abwesenheiten sind eigene Datensätze.
+_Avoid_: Trainerprofil, Trainerkonto, Trainer-User
 
 **Schulung**:
 Ein wiederverwendbares Weiterbildungsangebot mit Titel, Inhalt, Kategorie und Voraussetzungen.

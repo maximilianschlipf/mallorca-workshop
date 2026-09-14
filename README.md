@@ -159,13 +159,13 @@ Der Grund für die Trennung: Eine Katalogänderung ist eine seltene, bewusste Ha
 
 Gleichzeitiges Bearbeiten wird optimistisch aufgelöst: Jeder Datensatz führt einen Änderungszähler, und ein Speichern auf einem überholten Stand wird abgewiesen. Gesperrt wird nichts; wer einen Datensatz offen hat, erscheint als Hinweis.
 
-Qualifikationen werden an der Schulung geführt, nicht am Trainerprofil.
+Qualifikationen werden an der Schulung geführt, nicht am Benutzerkonto.
 
 Die Entscheidungen dazu stehen als `DEC_DAT_ABLAGE_02`, `DEC_DAT_SCHNITT_01`, `DEC_DAT_SCHEMA_01` und `DEC_DAT_NEBEN_01` in den Anforderungen.
 
 ### Berechtigungen
 
-Ein Benutzerkonto trägt eine **Menge** von Rollen: Trainer, Administrator, oder beide. Die Tabelle beschreibt die einzelne Rolle; wer mehrere trägt, erhält die Summe der Spalten. Der Normalfall für einen Administrator ist, zusätzlich Trainer zu sein — nur so hat er ein Trainerprofil, Qualifikationen und eigene Abwesenheiten.
+Ein Benutzerkonto trägt eine **Menge** von Rollen: Trainer, Administrator, oder beide. Die Tabelle beschreibt die einzelne Rolle; wer mehrere trägt, erhält die Summe der Spalten. Der Normalfall für einen Administrator ist, zusätzlich Trainer zu sein — nur so kann er qualifiziert werden, assistieren und eigene Abwesenheiten führen.
 
 | Aktion                                  | Eigentümer | Administrator | Trainer |
 | --------------------------------------- | :--------: | :-----------: | :-----: |

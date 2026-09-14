@@ -27,6 +27,7 @@ Kürzel     Bereich
 
    speicherschicht
    benutzerkonten
+   benutzerkonten-umsetzung
    qualifikationen
    trainersicht
    abwesenheiten

@@ -1,6 +1,62 @@
 Benutzerkonten und Anmeldung
 ============================
 
+Es gibt genau eine Art von Konto. Was jemand darf, ergibt sich aus seinen
+Rollen -- ein gesondertes Trainerprofil gibt es nicht.
+
+Konto und Profil
+----------------
+
+.. req:: Benutzerkonto mit Profil
+   :id: REQ_USR_PROF_01
+   :status: approved
+   :priority: high
+   :component: backend
+
+   Ein Benutzerkonto besteht aus:
+
+   * **E-Mail-Adresse** -- zugleich Anmeldekennung,
+   * **Name**,
+   * **Passwort** -- gespeichert als Hash mit Salt,
+   * **Rollen** -- eine Menge aus Trainer, Administrator und Eigentümer,
+   * **Zustand** -- aktiv oder stillgelegt.
+
+   Weitere Daten hängen nicht am Konto: Qualifikationen stehen an der
+   Schulung, Abwesenheiten und Zuweisungen sind eigene Datensätze mit einem
+   Verweis auf das Konto.
+
+.. req:: Zustände eines Benutzerkontos
+   :id: REQ_USR_PROF_02
+   :status: approved
+   :priority: high
+   :links: REQ_USR_PROF_01
+
+   Ein Benutzerkonto ist **aktiv** oder **stillgelegt**. Nur ein aktives
+   Konto kann sich anmelden. Löschen ist kein Zustand, sondern entfernt das
+   Konto.
+
+.. req:: E-Mail-Adresse ist unveränderlich
+   :id: REQ_USR_PROF_03
+   :status: approved
+   :priority: high
+   :links: REQ_USR_PROF_01
+
+   Die E-Mail-Adresse eines Kontos kann nach der Registrierung nicht mehr
+   geändert werden. Sie ist die eindeutige Kennung des Kontos.
+
+   Sie ist ausdrücklich keine zugesicherte Zustellanschrift: Es wird nichts
+   an sie versandt und sie wird nicht geprüft. Soll ein Konto später auf eine
+   andere Adresse wandern, wäre der Weg ein Export und Import des Profils --
+   das ist noch nicht ausgearbeitet.
+
+.. req:: Name ist änderbar
+   :id: REQ_USR_PROF_04
+   :status: approved
+   :links: REQ_USR_PROF_01
+
+   Ein Benutzer kann seinen eigenen Namen ändern. Der Name ist keine Kennung
+   und muss nicht eindeutig sein.
+
 Rollenmodell
 ------------
 
@@ -10,12 +66,11 @@ Rollenmodell
 
    Ein Benutzerkonto hält eine Menge von Rollen, nicht genau eine. Ein
    Benutzerkonto kann die Rolle Trainer tragen, die Rolle Administrator oder
-   beide. Trägt es beide, besitzt es ein eigenes Trainerprofil und kann
-   Schulungen halten.
+   beide.
 
    Die Alternative -- genau eine Rolle, bei der "Administrator" die
    Trainerrechte implizit einschließt -- wurde verworfen, weil ein
-   Administrator ohne Trainerprofil keine Qualifikationen und keine
+   Administrator ohne Trainerrolle keine Qualifikationen und keine
    Abwesenheiten führen könnte.
 
 .. decision:: Eigentümer als Sicherung gegen das Aussperren
@@ -57,77 +112,105 @@ Rollenmodell
 
 .. req:: Rollen Trainer, Administrator und Eigentümer
    :id: REQ_USR_ROLLE_01
-   :status: draft
-   :links: DEC_USR_ROLLE_01
+   :status: approved
+   :priority: high
+   :links: DEC_USR_ROLLE_01, REQ_USR_PROF_01
 
    Ein Benutzerkonto trägt mindestens eine der Rollen Trainer,
    Administrator oder Eigentümer. Die Rolle Administrator umfasst die
-   Verwaltung von Schulungskatalog, Terminen, Qualifikationen und
-   Abwesenheitsanträgen.
+   Verwaltung von Schulungskatalog, Terminen, Qualifikationen,
+   Abwesenheitsanträgen und Teilnehmerbuchungen.
 
-.. req:: Administrator mit Trainerprofil
+.. req:: Was die Trainerrolle erlaubt
+   :id: REQ_USR_ROLLE_08
+   :status: approved
+   :priority: high
+   :links: REQ_USR_ROLLE_01, REQ_QUA_UMF_01
+
+   Die Trainerrolle erlaubt zweierlei mit unterschiedlicher Voraussetzung:
+
+   * **Assistieren** -- jederzeit, ohne Qualifikation,
+   * **eine Schulung halten** -- nur mit einer bestätigten Qualifikation für
+     diese Schulung.
+
+   Ein frisch registriertes Konto kann damit sofort mitarbeiten, ohne schon
+   qualifiziert zu sein.
+
+.. req:: Administrator mit Trainerrolle
    :id: REQ_USR_ROLLE_02
-   :status: draft
+   :status: approved
    :links: DEC_USR_ROLLE_01
 
    Trägt ein Benutzerkonto Administrator- und Trainerrolle, stehen ihm die
-   Trainerfunktionen in vollem Umfang zur Verfügung: es besitzt ein
-   Trainerprofil, kann für Schulungen qualifiziert werden, Abwesenheiten
-   pflegen und Terminen zugewiesen werden. Das ist der Normalfall für
-   Administratoren.
+   Trainerfunktionen in vollem Umfang zur Verfügung: Es kann für Schulungen
+   qualifiziert werden, Abwesenheiten pflegen und Terminen zugewiesen
+   werden. Das ist der Normalfall für Administratoren.
 
 .. req:: Administratorrolle vergeben
    :id: REQ_USR_ROLLE_03
-   :status: draft
+   :status: approved
    :links: DEC_USR_ROLLE_01
 
    Ein Administrator kann einem anderen Benutzerkonto die Rolle
    Administrator erteilen. Bestehende Rollen des Kontos bleiben dabei
    erhalten.
 
-.. req:: Rollen entziehen
+.. req:: Administratorrolle entzieht nur der Eigentümer
    :id: REQ_USR_ROLLE_04
-   :status: draft
-   :links: REQ_USR_ROLLE_03
+   :status: approved
+   :priority: high
+   :links: REQ_USR_ROLLE_03, DEC_USR_EIGT_01
 
-   Ein Administrator kann einem Benutzerkonto die Rolle Administrator oder
-   die Rolle Trainer wieder entziehen.
+   Die Rolle Administrator kann ausschließlich der Eigentümer entziehen.
+
+   Dürften Administratoren einander entmachten, könnten sich zwei
+   gegenseitig die Rolle nehmen; der Eigentümer als einzige entziehende
+   Stelle macht daraus eine eindeutige Zuständigkeit.
+
+.. req:: Trainerrolle entziehen
+   :id: REQ_USR_ROLLE_09
+   :status: approved
+   :links: REQ_USR_ROLLE_01
+
+   Ein Administrator kann einem Benutzerkonto die Rolle Trainer entziehen.
 
 .. req:: Ein Konto behält mindestens eine Rolle
    :id: REQ_USR_ROLLE_05
-   :status: draft
-   :links: REQ_USR_ROLLE_04
+   :status: approved
+   :priority: high
+   :links: REQ_USR_ROLLE_04, REQ_USR_ROLLE_09
 
    Das Entziehen der letzten Rolle eines Kontos wird abgewiesen. Ein Konto
    ohne Rolle könnte sich anmelden, aber nichts tun.
 
 .. req:: Reines Administratorkonto
    :id: REQ_USR_ROLLE_06
-   :status: draft
-   :links: REQ_USR_ROLLE_04
+   :status: approved
+   :links: REQ_USR_ROLLE_09
 
    Ein Konto, dem die Trainerrolle entzogen wurde, ist ein reines
-   Administratorkonto: ohne Trainerprofil, ohne Qualifikationen, keinem
-   Termin zuweisbar. Der Weg dorthin führt über Registrieren, Ernennen zum
-   Administrator und Ablegen der Trainerrolle.
+   Administratorkonto: ohne Qualifikationen, weder als Trainer noch als
+   Assistent einem Termin zuweisbar. Der Weg dorthin führt über
+   Registrieren, Ernennen zum Administrator und Ablegen der Trainerrolle.
 
 .. req:: Entzug der Trainerrolle löst Zuweisungen
    :id: REQ_USR_ROLLE_07
-   :status: draft
+   :status: approved
    :priority: high
-   :links: REQ_USR_ROLLE_06
+   :links: REQ_USR_ROLLE_06, REQ_ASS_PLATZ_01
 
-   Wird einem Konto die Trainerrolle entzogen, wird es aus allen
-   zukünftigen Terminen herausgenommen, denen es zugewiesen ist. Diese
-   Termine wechseln in den Zustand "nicht zugewiesen". Bei abgeschlossenen
-   Terminen bleibt es eingetragen.
+   Wird einem Konto die Trainerrolle entzogen, wird es aus allen zukünftigen
+   Terminen herausgenommen, denen es zugewiesen ist -- als ausführender
+   Trainer wie als Assistent. Termine ohne Trainer wechseln in den Zustand
+   "nicht zugewiesen", frei gewordene Assistenzplätze stehen wieder offen.
+   Bei abgeschlossenen Terminen bleibt es eingetragen.
 
 Eigentümer
 ----------
 
 .. req:: Erstes Konto erhält alle Rollen
    :id: REQ_USR_EIGT_01
-   :status: draft
+   :status: approved
    :priority: high
    :links: DEC_USR_EIGT_01
 
@@ -137,7 +220,7 @@ Eigentümer
 
 .. req:: Genau ein Eigentümer
    :id: REQ_USR_EIGT_02
-   :status: draft
+   :status: approved
    :priority: high
    :links: DEC_USR_EIGT_01
 
@@ -145,7 +228,7 @@ Eigentümer
 
 .. req:: Eigentümerrolle weitergeben
    :id: REQ_USR_EIGT_03
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_USR_EIGT_02
 
@@ -155,7 +238,7 @@ Eigentümer
 
 .. req:: Eigentümer behält die Administratorrolle
    :id: REQ_USR_EIGT_04
-   :status: draft
+   :status: approved
    :links: REQ_USR_EIGT_02
 
    Solange ein Konto die Rolle Eigentümer trägt, trägt es auch die Rolle
@@ -163,7 +246,7 @@ Eigentümer
 
 .. req:: Eigentümerkonto ist geschützt
    :id: REQ_USR_EIGT_05
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_USR_EIGT_03
 
@@ -191,16 +274,16 @@ Anmeldung
 
 .. req:: Anmeldung mit E-Mail und Passwort
    :id: REQ_USR_LOGIN_01
-   :status: draft
+   :status: approved
    :priority: high
+   :links: REQ_USR_PROF_01
 
    Ein Benutzerkonto meldet sich mit seiner E-Mail-Adresse und einem
-   Passwort an. Die E-Mail-Adresse ist die Anmeldekennung und über alle
-   Benutzerkonten eindeutig.
+   Passwort an. Die E-Mail-Adresse ist über alle Benutzerkonten eindeutig.
 
 .. req:: Zugriff nur nach Anmeldung
    :id: REQ_USR_LOGIN_02
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_USR_LOGIN_01
 
@@ -208,17 +291,39 @@ Anmeldung
 
 .. req:: Passwörter nur als gesalzener Hash
    :id: REQ_USR_LOGIN_03
-   :status: draft
+   :status: approved
    :priority: high
-   :links: REQ_USR_LOGIN_01
+   :component: backend
+   :links: REQ_USR_PROF_01
 
    Ein Passwort wird niemals im Klartext gespeichert, sondern ausschließlich
    als Hash mit einem je Konto eigenen Salt. In der Datenbank steht nur der
    Hash.
 
+.. req:: Fehlgeschlagene Anmeldung
+   :id: REQ_USR_LOGIN_06
+   :status: approved
+   :priority: high
+   :links: REQ_USR_LOGIN_01, DEC_USR_SICHER_01
+
+   Stimmen E-Mail-Adresse und Passwort nicht überein, wird die Anmeldung mit
+   einer Meldung abgewiesen, die offen lässt, welches von beidem falsch war.
+   Es gibt keine Sperre nach mehreren Fehlversuchen.
+
+.. req:: Anmeldung eines stillgelegten Kontos
+   :id: REQ_USR_LOGIN_07
+   :status: approved
+   :priority: high
+   :links: REQ_USR_LOGIN_01, REQ_USR_PROF_02
+
+   Ein stillgelegtes Konto kann sich auch mit richtigem Passwort nicht
+   anmelden. Ihm wird gesagt, dass das Konto stillgelegt ist, damit es sich
+   an einen Administrator wenden kann statt das Passwort für falsch zu
+   halten.
+
 .. req:: Sitzung endet mit dem Browser
    :id: REQ_USR_LOGIN_04
-   :status: draft
+   :status: approved
    :links: REQ_USR_LOGIN_01
 
    Eine Anmeldung gilt, bis der Browser geschlossen wird. Es gibt keine
@@ -226,71 +331,105 @@ Anmeldung
 
 .. req:: Abmelden
    :id: REQ_USR_LOGIN_05
-   :status: draft
+   :status: approved
    :links: REQ_USR_LOGIN_04
 
    Ein angemeldeter Benutzer kann sich abmelden, ohne den Browser zu
    schließen.
 
+Passwort
+--------
+
 .. req:: Passwort ändern
    :id: REQ_USR_PWD_01
-   :status: draft
+   :status: approved
+   :priority: high
    :links: REQ_USR_LOGIN_03
 
-   Ein angemeldeter Benutzer kann sein eigenes Passwort ändern.
+   Ein angemeldeter Benutzer kann sein eigenes Passwort ändern. Dabei gibt
+   er sein bisheriges Passwort an; stimmt es nicht, wird die Änderung
+   abgewiesen.
 
 .. req:: Passwort durch Administrator setzen
    :id: REQ_USR_PWD_02
-   :status: draft
+   :status: approved
+   :priority: high
    :links: DEC_USR_SICHER_01
 
-   Ein Administrator kann für ein Benutzerkonto ein neues Passwort setzen.
-   Das ist der einzige Weg zurück in ein Konto mit vergessenem Passwort.
+   Ein Administrator kann für ein Benutzerkonto ein neues Passwort setzen,
+   ohne das bisherige zu kennen. Das ist der einzige Weg zurück in ein Konto
+   mit vergessenem Passwort.
+
+.. req:: Das Eigentümerpasswort setzt nur der Eigentümer
+   :id: REQ_USR_PWD_03
+   :status: approved
+   :priority: high
+   :links: REQ_USR_PWD_02, REQ_USR_EIGT_05
+
+   Für das Konto mit der Rolle Eigentümer kann kein Administrator ein
+   Passwort setzen. Nur der Eigentümer selbst ändert es.
+
+   Ohne diese Regel wäre der Schutz des Eigentümerkontos wirkungslos: Ein
+   Administrator setzte ein neues Passwort, meldete sich an und gäbe sich
+   die Rolle selbst weiter.
 
 Registrierung
 -------------
 
-.. req:: Selbstregistrierung als Trainer
+.. req:: Selbstregistrierung
    :id: REQ_USR_REG_01
-   :status: draft
+   :status: approved
+   :priority: high
 
-   Eine Person kann sich ohne Zutun eines Administrators selbst als Trainer
-   registrieren. Dabei entsteht ein Benutzerkonto mit der Rolle Trainer und
-   ein zugehöriges Trainerprofil.
+   Eine Person kann sich ohne Zutun eines Administrators selbst
+   registrieren. Dabei entsteht ein aktives Benutzerkonto mit der Rolle
+   Trainer.
 
 .. req:: Angaben bei der Registrierung
    :id: REQ_USR_REG_04
-   :status: draft
-   :links: REQ_USR_REG_01
+   :status: approved
+   :priority: high
+   :links: REQ_USR_REG_01, REQ_USR_PROF_01
 
    Die Registrierung verlangt Name, E-Mail-Adresse und Passwort. Weitere
    Angaben sind nicht nötig.
 
-.. req:: Trainerkonto ist sofort nutzbar
+.. req:: Bereits vergebene E-Mail-Adresse
+   :id: REQ_USR_REG_05
+   :status: approved
+   :priority: high
+   :links: REQ_USR_REG_04, REQ_USR_LOGIN_01
+
+   Ist die angegebene E-Mail-Adresse bereits vergeben, wird die
+   Registrierung abgewiesen und darauf hingewiesen. Es entsteht kein
+   zweites Konto zur selben Adresse.
+
+.. req:: Konto ist sofort nutzbar
    :id: REQ_USR_REG_02
-   :status: draft
+   :status: approved
    :links: REQ_USR_REG_01
 
-   Ein neu registriertes Trainerkonto ist unmittelbar nach der Registrierung
+   Ein neu registriertes Konto ist unmittelbar nach der Registrierung
    anmeldbar. Es wartet auf keine Freischaltung durch einen Administrator.
 
-.. req:: Neues Trainerkonto ohne Qualifikationen
+.. req:: Neues Konto ohne Qualifikationen
    :id: REQ_USR_REG_03
-   :status: draft
-   :links: REQ_USR_REG_02
+   :status: approved
+   :links: REQ_USR_REG_02, REQ_USR_ROLLE_08
 
-   Ein neu registriertes Trainerkonto besitzt keine Qualifikationen. Es kann
-   den Schulungskatalog einsehen und sich auf Qualifikationen bewerben, kann
-   aber keinem Termin zugewiesen werden, solange keine Qualifikation
-   vorliegt.
+   Ein neu registriertes Konto besitzt keine Qualifikationen. Es kann den
+   Schulungskatalog einsehen, sich auf Qualifikationen bewerben und auf
+   Assistenzplätze bewerben, kann aber keinen Termin als ausführender
+   Trainer übernehmen.
 
 Konto beenden
 -------------
 
 .. req:: Benutzerkonto stilllegen
    :id: REQ_USR_ENDE_01
-   :status: draft
+   :status: approved
    :priority: low
+   :links: REQ_USR_PROF_02
 
    Ein Administrator kann ein Benutzerkonto stilllegen. Ein stillgelegtes
    Konto kann sich nicht mehr anmelden, bleibt aber mit allen Daten
@@ -298,13 +437,13 @@ Konto beenden
 
 .. req:: Stilllegen löst zukünftige Zuweisungen
    :id: REQ_USR_ENDE_04
-   :status: draft
+   :status: approved
    :priority: high
-   :links: REQ_USR_ENDE_01
+   :links: REQ_USR_ENDE_01, REQ_ASS_PLATZ_01
 
    Beim Stilllegen wird das Konto aus allen zukünftigen Terminen
-   herausgenommen, denen es zugewiesen ist; diese wechseln in den Zustand
-   "nicht zugewiesen". Bei abgeschlossenen Terminen bleibt es eingetragen.
+   herausgenommen, denen es zugewiesen ist -- als ausführender Trainer wie
+   als Assistent. Bei abgeschlossenen Terminen bleibt es eingetragen.
 
    Ohne diese Regel hätte ein zukünftiger Termin einen Trainer, der sich
    nicht mehr anmelden kann, und er erschiene dem Administrator nicht unter
@@ -312,7 +451,7 @@ Konto beenden
 
 .. req:: Stillgelegtes Konto reaktivieren
    :id: REQ_USR_ENDE_05
-   :status: draft
+   :status: approved
    :priority: low
    :links: REQ_USR_ENDE_01
 
@@ -322,32 +461,32 @@ Konto beenden
 
 .. req:: Benutzerkonto löschen
    :id: REQ_USR_ENDE_02
-   :status: draft
+   :status: approved
    :priority: low
    :links: REQ_USR_ENDE_01
 
-   Ein Administrator kann ein Benutzerkonto löschen. Das Konto verschwindet
-   samt Trainerprofil, Qualifikationen, Vormerkungen, offenen Anfragen und
-   Abwesenheiten.
+   Ein Administrator kann ein Benutzerkonto löschen. Es verschwindet samt
+   seinen Qualifikationen, Vormerkungen, Assistenzbewerbungen, offenen
+   Anfragen, Abwesenheiten und Benachrichtigungen.
 
 .. req:: Termine verlieren durch Löschen ihren Trainer
    :id: REQ_USR_ENDE_03
-   :status: draft
+   :status: approved
    :priority: low
-   :links: REQ_USR_ENDE_02
+   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01
 
    War das gelöschte Konto einem zukünftigen Termin zugewiesen, wechselt
-   dieser Termin in den Zustand "nicht zugewiesen" und erscheint wieder
-   unter den Terminen ohne Trainer.
+   dieser in den Zustand "nicht zugewiesen"; war es dort Assistent, wird der
+   Assistenzplatz wieder frei.
 
 .. req:: Historie behält den Namen
    :id: REQ_USR_ENDE_06
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_USR_ENDE_02
 
-   Bei abgeschlossenen Terminen wird die Trainerzuweisung beim Löschen von
-   einem Verweis auf das Konto in den reinen Namen umgeschrieben. Die
-   Angabe, wer eine Schulung gehalten hat, überlebt damit das Löschen, ohne
-   dass das Konto selbst weiterbestehen muss. Das Löschen wird deswegen
-   nicht verweigert.
+   Bei abgeschlossenen Terminen wird die Zuweisung beim Löschen von einem
+   Verweis auf das Konto in den reinen Namen umgeschrieben. Die Angabe, wer
+   eine Schulung gehalten hat, überlebt damit das Löschen, ohne dass das
+   Konto selbst weiterbestehen muss. Das Löschen wird deswegen nicht
+   verweigert.
