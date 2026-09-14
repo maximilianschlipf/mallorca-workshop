@@ -47,6 +47,20 @@ Backend: http://localhost:18081
 
 ## Verifizieren
 
+Der vollständige Abschluss-Check wird aus dem Projektverzeichnis gestartet:
+
+```bash
+./verify.sh
+```
+
+Er erzeugt zuerst die Traceability-Matrix aus den freigegebenen Requirements
+und ihren echten Testnachweisen. Offene oder nur teilweise geprüfte
+`TEST_*`-Szenarien brechen den Check ab. Erst danach laufen Dokumentation,
+Backendtests, Frontendtests, Build und ein isolierter E2E-Lauf. Lokale Server
+müssen dafür beendet sein.
+
+Einzelne Prüfschritte lassen sich weiterhin separat ausführen:
+
 ```bash
 cd backend
 ./mvnw test

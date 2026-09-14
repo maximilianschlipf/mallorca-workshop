@@ -610,6 +610,18 @@ Profil
    Ein Benutzer ändert seinen Namen auf einen bereits von einem anderen
    Konto verwendeten. Die Änderung gelingt.
 
+.. test:: Benutzerkonten-Hauptablauf funktioniert im Browser
+   :id: TEST_USR_E2E_01
+   :status: approved
+   :automated: yes
+   :level: e2e
+   :verifies: REQ_USR_EIGT_01, REQ_USR_REG_01, REQ_USR_LOGIN_01, REQ_USR_LOGIN_05, REQ_USR_PWD_01, REQ_USR_ROLLE_03, REQ_USR_PROF_04
+
+   Auf einer frischen Instanz wird das erste Eigentümerkonto registriert.
+   Danach werden ein zweites Konto, Anmeldung, Kontenverwaltung, Profil- und
+   Passwortänderung und Abmeldung über die sichtbare Browseroberfläche
+   erfolgreich durchlaufen.
+
 Abdeckung
 ---------
 
