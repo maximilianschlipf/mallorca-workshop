@@ -3,6 +3,17 @@
 Branch `schulungskatalog`. Grundlage: `docs/source/anforderungen/katalog.rst`
 (Anforderungen) und `katalog-umsetzung.rst` (Stories und Tests).
 
+## Stand
+
+Schritte 0 bis 8 sind umgesetzt. 162 Backendtests, 10 Vitest- und 5 E2E-Tests
+grün; `make html` läuft mit `-W` durch.
+
+Von den 45 spezifizierten Tests stehen 38 auf `verified`. Offen bleiben die
+fünf, die gegen noch nicht gebaute Bereiche prüfen, dazu `TEST_KAT_ABL_04`
+(nicht automatisiert) und `TEST_KAT_ARCH_02`, das zur Hälfte umgesetzt ist.
+
+Offen aus dem Plan: das Frontend, siehe unten.
+
 ## Getroffene Entscheidungen
 
 | Frage | Entscheidung |
