@@ -1,4 +1,15 @@
-import type { Benutzerkonto, Rolle, Schulung, Trainer } from "./types";
+import type {
+  Aufnahmebericht,
+  Benutzerkonto,
+  Feldfehler,
+  Katalogantwort,
+  Kennungsschema,
+  Rolle,
+  Schulung,
+  Schulungseingabe,
+  Trainer,
+  VerwaisterTermin,
+} from "./types";
 
 export class ApiError extends Error {
   status: number;
@@ -11,11 +22,33 @@ export class ApiError extends Error {
   }
 }
 
+export class ApiFehler extends Error {
+  readonly status: number;
+  readonly fehler: Feldfehler[];
+
+  constructor(status: number, fehler: Feldfehler[], meldung: string) {
+    super(meldung);
+    this.name = "ApiFehler";
+    this.status = status;
+    this.fehler = fehler;
+  }
+
+  zuFeld(feld: string): string | undefined {
+    return this.fehler.find((f) => f.feld === feld)?.meldung;
+  }
+
+  get codes(): string[] {
+    return this.fehler.map((f) => f.code).filter((code): code is string => code !== null);
+  }
+}
+
 let csrfToken: string | null = null;
 
 async function api<T>(url: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
-  if (options.body) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
   if (options.method && options.method !== "GET") {
     if (!csrfToken) {
       const response = await fetch("/api/auth/csrf");
@@ -23,11 +56,26 @@ async function api<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
     headers.set("X-XSRF-TOKEN", csrfToken);
   }
+
   const response = await fetch(url, { ...options, headers });
   if (!response.ok) {
-    const fehler = await response.json().catch(() => ({})) as Partial<ApiError>;
-    throw new ApiError(response.status, fehler.code ?? "API_FEHLER",
-      fehler.message ?? `API-Fehler: ${response.status}`);
+    const body = await response.json().catch(() => ({})) as {
+      code?: string;
+      message?: string;
+      fehler?: Feldfehler[];
+    };
+    if (body.fehler) {
+      throw new ApiFehler(
+        response.status,
+        body.fehler,
+        body.fehler.map((fehler) => fehler.meldung).join(" ") || `API-Fehler: ${response.status}`,
+      );
+    }
+    throw new ApiError(
+      response.status,
+      body.code ?? "API_FEHLER",
+      body.message ?? `API-Fehler: ${response.status}`,
+    );
   }
   return response.status === 204 ? undefined as T : await response.json() as T;
 }
@@ -37,34 +85,53 @@ export interface SchulungFilter {
   kategorie?: string;
 }
 
-export async function fetchSchulungen(
-  filter: SchulungFilter = {},
-): Promise<Schulung[]> {
+export function fetchSchulungen(filter: SchulungFilter = {}): Promise<Schulung[]> {
   const params = new URLSearchParams();
   const suche = filter.suche?.trim();
   const kategorie = filter.kategorie?.trim();
-  if (suche) {
-    params.set("suche", suche);
-  }
-  if (kategorie) {
-    params.set("kategorie", kategorie);
-  }
-
+  if (suche) params.set("suche", suche);
+  if (kategorie) params.set("kategorie", kategorie);
   const query = params.toString();
   return api(`/api/schulungen${query ? `?${query}` : ""}`);
 }
 
-export async function fetchKategorien(): Promise<string[]> {
-  return api("/api/kategorien");
+export const fetchSchulung = (id: string) =>
+  api<Schulung>(`/api/schulungen/${encodeURIComponent(id)}`);
+export const fetchKennungsschema = () => api<Kennungsschema>("/api/schulungen/id-schema");
+export const legeSchulungAn = (eingabe: Schulungseingabe) =>
+  api<Katalogantwort>("/api/schulungen", { method: "POST", body: JSON.stringify(eingabe) });
+export const aendereSchulung = (id: string, eingabe: Schulungseingabe) =>
+  api<Katalogantwort>(`/api/schulungen/${encodeURIComponent(id)}`, {
+    method: "PUT", body: JSON.stringify(eingabe),
+  });
+export const archiviereSchulung = (id: string) =>
+  api<Katalogantwort>(`/api/schulungen/${encodeURIComponent(id)}/archivierung`, { method: "POST" });
+export const reaktiviereSchulung = (id: string) =>
+  api<Katalogantwort>(`/api/schulungen/${encodeURIComponent(id)}/archivierung`, { method: "DELETE" });
+export const loescheSchulung = (id: string) =>
+  api<void>(`/api/schulungen/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+export const fetchKategorien = () => api<string[]>("/api/kategorien");
+export const legeKategorieAn = (name: string) =>
+  api<string[]>("/api/kategorien", { method: "POST", body: JSON.stringify({ name }) });
+export const benenneKategorieUm = (name: string, neuerName: string) =>
+  api<string[]>("/api/kategorien", { method: "PUT", body: JSON.stringify({ name, neuerName }) });
+export const loescheKategorie = (name: string) =>
+  api<void>(`/api/kategorien?name=${encodeURIComponent(name)}`, { method: "DELETE" });
+export const fetchVerwaisteTermine = () => api<VerwaisterTermin[]>("/api/katalog/verwaiste-termine");
+
+export async function nimmDateienAuf(dateien: File[], ersetzen: boolean): Promise<Aufnahmebericht> {
+  const body = new FormData();
+  for (const datei of dateien) body.append("dateien", datei, datei.name);
+  return api(`/api/schulungen/aufnahme?ersetzen=${ersetzen}`, { method: "POST", body });
 }
 
-export async function fetchVerfuegbareTrainer(
+export function fetchVerfuegbareTrainer(
   schulungId: string,
   von: string,
   bis: string,
 ): Promise<Trainer[]> {
-  const params = new URLSearchParams({ schulungId, von, bis });
-  return api(`/api/trainer/verfuegbar?${params}`);
+  return api(`/api/trainer/verfuegbar?${new URLSearchParams({ schulungId, von, bis })}`);
 }
 
 export const registrieren = (daten: { name: string; email: string; passwort: string }) =>
@@ -78,22 +145,30 @@ export async function logout() {
   await api<void>("/api/auth/abmelden", { method: "POST" });
   csrfToken = null;
 }
-export const nameAendern = (name: string, aenderungsstand: number) => api<Benutzerkonto>("/api/ich/name", {
-  method: "PATCH", headers: { "If-Match": String(aenderungsstand) }, body: JSON.stringify({ name }),
-});
-export const passwortAendern = (bisherigesPasswort: string, neuesPasswort: string, aenderungsstand: number) =>
-  api<Benutzerkonto>("/api/ich/passwort", {
-    method: "PUT", headers: { "If-Match": String(aenderungsstand) },
-    body: JSON.stringify({ bisherigesPasswort, neuesPasswort }),
+export const nameAendern = (name: string, aenderungsstand: number) =>
+  api<Benutzerkonto>("/api/ich/name", {
+    method: "PATCH", headers: { "If-Match": String(aenderungsstand) }, body: JSON.stringify({ name }),
   });
+export const passwortAendern = (
+  bisherigesPasswort: string,
+  neuesPasswort: string,
+  aenderungsstand: number,
+) => api<Benutzerkonto>("/api/ich/passwort", {
+  method: "PUT",
+  headers: { "If-Match": String(aenderungsstand) },
+  body: JSON.stringify({ bisherigesPasswort, neuesPasswort }),
+});
 export const fetchKonten = () => api<Benutzerkonto[]>("/api/benutzerkonten");
 const stand = (aenderungsstand: number) => ({ "If-Match": String(aenderungsstand) });
 export const rolleErteilen = (id: string, rolle: Rolle, aenderungsstand: number) =>
   api<void>(`/api/benutzerkonten/${id}/rollen/${rolle}`, { method: "PUT", headers: stand(aenderungsstand) });
 export const rolleEntziehen = (id: string, rolle: Rolle, aenderungsstand: number) =>
   api<void>(`/api/benutzerkonten/${id}/rollen/${rolle}`, { method: "DELETE", headers: stand(aenderungsstand) });
-export const kontoAktion = (id: string, aktion: "stilllegen" | "reaktivieren" | "eigentuemer", aenderungsstand: number) =>
-  api<void>(`/api/benutzerkonten/${id}/${aktion}`, { method: "POST", headers: stand(aenderungsstand) });
+export const kontoAktion = (
+  id: string,
+  aktion: "stilllegen" | "reaktivieren" | "eigentuemer",
+  aenderungsstand: number,
+) => api<void>(`/api/benutzerkonten/${id}/${aktion}`, { method: "POST", headers: stand(aenderungsstand) });
 export const fremdesPasswortSetzen = (id: string, passwort: string, aenderungsstand: number) =>
   api<void>(`/api/benutzerkonten/${id}/passwort`, {
     method: "PUT", headers: stand(aenderungsstand), body: JSON.stringify({ passwort }),
