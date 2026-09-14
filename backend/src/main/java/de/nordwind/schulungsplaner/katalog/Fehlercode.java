@@ -8,6 +8,8 @@ package de.nordwind.schulungsplaner.katalog;
  */
 public enum Fehlercode {
     PFLICHTANGABE_FEHLT,
+    ID_VERGEBEN,
+    ID_UNVERAENDERLICH,
     ID_UNERLAUBTE_ZEICHEN,
     KATEGORIE_UNBEKANNT,
     DAUER_ZU_KLEIN,

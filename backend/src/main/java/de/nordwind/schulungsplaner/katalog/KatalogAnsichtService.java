@@ -62,6 +62,22 @@ public class KatalogAnsichtService {
                 .toList();
     }
 
+    /** Eine einzelne Schulung samt Zustand und Terminen. */
+    public java.util.Optional<Schulung> findeSchulung(SchulungId id) {
+        return katalog.lade(id).map(schulung -> zusammenfuehren(
+                schulung, zustaende.alleZustaende(), termineJeSchulung()));
+    }
+
+    /**
+     * Das Schema, nach dem die bestehenden Schulungen benannt sind
+     * (REQ_KAT_ID_01). Eine ID wird daraus ausdruecklich nicht abgeleitet --
+     * die vergibt der Mensch.
+     */
+    public Kennungsschema kennungsschema() {
+        return Kennungsschema.ausBestehenden(
+                katalog.alleIds().stream().map(SchulungId::wert).toList());
+    }
+
     /**
      * Die zur Auswahl stehenden Kategorien, doppelfrei und alphabetisch
      * sortiert (REQ_KAT_SUCH_06).
