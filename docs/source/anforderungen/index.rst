@@ -34,6 +34,7 @@ Kürzel     Bereich
    katalog
    katalog-umsetzung
    terminplanung
+   terminplanung-umsetzung
    assistenz
    vormerkungen
    uebernahme

@@ -25,8 +25,16 @@ Ein wiederverwendbares Weiterbildungsangebot mit Titel, Inhalt, Kategorie und Vo
 _Avoid_: Kurs, Termin
 
 **Termin**:
-Eine konkret geplante Durchführung einer Schulung mit Zeitraum, Ort, Status und optionaler Trainerzuweisung.
-_Avoid_: Schulung, Buchung, Platzierung
+Eine konkret geplante Durchführung einer Schulung mit Zeitraum, Zustand und optionaler Trainerzuweisung. Zustände sind geplant, abgeschlossen und abgesagt.
+_Avoid_: Schulung, Buchung, Platzierung, ausgebucht als Zustand
+
+**Zugangsart**:
+Ob ein Termin **öffentlich** ist — einzeln buchbar für Teilnehmer verschiedener Firmen — oder **exklusiv** für eine Firma. Sie bestimmt, welche Teilnehmergrenze der Schulung gilt.
+_Avoid_: Format, Terminart
+
+**Durchführungsart**:
+Wie ein Termin stattfindet: **remote** (ausschließlich online), **vor Ort** (in den eigenen Räumen), **beim Kunden** (in dessen Räumen) oder **hybrid** (vor Ort und zugleich online zugänglich). Unabhängig von der Zugangsart.
+_Avoid_: Format, Präsenz, Online, Onsite, Inhouse
 
 **Qualifikation**:
 Die bestätigte Berechtigung eines Trainers, eine bestimmte Schulung durchzuführen.

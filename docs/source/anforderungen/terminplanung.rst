@@ -1,3 +1,5 @@
+.. _terminplanung:
+
 Terminplanung
 =============
 
@@ -12,17 +14,83 @@ Termine anlegen
    :status: draft
    :priority: high
 
-   Ein Administrator legt zu einer aktiven Schulung einen Termin an. Dazu
-   gehören Zeitraum, Ort, Zugangsart und Durchführungsart.
+   Ein Administrator legt zu einer aktiven Schulung einen Termin an.
+
+.. req:: Pflichtangaben eines Termins
+   :id: REQ_TER_ANL_03
+   :status: draft
+   :priority: high
+   :links: REQ_TER_ANL_01
+
+   Anzugeben sind die Schulung, das Startdatum und das Enddatum. Alles
+   Weitere -- Zugangsart, Durchführungsart, Ort und Trainerzuweisung -- ist
+   freiwillig und kann später ergänzt werden.
+
+   Termine entstehen oft, bevor feststeht, wie und wo sie stattfinden. Ein
+   Termin, der nur den Zeitraum kennt, ist deshalb ein gültiger Termin.
 
 .. req:: Termin ohne Trainerzuweisung speicherbar
    :id: REQ_TER_ANL_02
    :status: draft
    :priority: high
-   :links: REQ_TER_ANL_01
+   :links: REQ_TER_ANL_03
 
    Ein Termin kann ohne zugewiesenen Trainer gespeichert werden. Er gilt
    dann als nicht zugewiesen.
+
+.. req:: Enddatum wird aus der Dauer vorgeschlagen
+   :id: REQ_TER_ANL_04
+   :status: draft
+   :priority: high
+   :links: REQ_TER_ANL_03, REQ_KAT_FELD_03
+
+   Beim Anlegen schlägt das System aus der Dauer der Schulung ein Enddatum
+   vor. Der Vorschlag ist nicht bindend: Der Administrator kann einen
+   kürzeren wie einen längeren Zeitraum wählen.
+
+.. req:: Enddatum liegt nicht vor dem Startdatum
+   :id: REQ_TER_ANL_05
+   :status: draft
+   :priority: high
+   :links: REQ_TER_ANL_03
+
+   Ein Termin, dessen Enddatum vor seinem Startdatum liegt, wird
+   abgewiesen. Start- und Enddatum dürfen auf denselben Tag fallen.
+
+.. req:: Kein Termin in der Vergangenheit
+   :id: REQ_TER_ANL_06
+   :status: draft
+   :priority: high
+   :links: REQ_TER_ANL_03
+
+   Ein Termin, dessen Startdatum in der Vergangenheit liegt, wird
+   abgewiesen. Gehaltene Schulungen werden nicht nachgetragen.
+
+Kennung
+-------
+
+.. req:: Termin-ID wird selbsttätig vergeben
+   :id: REQ_TER_ID_01
+   :status: draft
+   :priority: high
+   :component: backend
+   :links: REQ_TER_ANL_01, REQ_KAT_ID_01
+
+   Die Kennung eines Termins vergibt das System. Sie besteht aus der
+   Schulungs-ID, einem ``-T`` und einer je Schulung fortlaufenden,
+   vierstelligen Nummer -- etwa ``SCH-001-T0001``.
+
+   Anders als bei der Schulung gibt es hier nichts zu benennen: Eine
+   Termin-ID ist reine Kennung, und vier Stellen reichen für jede Schulung
+   weit über die Lebensdauer des Planers hinaus.
+
+.. req:: Termin-ID ist unveränderlich
+   :id: REQ_TER_ID_02
+   :status: draft
+   :links: REQ_TER_ID_01
+
+   Die Kennung eines Termins ändert sich nach dem Anlegen nicht mehr, auch
+   nicht beim Verschieben oder Absagen.
 
 Zugangsart und Durchführungsart
 -------------------------------
@@ -31,22 +99,34 @@ Zugangsart und Durchführungsart
    :id: REQ_TER_FORM_01
    :status: draft
    :priority: high
-   :links: REQ_TER_ANL_01
+   :links: REQ_TER_ANL_03
 
-   Ein Termin ist entweder **öffentlich** -- einzeln buchbar für Teilnehmer
-   verschiedener Firmen -- oder **exklusiv** für eine Firma.
+   Die **Zugangsart** eines Termins ist eine von zwei:
+
+   * **öffentlich** -- einzeln buchbar für Teilnehmer verschiedener Firmen,
+   * **exklusiv** -- für eine Firma.
 
 .. req:: Durchführungsart eines Termins
    :id: REQ_TER_FORM_02
    :status: draft
    :priority: high
-   :links: REQ_TER_ANL_01
+   :links: REQ_TER_ANL_03
 
-   Ein Termin wird auf eine von drei Arten durchgeführt:
+   Die **Durchführungsart** eines Termins ist eine von vier:
 
-   * **remote** -- online, ohne gemeinsamen Ort,
+   * **remote** -- ausschließlich online, ohne gemeinsamen Ort,
    * **vor Ort** -- in den eigenen Räumen,
-   * **beim Kunden** -- in den Räumen des Kunden.
+   * **beim Kunden** -- in den Räumen des Kunden,
+   * **hybrid** -- in den eigenen Räumen und zugleich online zugänglich.
+
+.. req:: Beide Angaben sind nachtragbar
+   :id: REQ_TER_FORM_07
+   :status: draft
+   :priority: high
+   :links: REQ_TER_FORM_01, REQ_TER_FORM_02, REQ_TER_ANL_03
+
+   Zugangsart und Durchführungsart können beim Anlegen angegeben oder
+   später nachgetragen werden. Ein Termin ohne diese Angaben ist gültig.
 
 .. req:: Zugangsart und Durchführungsart sind frei kombinierbar
    :id: REQ_TER_FORM_03
@@ -66,8 +146,8 @@ Zugangsart und Durchführungsart
    :status: draft
    :links: REQ_TER_FORM_02
 
-   Bei "vor Ort" und "beim Kunden" trägt der Termin einen Ort. Bei "remote"
-   entfällt die Angabe eines physischen Orts.
+   Bei "vor Ort", "beim Kunden" und "hybrid" trägt der Termin einen Ort als
+   freien Text. Bei "remote" entfällt die Angabe eines physischen Orts.
 
 .. req:: Zugangsart bestimmt die maßgebliche Teilnehmergrenze
    :id: REQ_TER_FORM_05
@@ -77,6 +157,16 @@ Zugangsart und Durchführungsart
 
    Welche Teilnehmergrenze einer Schulung für einen Termin gilt, richtet
    sich nach seiner Zugangsart, nicht nach seiner Durchführungsart.
+
+.. req:: Ohne Zugangsart keine Grenzprüfung
+   :id: REQ_TER_FORM_06
+   :status: draft
+   :priority: high
+   :links: REQ_TER_FORM_05, REQ_TER_FORM_07
+
+   Solange die Zugangsart eines Termins nicht angegeben ist, lässt sich
+   keine Teilnehmergrenze bestimmen, und es wird dazu auch nicht gewarnt.
+   Teilnehmerbuchungen sind trotzdem möglich.
 
 Zustände eines Termins
 ----------------------
@@ -89,6 +179,10 @@ Zustände eines Termins
    Ein Termin ist **geplant**, **abgeschlossen** oder **abgesagt**. Der
    Zustand ist unabhängig davon, ob ein Trainer zugewiesen ist -- das ist
    eine eigene Eigenschaft.
+
+   "Ausgebucht" ist kein Zustand: Ob ein Termin voll ist, ergibt sich aus
+   seinen Buchungen, und das Überschreiten der Grenze ist nach
+   :need:`REQ_TLN_GRENZ_02` ohnehin erlaubt und nur eine Warnung.
 
 .. req:: Der ausführende Trainer schließt den Termin ab
    :id: REQ_TER_STAT_02
@@ -177,7 +271,9 @@ Zustände eines Termins
    :priority: high
    :links: REQ_TER_ANL_01
 
-   Ein Administrator kann den Zeitraum eines geplanten Termins ändern.
+   Ein Administrator kann den Zeitraum eines geplanten Termins ändern. Es
+   gelten dieselben Regeln wie beim Anlegen: nicht in die Vergangenheit, und
+   das Enddatum nicht vor dem Startdatum.
 
 .. req:: Verschieben prüft die Zuweisung erneut
    :id: REQ_TER_AEND_02
@@ -193,10 +289,10 @@ Zustände eines Termins
 .. req:: Übrige Termindaten ändern
    :id: REQ_TER_AEND_03
    :status: draft
-   :links: REQ_TER_ANL_01
+   :links: REQ_TER_ANL_01, REQ_TER_FORM_07
 
    Ein Administrator kann Ort, Zugangsart und Durchführungsart eines
-   geplanten Termins ändern.
+   geplanten Termins ändern oder erstmals angeben.
 
 .. req:: Termin absagen
    :id: REQ_TER_AEND_04
@@ -207,6 +303,19 @@ Zustände eines Termins
    Ein Administrator kann einen geplanten Termin absagen. Der Termin bleibt
    mit allen Daten erhalten und wechselt in den Zustand abgesagt; er wird
    nicht mehr als anstehend geführt.
+
+.. req:: Eine Absage ist endgültig
+   :id: REQ_TER_AEND_09
+   :status: draft
+   :priority: high
+   :links: REQ_TER_AEND_04
+
+   Ein abgesagter Termin kann nicht wieder in den Zustand geplant versetzt
+   werden. Soll er doch stattfinden, wird ein neuer Termin angelegt.
+
+   Damit bleibt die Absage als Tatsache stehen, statt rückwirkend zu
+   verschwinden -- und der neue Termin trägt eine eigene Kennung, unter der
+   die Beteiligten ihn von dem abgesagten unterscheiden können.
 
 .. req:: Absage wird mitgeteilt
    :id: REQ_TER_AEND_05
@@ -219,10 +328,21 @@ Zustände eines Termins
 .. req:: Termin löschen
    :id: REQ_TER_AEND_06
    :status: draft
-   :links: REQ_TER_AEND_04
+   :links: REQ_TER_AEND_04, REQ_TER_STAT_01
 
-   Ein Administrator kann einen Termin löschen. Damit verschwindet er
-   vollständig, im Unterschied zur Absage, die ihn erhält.
+   Ein Administrator kann einen geplanten oder abgesagten Termin löschen.
+   Damit verschwindet er vollständig, im Unterschied zur Absage, die ihn
+   erhält.
+
+.. req:: Abgeschlossene Termine lassen sich nicht löschen
+   :id: REQ_TER_AEND_10
+   :status: draft
+   :priority: high
+   :links: REQ_TER_AEND_06, REQ_TRA_HIST_01
+
+   Ein abgeschlossener Termin kann nicht gelöscht werden. Er ist die
+   Aufzeichnung einer durchgeführten Schulung: Wer sie gehalten hat und wie
+   viele teilgenommen haben, bleibt dauerhaft erhalten.
 
 .. req:: Warnung vor Absage und Löschen
    :id: REQ_TER_AEND_07
@@ -308,6 +428,15 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
    anderen ersetzen. Für den neuen Trainer gelten dieselben Prüfungen wie
    bei einer erstmaligen Zuweisung.
 
+.. req:: Keine Zuweisung an abgeschlossenen oder abgesagten Terminen
+   :id: REQ_TER_ZUW_06
+   :status: draft
+   :priority: high
+   :links: REQ_TER_ZUW_04, REQ_TER_STAT_01
+
+   An einem abgeschlossenen oder abgesagten Termin lässt sich die
+   Trainerzuweisung nicht mehr ändern.
+
 Entscheidungshilfe bei der Planung
 ----------------------------------
 
@@ -321,6 +450,17 @@ Entscheidungshilfe bei der Planung
    getrennt in zwei Gruppen: zuerst die für die Schulung qualifizierten,
    danach die übrigen. So bleibt die proaktive Zuweisung eines nicht
    qualifizierten Trainers möglich, ohne dass sie versehentlich geschieht.
+
+.. req:: Nicht verfügbare Trainer sind erkennbar
+   :id: REQ_TER_VORS_03
+   :status: draft
+   :priority: high
+   :links: REQ_TER_VORS_01, REQ_TER_ZUW_01, REQ_TER_ZUW_03
+
+   In der Liste ist erkennbar, welche Trainer im Zeitraum des Termins nicht
+   zur Verfügung stehen -- wegen einer Abwesenheit oder einer anderen
+   Zuweisung -- und aus welchem der beiden Gründe. Sie sind nicht
+   auswählbar.
 
 .. req:: Verfügbarkeit im Kalender anzeigen
    :id: REQ_TER_VORS_02
@@ -383,3 +523,26 @@ Dashboard der Administratoren
    Mindestteilnehmerzahl nicht, wird er im Dashboard ebenso gewarnt wie ein
    Termin ohne Trainer. Nur so bleibt Zeit, ihn abzusagen oder zu
    bewerben.
+
+Übernahme der bestehenden Termindaten
+-------------------------------------
+
+.. req:: Bestehende Termine werden umgeschlüsselt
+   :id: REQ_TER_MIGR_01
+   :status: draft
+   :priority: high
+   :component: backend
+   :links: REQ_TER_STAT_01, REQ_TER_FORM_01, REQ_TER_FORM_02
+
+   Die vorhandenen Termindaten werden beim Umbau auf die neuen Felder
+   umgeschlüsselt:
+
+   * Zustand ``ausgebucht`` wird zu ``geplant``; die Auslastung ergibt sich
+     künftig aus den Teilnehmerbuchungen.
+   * Durchführungsart: ``Präsenz`` wird zu ``vor Ort``, ``Online`` zu
+     ``remote``.
+   * Zugangsart: Alle bestehenden Termine sind öffentlich -- sie stehen
+     heute unter ``oeffentlicheTermine``. Diese Zuordnung wird übernommen,
+     bevor die Struktur verschwindet.
+   * Die Kennungen der Form ``SCH-001-T1`` werden auf die vierstellige Form
+     gebracht.
