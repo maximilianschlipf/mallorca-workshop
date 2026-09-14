@@ -10,6 +10,30 @@ sie abprüfen. Sie ist die Arbeitsgrundlage für die Umsetzung des Bereichs.
 * Ein **Test** beschreibt eine nachprüfbare Beobachtung und verweist mit
   ``verifies`` auf die Story oder Anforderung, die er absichert.
 
+Fachliche Grundlagen
+---------------------
+
+.. story:: Kontenregeln verwenden eindeutige Terminbegriffe
+   :id: STORY_USR_GRUND_01
+   :status: approved
+   :priority: high
+   :implements: REQ_QUA_UMF_01, REQ_TER_ANL_02, REQ_TER_STAT_01, REQ_TER_ZEIT_01, REQ_ASS_PLATZ_01
+
+   Beim Verwalten eines Kontos kann das System eindeutig bestimmen, welche
+   Qualifikationen, Trainerzuweisungen und Assistenzplätze betroffen sind und
+   welche Termine zukünftig oder abgeschlossen sind.
+
+.. test:: Grundlagen für kontobezogene Zuweisungen
+   :id: TEST_USR_GRUND_01
+   :status: approved
+   :automated: yes
+   :verifies: STORY_USR_GRUND_01, REQ_QUA_UMF_01, REQ_TER_ANL_02, REQ_TER_STAT_01, REQ_TER_ZEIT_01, REQ_ASS_PLATZ_01
+
+   Eine Qualifikation gilt für alle Termine einer Schulung. Ein Termin kann
+   ohne oder mit höchstens einem ausführenden Trainer sowie mit bis zu drei
+   Assistenten bestehen. Ein Termin mit noch nicht vergangenem Enddatum gilt
+   als zukünftig; als abgeschlossen gilt nur ein Termin mit diesem Zustand.
+
 Erstinbetriebnahme
 ------------------
 
@@ -32,6 +56,16 @@ Erstinbetriebnahme
 
    Auf einer Instanz ohne Benutzerkonten wird ein Konto registriert. Es
    trägt danach die Rollen Trainer, Administrator und Eigentümer.
+
+.. test:: Parallele Erstregistrierung erzeugt genau einen Eigentümer
+   :id: TEST_USR_EIGT_06
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_EIGT_01, REQ_USR_EIGT_02
+
+   Treffen zwei Registrierungen gleichzeitig auf einer Instanz ohne Konten
+   ein, entsteht genau ein Eigentümer. Das andere Konto trägt ausschließlich
+   die Trainerrolle.
 
 .. test:: Zweites Konto trägt nur die Trainerrolle
    :id: TEST_USR_EIGT_02
@@ -92,7 +126,10 @@ Registrierung
    :verifies: REQ_USR_REG_05
 
    Eine Registrierung mit einer bereits vergebenen E-Mail-Adresse wird mit
-   einem Hinweis abgewiesen. Die Zahl der Konten bleibt unverändert.
+   einem Hinweis abgewiesen. Das gilt auch bei abweichender Groß- und
+   Kleinschreibung sowie Leerzeichen am Anfang oder Ende. Die Zahl der Konten
+   bleibt unverändert; die Anmeldung gelingt ebenfalls unabhängig von der
+   Groß- und Kleinschreibung.
 
 Anmeldung
 ---------
@@ -101,11 +138,21 @@ Anmeldung
    :id: STORY_USR_LOGIN_01
    :status: approved
    :priority: high
-   :implements: REQ_USR_LOGIN_01, REQ_USR_LOGIN_02, REQ_USR_LOGIN_03, REQ_USR_LOGIN_04, REQ_USR_LOGIN_05, REQ_USR_LOGIN_06, REQ_USR_LOGIN_07
+   :implements: REQ_USR_LOGIN_01, REQ_USR_LOGIN_02, REQ_USR_LOGIN_03, REQ_USR_LOGIN_04, REQ_USR_LOGIN_05, REQ_USR_LOGIN_06, REQ_USR_LOGIN_07, REQ_USR_SICHER_01
 
    Ich melde mich mit E-Mail und Passwort an und arbeite, bis ich mich
-   abmelde oder den Browser schließe. Ohne Anmeldung komme ich an keine
-   Ansicht der Anwendung.
+   abmelde oder den Browser schließe. Ohne Anmeldung komme ich außer an
+   Anmeldung und Registrierung an keine Ansicht der Anwendung.
+
+.. story:: Konto- und Rollenänderungen wirken auf laufende Sitzungen
+   :id: STORY_USR_LOGIN_02
+   :status: approved
+   :priority: high
+   :implements: REQ_USR_LOGIN_08, REQ_USR_LOGIN_09
+
+   Wird mein Konto stillgelegt oder gelöscht, endet mein Zugriff sofort.
+   Werden meine Rollen geändert, gelten die neuen Rechte beim nächsten
+   Aufruf.
 
 .. test:: Anmeldung mit gültigen Daten gelingt
    :id: TEST_USR_LOGIN_01
@@ -122,8 +169,10 @@ Anmeldung
    :automated: yes
    :verifies: REQ_USR_LOGIN_02
 
-   Der Aufruf einer beliebigen Ansicht ohne bestehende Anmeldung führt zur
-   Anmeldung und gibt keine Inhalte preis.
+   Anmeldung und Registrierung sind ohne Sitzung erreichbar. Der Aufruf
+   einer fachlichen Ansicht oder Schnittstelle ohne bestehende Anmeldung
+   führt zur Anmeldung beziehungsweise wird abgewiesen und gibt keine
+   fachlichen Inhalte preis.
 
 .. test:: Falsche Anmeldedaten nennen die Ursache nicht
    :id: TEST_USR_LOGIN_03
@@ -171,6 +220,34 @@ Anmeldung
    verworfen: Nach dem Schließen und erneuten Öffnen ist eine Anmeldung
    nötig. Es gibt keine Möglichkeit, angemeldet zu bleiben.
 
+.. test:: Stilllegen und Löschen beenden laufende Sitzungen
+   :id: TEST_USR_LOGIN_09
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_LOGIN_08
+
+   Ein angemeldetes Konto wird stillgelegt beziehungsweise gelöscht. Seine
+   laufenden Sitzungen erhalten ab dem nächsten Aufruf keinen Zugriff mehr.
+
+.. test:: Rollenänderungen gelten in laufenden Sitzungen
+   :id: TEST_USR_LOGIN_10
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_LOGIN_09
+
+   Einer angemeldeten Person wird eine Rolle entzogen. Bereits beim nächsten
+   Aufruf ist eine mit dieser Rolle geschützte Funktion nicht mehr
+   erreichbar.
+
+.. test:: Standardbetrieb ist nur lokal erreichbar
+   :id: TEST_USR_SICHER_01
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_SICHER_01
+
+   Die Standardkonfiguration bindet den Server an die Loopback-Schnittstelle
+   und schaltet die H2-Konsole ab.
+
 Passwort
 --------
 
@@ -200,7 +277,8 @@ Passwort
    Mit dem richtigen bisherigen Passwort gelingt die Änderung, und die
    Anmeldung ist danach nur noch mit dem neuen möglich. Mit einem falschen
    bisherigen Passwort wird die Änderung abgewiesen und das alte bleibt
-   gültig.
+   gültig. Nach erfolgreicher Änderung enden alle anderen Sitzungen des
+   Kontos.
 
 .. test:: Administrator setzt ein Passwort ohne das bisherige
    :id: TEST_USR_PWD_02
@@ -209,7 +287,8 @@ Passwort
    :verifies: REQ_USR_PWD_02
 
    Ein Administrator setzt für ein fremdes Konto ein neues Passwort, ohne
-   das bisherige anzugeben. Die Anmeldung mit dem neuen Passwort gelingt.
+   das bisherige anzugeben. Alle laufenden Sitzungen des Kontos enden und die
+   Anmeldung mit dem neuen Passwort gelingt.
 
 .. test:: Administrator kommt an das Eigentümerpasswort nicht heran
    :id: TEST_USR_PWD_03
@@ -238,7 +317,7 @@ Rollen verwalten
    :id: STORY_USR_ROLLE_01
    :status: approved
    :priority: high
-   :implements: REQ_USR_ROLLE_01, REQ_USR_ROLLE_02, REQ_USR_ROLLE_03
+   :implements: REQ_USR_ROLLE_01, REQ_USR_ROLLE_02, REQ_USR_ROLLE_03, REQ_USR_ROLLE_10
 
    Als Administrator gebe ich einem anderen Konto die Administratorrolle.
    Seine bisherigen Rollen behält es.
@@ -307,7 +386,20 @@ Rollen verwalten
    :verifies: REQ_USR_ROLLE_06
 
    Ein Konto ohne Trainerrolle kann weder als ausführender Trainer noch als
-   Assistent einem Termin zugewiesen werden.
+   Assistent einem Termin zugewiesen werden. Seine Qualifikationen, Anfragen
+   und Abwesenheiten bleiben gespeichert, sind aber nicht nutzbar. Nach
+   erneuter Vergabe der Trainerrolle sind sie wieder nutzbar.
+
+.. test:: Trainer kann keine Konten verwalten
+   :id: TEST_USR_ROLLE_09
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_ROLLE_10
+
+   Ein Konto mit ausschließlich der Trainerrolle kann keine Rollen vergeben
+   oder entziehen, kein fremdes Passwort setzen und kein Konto stilllegen,
+   reaktivieren oder löschen. Den Namen eines anderen Kontos kann es ebenfalls
+   nicht ändern.
 
 .. test:: Jedes Konto trägt mindestens eine Rolle
    :id: TEST_USR_ROLLE_06
@@ -356,8 +448,20 @@ Eigentümerrolle
    :automated: yes
    :verifies: REQ_USR_EIGT_03, REQ_USR_EIGT_02
 
-   Nach der Weitergabe trägt das empfangende Konto die Eigentümerrolle und
-   das abgebende nicht mehr. Es gibt weiterhin genau einen Eigentümer.
+   Nach der Weitergabe an ein aktives reines Trainerkonto trägt das
+   empfangende Konto die Eigentümer- und Administratorrolle und das abgebende
+   weiterhin die Administrator-, aber nicht mehr die Eigentümerrolle. Es gibt
+   weiterhin genau einen Eigentümer. Auch bei zwei gleichzeitigen
+   Übergabeversuchen erhält nur eines der Zielkonten die Eigentümerrolle.
+
+.. test:: Weitergabe an ein stillgelegtes Konto wird abgewiesen
+   :id: TEST_USR_EIGT_07
+   :status: approved
+   :automated: yes
+   :verifies: REQ_USR_EIGT_03
+
+   Der Versuch, die Eigentümerrolle an ein stillgelegtes Konto zu übergeben,
+   wird abgewiesen. Rollen und Eigentümer bleiben unverändert.
 
 .. test:: Eigentümer behält die Administratorrolle
    :id: TEST_USR_EIGT_04
@@ -405,7 +509,8 @@ Konto beenden
    :verifies: REQ_USR_ENDE_01
 
    Ein Administrator legt ein aktives Konto still. Dessen Anmeldung gelingt
-   danach nicht mehr, seine Daten bleiben aber vollständig erhalten.
+   danach nicht mehr. Profildaten und Vorgänge bleiben erhalten; nur
+   zukünftige Trainer- und Assistenzzuweisungen entfallen.
 
 .. test:: Stilllegen räumt zukünftige Zuweisungen ab
    :id: TEST_USR_ENDE_01
@@ -452,7 +557,8 @@ Konto beenden
    :verifies: REQ_USR_ENDE_06
 
    Ein abgeschlossener Termin zeigt nach dem Löschen weiterhin den Namen des
-   Trainers, verweist aber nicht mehr auf ein Konto.
+   ausführenden Trainers oder Assistenten, verweist aber nicht mehr auf ein
+   Konto.
 
 Profil
 ------

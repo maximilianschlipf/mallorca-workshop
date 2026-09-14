@@ -11,11 +11,11 @@ Plätze
 
 .. req:: Assistenzplätze an einem Termin
    :id: REQ_ASS_PLATZ_01
-   :status: draft
+   :status: approved
    :priority: high
-   :links: REQ_TER_ANL_01
+   :links: REQ_TER_ANL_02
 
-   Ein Termin hat genau einen ausführenden Trainer und zusätzlich bis zu
+   Ein Termin hat höchstens einen ausführenden Trainer und zusätzlich bis zu
    drei Assistenzplätze.
 
 .. req:: Assistenz ohne Qualifikation

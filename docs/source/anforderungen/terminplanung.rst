@@ -31,7 +31,7 @@ Termine anlegen
 
 .. req:: Termin ohne Trainerzuweisung speicherbar
    :id: REQ_TER_ANL_02
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_TER_ANL_03
 
@@ -173,16 +173,26 @@ Zustände eines Termins
 
 .. req:: Zustände eines Termins
    :id: REQ_TER_STAT_01
-   :status: draft
+   :status: approved
    :priority: high
 
    Ein Termin ist **geplant**, **abgeschlossen** oder **abgesagt**. Der
    Zustand ist unabhängig davon, ob ein Trainer zugewiesen ist -- das ist
-   eine eigene Eigenschaft.
+   eine eigene Eigenschaft. Als abgeschlossen gilt ein Termin ausschließlich
+   mit dem Zustand "abgeschlossen".
 
    "Ausgebucht" ist kein Zustand: Ob ein Termin voll ist, ergibt sich aus
    seinen Buchungen, und das Überschreiten der Grenze ist nach
    :need:`REQ_TLN_GRENZ_02` ohnehin erlaubt und nur eine Warnung.
+
+.. req:: Zukünftiger Termin
+   :id: REQ_TER_ZEIT_01
+   :status: approved
+   :priority: high
+
+   Als zukünftig gilt ein Termin, dessen Enddatum am aktuellen Datum noch
+   nicht vergangen ist. Das schließt einen bereits begonnenen, aber noch
+   nicht beendeten Termin ein.
 
 .. req:: Der ausführende Trainer schließt den Termin ab
    :id: REQ_TER_STAT_02

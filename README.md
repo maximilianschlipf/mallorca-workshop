@@ -184,7 +184,9 @@ Ein Benutzerkonto trägt eine **Menge** von Rollen: Trainer, Administrator, oder
 | Übernahme anbieten und entscheiden      |    nein    |     nein      |   ja    |
 | Eigenen Termin abschließen              |    nein    |      ja       |   ja    |
 
-Die Rolle **Eigentümer** trägt genau ein Konto. Sie sichert eine Instanz dagegen, sich selbst auszusperren: Ihr Träger behält zwingend die Administratorrolle, kann weder stillgelegt noch gelöscht werden, und gibt die Rolle nur weiter, statt sie abzulegen. Das erste registrierte Konto erhält alle drei Rollen.
+Sobald ein Benutzerkonto existiert, trägt genau ein aktives Konto die Rolle **Eigentümer**. Sie sichert eine Instanz dagegen, sich selbst auszusperren: Ihr Träger behält zwingend die Administratorrolle, kann weder stillgelegt noch gelöscht werden, und gibt die Rolle nur atomar an ein anderes aktives Konto weiter. Das erste registrierte Konto erhält alle drei Rollen.
+
+Die Standardkonfiguration bindet die Anwendung ausschließlich an die lokale Loopback-Schnittstelle und deaktiviert die H2-Konsole. Eine Erreichbarkeit von anderen Rechnern erfordert eine bewusst geänderte Sicherheitskonfiguration.
 
 Ein Administrator entscheidet auch über Vorgänge, die er selbst ausgelöst hat — sonst wäre eine Instanz mit einem einzigen Administrator blockiert.
 
