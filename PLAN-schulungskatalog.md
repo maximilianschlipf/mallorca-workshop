@@ -12,7 +12,10 @@ Von den 45 spezifizierten Tests stehen 38 auf `verified`. Offen bleiben die
 fünf, die gegen noch nicht gebaute Bereiche prüfen, dazu `TEST_KAT_ABL_04`
 (nicht automatisiert) und `TEST_KAT_ARCH_02`, das zur Hälfte umgesetzt ist.
 
-Offen aus dem Plan: das Frontend, siehe unten.
+Das Frontend ist ebenfalls umgesetzt, entgegen der ursprünglichen Planung im
+selben Branch: Router, Katalogverwaltung, Schulungsformular, Einzelansicht,
+Kategorienpflege und Dateiaufnahme, geprüft über 25 E2E-Tests nach dem
+Seitenobjekt-Muster.
 
 ## Getroffene Entscheidungen
 
@@ -239,10 +242,9 @@ weiterhin über die Schulungs-ID aus der Datenbank.
 zurückgestellten Tests werden als solche kenntlich gemacht. Danach `make html`
 — der Build läuft mit `-W`, Warnungen sind Fehler.
 
-## Später: Frontend
+## Frontend
 
-Eigener Branch, nach Abnahme des Backends. Damit die Entscheidung festgehalten
-ist, hier der vorgesehene Zuschnitt:
+Umgesetzt. Der Zuschnitt:
 
 - `vue-router` einführen, `App.vue` (603 Zeilen) in Komponenten zerlegen.
 - Ansichten: Katalogliste, Schulungsdetail, Schulungsformular,
