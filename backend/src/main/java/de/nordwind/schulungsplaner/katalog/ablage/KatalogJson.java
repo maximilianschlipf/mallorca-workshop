@@ -26,7 +26,7 @@ import tools.jackson.databind.module.SimpleModule;
  * Annotationen am Typ selbst. So bleibt der Kern des Katalogs frei von
  * Abhaengigkeiten zum Serialisierungswerkzeug.
  */
-final class KatalogJson {
+class KatalogJson {
 
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .addModule(new SimpleModule("Katalog")
