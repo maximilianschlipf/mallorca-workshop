@@ -22,6 +22,11 @@ async function logout() {
         </RouterLink>
         <div v-if="aktuellesKonto" class="nav-links" aria-label="Benutzerbereich">
           <RouterLink class="nav-link" to="/">Planer</RouterLink>
+          <RouterLink
+            v-if="aktuellesKonto.rollen.includes('ADMINISTRATOR')"
+            class="nav-link"
+            to="/katalog"
+          >Katalog</RouterLink>
           <RouterLink class="nav-link" to="/profil">Profil</RouterLink>
           <RouterLink
             v-if="aktuellesKonto.rollen.includes('ADMINISTRATOR')"

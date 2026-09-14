@@ -9,7 +9,13 @@ const router = createRouter({
     { path: "/registrieren", component: () => import("./views/RegistrierenView.vue"), meta: { gast: true } },
     { path: "/profil", component: () => import("./views/ProfilView.vue"), meta: { auth: true } },
     { path: "/benutzerkonten", component: () => import("./views/KontenView.vue"), meta: { auth: true, admin: true } },
+    { path: "/:pfad(.*)*", component: () => import("./ansichten/NichtGefundenAnsicht.vue") },
   ],
+  scrollBehavior(ziel, _von, gespeichert) {
+    if (gespeichert) return gespeichert;
+    if (ziel.hash) return { el: ziel.hash };
+    return { top: 0 };
+  },
 });
 
 router.beforeEach(async (ziel) => {
