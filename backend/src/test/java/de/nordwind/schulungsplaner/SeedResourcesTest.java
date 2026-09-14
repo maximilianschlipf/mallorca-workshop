@@ -15,8 +15,8 @@ class SeedResourcesTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void shouldPackageSchulungenSeedInClasspath() throws IOException {
-        assertSeedResource("seed/schulungen.json", "schulungen", 8);
+    void shouldPackageTermineSeedInClasspath() throws IOException {
+        assertSeedResource("seed/termine.json", "termine", 14);
     }
 
     @Test

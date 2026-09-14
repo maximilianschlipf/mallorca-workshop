@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-006",
+  "titel" : "Cyber Security Awareness",
+  "kategorie" : "IT-Security",
+  "kurzbeschreibung" : "Sensibilisierung für gängige Sicherheitsrisiken im Arbeitsalltag (Phishing, Social Engineering u.a.).",
+  "voraussetzungen" : [ ],
+  "dauerInTagen" : 1,
+  "mindestteilnehmerExklusiv" : 10,
+  "maxTeilnehmerOeffentlich" : 20
+}

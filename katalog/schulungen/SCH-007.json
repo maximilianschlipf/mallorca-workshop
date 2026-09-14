@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-007",
+  "titel" : "Design Thinking Workshop",
+  "kategorie" : "Soft Skills & Führung",
+  "kurzbeschreibung" : "Kreativitätstechniken und Methoden für nutzerzentrierte Produktentwicklung.",
+  "voraussetzungen" : [ ],
+  "dauerInTagen" : 2,
+  "mindestteilnehmerExklusiv" : 6,
+  "maxTeilnehmerOeffentlich" : 14
+}

@@ -2,7 +2,8 @@ package de.nordwind.schulungsplaner.api;
 
 import de.nordwind.schulungsplaner.domain.Schulung;
 import de.nordwind.schulungsplaner.domain.VerfuegbarerTrainer;
-import de.nordwind.schulungsplaner.service.SchulungsQueryService;
+import de.nordwind.schulungsplaner.katalog.KatalogAnsichtService;
+import de.nordwind.schulungsplaner.service.TrainerQueryService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,22 +19,24 @@ import java.util.List;
 @RequestMapping("/api")
 public class SchulungController {
 
-    private final SchulungsQueryService queryService;
+    private final KatalogAnsichtService katalog;
+    private final TrainerQueryService trainer;
 
-    public SchulungController(SchulungsQueryService queryService) {
-        this.queryService = queryService;
+    public SchulungController(KatalogAnsichtService katalog, TrainerQueryService trainer) {
+        this.katalog = katalog;
+        this.trainer = trainer;
     }
 
     @GetMapping("/schulungen")
     public List<Schulung> listSchulungen(
             @RequestParam(required = false) String suche,
             @RequestParam(required = false) String kategorie) {
-        return queryService.findSchulungen(suche, kategorie);
+        return katalog.findeSchulungen(suche, kategorie);
     }
 
     @GetMapping("/kategorien")
     public List<String> listKategorien() {
-        return queryService.findKategorien();
+        return katalog.findeKategorien();
     }
 
     @GetMapping("/trainer/verfuegbar")
@@ -47,7 +50,7 @@ public class SchulungController {
                     "Das Anfangsdatum darf nicht nach dem Enddatum liegen."
             );
         }
-        return queryService.findVerfuegbareTrainer(schulungId, von, bis);
+        return trainer.findeVerfuegbareTrainer(schulungId, von, bis);
     }
 
     @GetMapping("/health")
