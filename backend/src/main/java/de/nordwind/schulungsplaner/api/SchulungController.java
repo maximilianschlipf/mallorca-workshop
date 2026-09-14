@@ -9,6 +9,7 @@ import de.nordwind.schulungsplaner.katalog.SchulungId;
 import de.nordwind.schulungsplaner.katalog.SchulungNichtGefunden;
 import de.nordwind.schulungsplaner.katalog.Schulungseingabe;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,6 +71,28 @@ public class SchulungController {
     public Katalogantwort aendern(@PathVariable String id,
                                   @RequestBody Schulungseingabe eingabe) {
         return pflege.aendere(kennung(id), eingabe);
+    }
+
+    /** Archiviert eine Schulung (REQ_KAT_ARCH_01). */
+    @PostMapping("/{id}/archivierung")
+    public Katalogantwort archivieren(@PathVariable String id) {
+        return pflege.archiviere(kennung(id));
+    }
+
+    /**
+     * Nimmt die Archivierung zurueck (REQ_KAT_ARCH_04). Als Wegnahme der
+     * Archivierung ausgedrueckt, nicht als eigener Vorgang -- es ist
+     * derselbe Schalter in der Gegenrichtung.
+     */
+    @DeleteMapping("/{id}/archivierung")
+    public Katalogantwort reaktivieren(@PathVariable String id) {
+        return pflege.reaktiviere(kennung(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> loeschen(@PathVariable String id) {
+        pflege.loesche(kennung(id));
+        return ResponseEntity.noContent().build();
     }
 
     /**

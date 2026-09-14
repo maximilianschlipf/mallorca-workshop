@@ -31,6 +31,11 @@ public class KatalogRepository {
         this.pfade = pfade;
     }
 
+    /** Der Ablageort einer Schulung -- etwa um ihn nach dem Loeschen zu committen. */
+    public Path dateiFuer(SchulungId id) {
+        return pfade.dateiFuer(id);
+    }
+
     public Optional<Katalogschulung> lade(SchulungId id) {
         Path datei = pfade.dateiFuer(id);
         if (!Files.isRegularFile(datei)) {

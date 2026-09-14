@@ -99,8 +99,12 @@ public class KatalogAnsichtService {
                 .map(SchulungId::wert)
                 .collect(Collectors.toSet());
 
+        // Termine mit hinterlassenem Titel sind kein Verweis ins Leere: Ihre
+        // Schulung wurde ueber die Anwendung geloescht, und der Titel steht
+        // bewusst als Text an ihnen (REQ_KAT_LOE_04).
         return jdbcTemplate.query(
-                        "SELECT termin_id, schulung_id FROM termin ORDER BY termin_id",
+                        "SELECT termin_id, schulung_id FROM termin "
+                                + "WHERE schulung_titel IS NULL ORDER BY termin_id",
                         (rs, zeile) -> new VerwaisterTermin(
                                 rs.getString("termin_id"), rs.getString("schulung_id")))
                 .stream()
