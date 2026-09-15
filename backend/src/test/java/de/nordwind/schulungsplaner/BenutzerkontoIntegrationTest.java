@@ -13,11 +13,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.core.env.Environment;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -37,14 +45,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.url=jdbc:h2:mem:kontotest;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
 })
 @AutoConfigureMockMvc
+@Import(BenutzerkontoIntegrationTest.FixedClockConfig.class)
 class BenutzerkontoIntegrationTest {
+    private static final LocalDate HEUTE = LocalDate.of(2026, 9, 15);
+
     @Autowired KontoService konten;
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired SchulungsQueryService schulungen;
     @Autowired TrainereinsatzService einsaetze;
-    @Autowired Environment umgebung;
 
     @BeforeEach
     void leeren() {
@@ -59,7 +69,7 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("DELETE FROM benutzerkonto");
     }
 
-    // verifies: TEST_USR_EIGT_01, TEST_USR_EIGT_02, TEST_USR_EIGT_06, TEST_USR_PWD_04, TEST_USR_ROLLE_06
+    // verifies: TEST_USR_EIGT_01, TEST_USR_EIGT_06, TEST_USR_PWD_04, TEST_USR_ROLLE_06
     @Test
     void ersteUndParalleleRegistrierungErzeugenGenauEinenEigentuemer() throws Exception {
         try (var pool = Executors.newFixedThreadPool(2)) {
@@ -82,6 +92,19 @@ class BenutzerkontoIntegrationTest {
         }
     }
 
+    // verifies: TEST_USR_EIGT_02
+    @Test
+    void zweitesKontoIstNurTrainerUndAendertDenEigentuemerNicht() {
+        Benutzerkonto erstes = konten.registrieren("Erstes", "erstes@example.de", "pw");
+        Benutzerkonto zweites = konten.registrieren("Zweites", "zweites@example.de", "pw");
+
+        assertThat(konten.laden(erstes.id()).rollen())
+                .containsExactlyInAnyOrder(Rolle.TRAINER, Rolle.ADMINISTRATOR, Rolle.EIGENTUEMER);
+        assertThat(konten.laden(zweites.id()).rollen()).containsExactly(Rolle.TRAINER);
+        assertThat(konten.alle()).filteredOn(k -> k.rollen().contains(Rolle.EIGENTUEMER))
+                .extracting(Benutzerkonto::id).containsExactly(erstes.id());
+    }
+
     // verifies: TEST_USR_LOGIN_03, TEST_USR_REG_04
     @Test
     void emailIstNormalisiertEindeutigUndLoginMeldetKeineFalscheUrsache() throws Exception {
@@ -97,6 +120,11 @@ class BenutzerkontoIntegrationTest {
         String unbekannt = loginFehler("niemand@example.de", "falsch");
         String falschesPasswort = loginFehler("EINS@example.de", "falsch");
         assertThat(unbekannt).isEqualTo(falschesPasswort).contains("UNGUELTIGE_ANMELDEDATEN");
+        JsonNode fehler = json.readTree(unbekannt);
+        assertThat(fehler.size()).isEqualTo(2);
+        assertThat(fehler.path("code").asText()).isEqualTo("UNGUELTIGE_ANMELDEDATEN");
+        assertThat(fehler.path("message").asText())
+                .isEqualTo("E-Mail-Adresse oder Passwort ist falsch.");
     }
 
     // verifies: TEST_USR_PWD_01, TEST_USR_REG_02
@@ -127,22 +155,48 @@ class BenutzerkontoIntegrationTest {
     // verifies: TEST_USR_REG_01
     @Test
     void registrierungVerlangtGenauDreiAngaben() throws Exception {
-        mvc.perform(post("/api/auth/registrieren").with(csrf())
+        String antwort = mvc.perform(post("/api/auth/registrieren").with(csrf())
                         .contentType("application/json")
                         .content("{\"name\":\"X\",\"email\":\"x@example.de\",\"passwort\":\"pw\"}"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        JsonNode kontoAntwort = json.readTree(antwort);
+        assertThat(kontoAntwort.has("id") && kontoAntwort.has("email") && kontoAntwort.has("name")
+                && kontoAntwort.has("rollen") && kontoAntwort.has("zustand")).isTrue();
+        assertThat(kontoAntwort.has("passwort") || kontoAntwort.has("passwortHash")
+                || kontoAntwort.has("passwort_hash")).isFalse();
         assertThat(konten.alle()).singleElement().satisfies(konto -> {
             assertThat(konto.name()).isEqualTo("X");
             assertThat(konto.email()).isEqualTo("x@example.de");
         });
-        for (String unvollstaendig : List.of(
+        List<String> unvollstaendig = List.of(
                 "{\"email\":\"x@example.de\",\"passwort\":\"pw\"}",
                 "{\"name\":\"X\",\"passwort\":\"pw\"}",
-                "{\"name\":\"X\",\"email\":\"x@example.de\"}")) {
-            mvc.perform(post("/api/auth/registrieren").with(csrf())
-                            .contentType("application/json").content(unvollstaendig))
-                    .andExpect(status().isBadRequest());
+                "{\"name\":\"X\",\"email\":\"x@example.de\"}");
+        for (String anfrage : unvollstaendig) {
+            String fehler = mvc.perform(post("/api/auth/registrieren").with(csrf())
+                            .contentType("application/json").content(anfrage))
+                    .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+            JsonNode fehlerAntwort = json.readTree(fehler);
+            assertThat(fehlerAntwort.size()).isEqualTo(2);
+            assertThat(fehlerAntwort.path("code").asText()).isEqualTo("UNGUELTIGE_EINGABE");
+            assertThat(fehlerAntwort.path("message").asText()).isEqualTo("Bitte prüfen Sie Ihre Eingaben.");
         }
+    }
+
+    @Test
+    void mutationenOhneGueltigesCsrfTokenWerdenAbgewiesen() throws Exception {
+        mvc.perform(post("/api/auth/registrieren")
+                        .contentType("application/json")
+                        .content("{\"name\":\"X\",\"email\":\"x@example.de\",\"passwort\":\"pw\"}"))
+                .andExpect(status().isForbidden());
+        assertThat(konten.alle()).isEmpty();
+
+        Benutzerkonto konto = konten.registrieren("X", "x@example.de", "pw");
+        mvc.perform(patch("/api/ich/name").session(login(konto.email(), "pw"))
+                        .header("If-Match", konto.aenderungsstand())
+                        .contentType("application/json").content("{\"name\":\"Angriff\"}"))
+                .andExpect(status().isForbidden());
+        assertThat(konten.laden(konto.id()).name()).isEqualTo("X");
     }
 
     // verifies: TEST_USR_PWD_02
@@ -304,9 +358,14 @@ class BenutzerkontoIntegrationTest {
 
     // verifies: TEST_USR_SICHER_01
     @Test
-    void standardbetriebBindetLoopbackUndDeaktiviertDieH2Konsole() {
-        assertThat(umgebung.getProperty("server.address")).isEqualTo("127.0.0.1");
-        assertThat(umgebung.getProperty("spring.h2.console.enabled", Boolean.class, false)).isFalse();
+    void standardbetriebBindetLoopbackUndDeaktiviertDieH2Konsole() throws Exception {
+        var properties = new YamlPropertySourceLoader().load(
+                "application", new FileSystemResource("src/main/resources/application.yml"));
+
+        assertThat(properties).singleElement().satisfies(source -> {
+            assertThat(source.getProperty("server.address")).isEqualTo("127.0.0.1");
+            assertThat(source.getProperty("spring.h2.console.enabled")).isEqualTo(false);
+        });
     }
 
     // verifies: TEST_USR_ROLLE_05, TEST_USR_ROLLE_08
@@ -317,9 +376,12 @@ class BenutzerkontoIntegrationTest {
         konten.rolleErteilen(chef.id(), ziel.id(), Rolle.ADMINISTRATOR,
                 ziel.aenderungsstand());
         jdbc.update("INSERT INTO trainer_qualifikation VALUES (?, 'SCH-001')", ziel.id());
-        jdbc.update("INSERT INTO abwesenheit (benutzerkonto_id, von, bis) VALUES (?, DATE '2030-01-01', DATE '2030-01-02')", ziel.id());
-        termin("ROLLEN", "2030-02-01", "geplant", null);
+        jdbc.update("INSERT INTO abwesenheit (benutzerkonto_id, von, bis) VALUES (?, DATE '2099-02-01', DATE '2099-02-02')", ziel.id());
+        termin("ROLLEN", "2099-02-03", "geplant", null);
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "ROLLEN");
+        assertThat(schulungen.findVerfuegbareTrainer(
+                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
+                .extracting("id").contains(ziel.id());
         konten.rolleEntziehen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());
 
@@ -328,7 +390,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(schulungen.findVerfuegbareTrainer(
-                "SCH-001", java.time.LocalDate.of(2030, 2, 1), java.time.LocalDate.of(2030, 2, 2)))
+                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
                 .extracting("id").doesNotContain(ziel.id());
         assertThatThrownBy(() -> einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id()))
                 .isInstanceOfSatisfying(KontoFehler.class,
@@ -339,6 +401,12 @@ class BenutzerkontoIntegrationTest {
 
         konten.rolleErteilen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());
+        assertThat(schulungen.findVerfuegbareTrainer(
+                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
+                .extracting("id").contains(ziel.id());
+        assertThat(schulungen.findVerfuegbareTrainer(
+                "SCH-001", LocalDate.of(2099, 2, 1), LocalDate.of(2099, 2, 2)))
+                .extracting("id").doesNotContain(ziel.id());
         einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id());
         einsaetze.assistentZuweisen(chef.id(), "ROLLEN", ziel.id());
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='ROLLEN'", String.class))
@@ -352,7 +420,7 @@ class BenutzerkontoIntegrationTest {
     void neuesKontoKannSichBewerbenAberOhneQualifikationNichtAlsTrainerEingesetztWerden() {
         Benutzerkonto chef = konten.registrieren("Chef", "chef@example.de", "pw");
         Benutzerkonto neu = konten.registrieren("Neu", "neu@example.de", "pw");
-        termin("BEWERBUNG", "2030-03-01", "geplant", null);
+        termin("BEWERBUNG", "2099-03-01", "geplant", null);
 
         einsaetze.aufQualifikationBewerben(neu.id(), "SCH-001");
         einsaetze.aufAssistenzplatzBewerben(neu.id(), "BEWERBUNG");
@@ -373,9 +441,9 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("INSERT INTO trainer_qualifikation VALUES (?, 'SCH-001')", chef.id());
         mvc.perform(post("/api/ich/abwesenheiten").session(login(chef.email(), "pw")).with(csrf())
                         .contentType("application/json")
-                        .content("{\"von\":\"2030-01-01\",\"bis\":\"2030-01-02\",\"grund\":\"Verhindert\"}"))
+                        .content("{\"von\":\"2099-01-01\",\"bis\":\"2099-01-02\",\"grund\":\"Verhindert\"}"))
                 .andExpect(status().isNoContent());
-        termin("ADMIN-TRAINER", "2030-03-01", "geplant", null);
+        termin("ADMIN-TRAINER", "2099-03-01", "geplant", null);
         einsaetze.trainerZuweisen(chef.id(), "ADMIN-TRAINER", chef.id());
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, chef.id())).isOne();
@@ -593,8 +661,8 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("INSERT INTO trainer_qualifikation VALUES (?, 'SCH-001')", trainer.id());
         jdbc.update("INSERT INTO trainer_qualifikation VALUES (?, 'SCH-001')", ersatz.id());
 
-        termin("QUALIFIKATION-A", java.time.LocalDate.now().plusDays(10).toString(), "geplant", null);
-        termin("QUALIFIKATION-B", java.time.LocalDate.now().plusDays(11).toString(), "geplant", null);
+        termin("QUALIFIKATION-A", HEUTE.plusDays(10).toString(), "geplant", null);
+        termin("QUALIFIKATION-B", HEUTE.plusDays(11).toString(), "geplant", null);
         einsaetze.trainerZuweisen(chef.id(), "QUALIFIKATION-A", trainer.id());
         einsaetze.trainerZuweisen(chef.id(), "QUALIFIKATION-B", trainer.id());
         einsaetze.trainerZuweisen(chef.id(), "QUALIFIKATION-A", ersatz.id());
@@ -605,7 +673,7 @@ class BenutzerkontoIntegrationTest {
                 "SELECT trainer_id FROM termin WHERE termin_id='QUALIFIKATION-B'", String.class))
                 .isEqualTo(trainer.id());
 
-        termin("DREI-PLAETZE", java.time.LocalDate.now().plusDays(12).toString(), "geplant", null);
+        termin("DREI-PLAETZE", HEUTE.plusDays(12).toString(), "geplant", null);
         for (int platz = 1; platz <= 3; platz++) {
             Benutzerkonto konto = konten.registrieren(
                     "Assistenz " + platz, "assistenz" + platz + "@example.de", "pw");
@@ -620,11 +688,11 @@ class BenutzerkontoIntegrationTest {
                 "SELECT platz FROM termin_assistent WHERE termin_id='DREI-PLAETZE' ORDER BY platz",
                 Integer.class)).containsExactly(1, 2, 3);
 
-        termin("VERGANGEN-GEPLANT", java.time.LocalDate.now().minusDays(1).toString(),
+        termin("VERGANGEN-GEPLANT", HEUTE.minusDays(1).toString(),
                 "geplant", trainer.id());
-        termin("HEUTE-GEPLANT", java.time.LocalDate.now().toString(),
+        termin("HEUTE-GEPLANT", HEUTE.toString(),
                 "geplant", trainer.id());
-        termin("ZUKUNFT-ABGESCHLOSSEN", java.time.LocalDate.now().plusDays(1).toString(),
+        termin("ZUKUNFT-ABGESCHLOSSEN", HEUTE.plusDays(1).toString(),
                 "abgeschlossen", trainer.id());
         konten.rolleErteilen(chef.id(), trainer.id(), Rolle.ADMINISTRATOR,
                 konten.laden(trainer.id()).aenderungsstand());
@@ -662,5 +730,14 @@ class BenutzerkontoIntegrationTest {
                 (termin_id, schulung_id, startdatum, enddatum, ort, status, trainer_id)
                 VALUES (?, 'SCH-001', ?, ?, 'Köln', ?, ?)
                 """, id, java.time.LocalDate.parse(datum), java.time.LocalDate.parse(datum), status, trainerId);
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class FixedClockConfig {
+        @Bean
+        @Primary
+        Clock fixedClock() {
+            return Clock.fixed(HEUTE.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC);
+        }
     }
 }

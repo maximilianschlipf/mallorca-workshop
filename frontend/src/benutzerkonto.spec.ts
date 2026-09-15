@@ -14,14 +14,20 @@ const trainer = {
 describe("Benutzerkonten", () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it("schützt Profil- und Administratorrouten", async () => {
+  it("lässt nur Anmelde- und Registrierungsroute öffentlich", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue({
       ok: false,
       status: 401,
       json: async () => ({ code: "ANMELDUNG_ERFORDERLICH", message: "Bitte anmelden." }),
     } as Response);
-    await router.push("/profil");
-    expect(router.currentRoute.value.path).toBe("/anmelden");
+    for (const path of ["/anmelden", "/registrieren"]) {
+      await router.push(path);
+      expect(router.currentRoute.value.path).toBe(path);
+    }
+    for (const path of ["/", "/profil", "/benutzerkonten"]) {
+      await router.push(path);
+      expect(router.currentRoute.value.path).toBe("/anmelden");
+    }
 
     vi.mocked(fetch).mockResolvedValue({ ok: true, status: 200, json: async () => trainer } as Response);
     await router.push("/benutzerkonten");

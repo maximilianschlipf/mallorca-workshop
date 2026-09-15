@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -25,10 +27,12 @@ public class KontoService {
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwoerter;
+    private final Clock clock;
 
-    public KontoService(JdbcTemplate jdbc, PasswordEncoder passwoerter) {
+    public KontoService(JdbcTemplate jdbc, PasswordEncoder passwoerter, Clock clock) {
         this.jdbc = jdbc;
         this.passwoerter = passwoerter;
+        this.clock = clock;
     }
 
     @Transactional
@@ -248,15 +252,16 @@ public class KontoService {
     }
 
     private void entferneZukuenftigeZuweisungen(String id) {
+        LocalDate heute = LocalDate.now(clock);
         jdbc.update("""
                 UPDATE termin SET trainer_id = NULL
-                WHERE trainer_id = ? AND enddatum >= CURRENT_DATE AND status <> 'abgeschlossen'
-                """, id);
+                WHERE trainer_id = ? AND enddatum >= ? AND status <> 'abgeschlossen'
+                """, id, heute);
         jdbc.update("""
                 DELETE FROM termin_assistent WHERE benutzerkonto_id = ? AND termin_id IN
                     (SELECT termin_id FROM termin
-                     WHERE enddatum >= CURRENT_DATE AND status <> 'abgeschlossen')
-                """, id);
+                     WHERE enddatum >= ? AND status <> 'abgeschlossen')
+                """, id, heute);
     }
 
     private void passwortSpeichern(String id, String passwort, long aenderungsstand) {

@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,10 +16,12 @@ import java.util.List;
 public class TrainereinsatzService {
     private final JdbcTemplate jdbc;
     private final KontoService konten;
+    private final Clock clock;
 
-    public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten) {
+    public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten, Clock clock) {
         this.jdbc = jdbc;
         this.konten = konten;
+        this.clock = clock;
     }
 
     @Transactional
@@ -46,7 +49,7 @@ public class TrainereinsatzService {
     public void aufAssistenzplatzBewerben(String kontoId, String terminId) {
         pruefeAktivenTrainer(kontoId);
         TerminDaten termin = terminLaden(terminId, false);
-        if (termin.enddatum().isBefore(LocalDate.now()) || "abgeschlossen".equals(termin.status())) {
+        if (termin.enddatum().isBefore(LocalDate.now(clock)) || "abgeschlossen".equals(termin.status())) {
             throw fehler(HttpStatus.CONFLICT, "TERMIN_ABGESCHLOSSEN",
                     "Auf einen abgeschlossenen Termin ist keine Bewerbung möglich.");
         }

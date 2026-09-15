@@ -73,7 +73,6 @@ class SchulungsApiTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // verifies: TEST_USR_LOGIN_02
     @Test
     @WithAnonymousUser
     void weistNichtAngemeldeteAufrufeAb() throws Exception {

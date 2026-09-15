@@ -17,9 +17,16 @@ Bei Änderungen, die Requirements umsetzen oder verändern:
 4. Vor einer Fertigmeldung muss `./verify.sh` vollständig erfolgreich sein.
    Bei einem Fehler ist die Arbeit als unvollständig zu melden, einschließlich
    der offenen IDs.
-5. Danach den gesamten Diff unabhängig gegen die Spezifikation prüfen. Offene,
-   partielle oder nicht Ende-zu-Ende erreichbare Anforderungen verhindern die
-   Fertigmeldung auch bei grünen Builds.
+5. Danach den gesamten Diff mit dem Repo-Skill `feature-code-review` prüfen.
+   Standards, Spezifikation und Test-/QA-Qualität sind getrennte Prüfspuren.
+   Für jeden freigegebenen `TEST_*` muss die Review-Matrix Szenario,
+   ausführbaren Test, Produktpfad und vollständige Assertions nachweisen.
+   Offene, partielle, nicht deterministische oder nicht einzeln ausführbare
+   Tests verhindern die Fertigmeldung auch bei grünen Builds.
 6. Der Abschlussbericht nennt für jeden Scope das Ergebnis des
    Requirements-Gates und der vier Test-/Build-Befehle. „Alle Anforderungen
    umgesetzt“ ist nur bei einem vollständig grünen Gate zulässig.
+
+Eine Review darf nur dann „ohne Findings“ melden, wenn alle Matrixzeilen
+vollständig sind und alle vorgeschriebenen Befehle erfolgreich liefen. Nach
+Korrekturen wird der vollständige Diff erneut mit frischem Blick geprüft.

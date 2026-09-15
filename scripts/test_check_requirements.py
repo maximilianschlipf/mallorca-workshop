@@ -70,6 +70,22 @@ class RequirementsGateTest(unittest.TestCase):
         _, issues = audit(self.root)
         self.assertIn("TEST_TEST_01: vollständiger Testnachweis fehlt", issues)
 
+    def test_java_helper_without_test_annotation_is_rejected(self):
+        (self.root / "backend/src/test/ExampleTest.java").write_text(
+            "// verifies: TEST_TEST_01\nvoid helper() {}\n", encoding="utf-8"
+        )
+        _, issues = audit(self.root)
+        self.assertIn("TEST_TEST_01: vollständiger Testnachweis fehlt", issues)
+
+    def test_annotated_java_test_is_accepted(self):
+        path = self.root / "docs/acceptance.rst"
+        path.write_text(ACCEPTANCE.replace(":level: e2e", ":level: integration"), encoding="utf-8")
+        (self.root / "backend/src/test/ExampleTest.java").write_text(
+            "// verifies: TEST_TEST_01\n@Test\nvoid scenario() {}\n", encoding="utf-8"
+        )
+        _, issues = audit(self.root)
+        self.assertEqual([], issues)
+
 
 if __name__ == "__main__":
     unittest.main()

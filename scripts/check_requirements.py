@@ -15,7 +15,8 @@ ID_PATTERN = re.compile(r"\b(?:REQ|STORY|TEST)_[A-Z0-9]+(?:_[A-Z0-9]+)+\b")
 DIRECTIVE_PATTERN = re.compile(r"^\.\. (concept|decision|req|story|bug|test)::\s*(.*)$")
 OPTION_PATTERN = re.compile(r"^\s+:([a-z_]+):\s*(.*)$")
 EVIDENCE_PATTERN = re.compile(r"verifies:\s*(.*)$")
-TEST_PATTERN = re.compile(r"^(?:test|it)\s*\(|(?:public\s+)?void\s+\w+\s*\(")
+JS_TEST_PATTERN = re.compile(r"^(?:test|it)\s*\(")
+JAVA_TEST_PATTERN = re.compile(r"^(?:public\s+)?void\s+\w+\s*\(")
 
 
 @dataclass
@@ -89,10 +90,15 @@ def find_evidence(root: Path) -> dict[str, list[Path]]:
         lines = path.read_text(encoding="utf-8").splitlines()
         for index, line in enumerate(lines):
             match = EVIDENCE_PATTERN.search(line)
-            following = (candidate.strip() for candidate in lines[index + 1:index + 7])
-            declaration = next((candidate for candidate in following
-                                if candidate and not candidate.startswith("@")), "")
-            if match and TEST_PATTERN.search(declaration):
+            following = [candidate.strip() for candidate in lines[index + 1:index + 7]]
+            declaration_index = next((number for number, candidate in enumerate(following)
+                                      if candidate and not candidate.startswith("@")), -1)
+            declaration = following[declaration_index] if declaration_index >= 0 else ""
+            is_test = JS_TEST_PATTERN.search(declaration) or (
+                JAVA_TEST_PATTERN.search(declaration)
+                and "@Test" in following[:declaration_index]
+            )
+            if match and is_test:
                 for test_id in ID_PATTERN.findall(match.group(1)):
                     found[test_id].append(path.relative_to(root))
     return found

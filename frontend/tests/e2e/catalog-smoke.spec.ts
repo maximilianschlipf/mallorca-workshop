@@ -1,7 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-test.describe.configure({ mode: "serial" });
-
 const eigentuemerEmail = "e2e-eigentuemer@example.de";
 const eigentuemerPasswort = "e2e-eigentuemer-passwort";
 
@@ -29,6 +27,15 @@ async function registrieren(
   await page.getByLabel("Passwort").fill(passwort);
   await page.getByRole("button", { name: "Benutzerkonto anlegen" }).click();
   await expect(page.getByText("Das Benutzerkonto wurde angelegt.")).toBeVisible();
+}
+
+async function registrierenUndAnmelden(
+  page: import("@playwright/test").Page,
+  name: string,
+  email: string,
+) {
+  await registrieren(page, name, email, "e2e-passwort");
+  await login(page, email, "e2e-passwort");
 }
 
 async function logout(page: import("@playwright/test").Page) {
@@ -81,11 +88,28 @@ test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", as
   await logout(page);
 });
 
+// verifies: TEST_USR_LOGIN_02
+test("öffentliche und geschützte Ansichten trennen anonyme Zugriffe", async ({ page }) => {
+  await page.goto("/anmelden");
+  await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
+  await page.goto("/registrieren");
+  await expect(page.getByRole("heading", { name: "Registrieren" })).toBeVisible();
+
+  for (const path of ["/", "/profil", "/benutzerkonten"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/anmelden/);
+    await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
+  }
+  expect((await page.request.get("/api/schulungen")).status()).toBe(401);
+  expect((await page.request.get("/api/auth/ich")).status()).toBe(401);
+});
+
 // verifies: TEST_USR_LOGIN_08
-test("verwirft die Sitzung beim Schließen des Browsers", async ({ browser, baseURL }) => {
+test("verwirft die Sitzung beim Schließen des Browsers", async ({ browser, baseURL, page }) => {
+  await registrieren(page, "E2E Sitzung", "e2e-sitzung@example.de", "e2e-passwort");
   const angemeldeterBrowser = await browser.newContext({ baseURL });
   const angemeldeteSeite = await angemeldeterBrowser.newPage();
-  await login(angemeldeteSeite);
+  await login(angemeldeteSeite, "e2e-sitzung@example.de", "e2e-passwort");
 
   const sitzung = (await angemeldeterBrowser.cookies()).find(cookie => cookie.name === "JSESSIONID");
   expect(sitzung?.expires).toBe(-1);
@@ -100,7 +124,7 @@ test("verwirft die Sitzung beim Schließen des Browsers", async ({ browser, base
 });
 
 test("catalog is visible and API returns 200", async ({ page }) => {
-  await login(page);
+  await registrierenUndAnmelden(page, "E2E Katalog", "e2e-katalog@example.de");
   const apiResponse = await page.request.get("/api/schulungen");
   expect(apiResponse.status()).toBe(200);
   await expect(
@@ -110,7 +134,7 @@ test("catalog is visible and API returns 200", async ({ page }) => {
 });
 
 test("search filters the catalog and reset restores it", async ({ page }) => {
-  await login(page);
+  await registrierenUndAnmelden(page, "E2E Suche", "e2e-suche@example.de");
   await page.goto("/");
   await expect(page.locator(".card").first()).toBeVisible();
 
@@ -127,7 +151,7 @@ test("search filters the catalog and reset restores it", async ({ page }) => {
 });
 
 test("shows empty state when no training matches", async ({ page }) => {
-  await login(page);
+  await registrierenUndAnmelden(page, "E2E Leer", "e2e-leer@example.de");
   await page.goto("/");
   await expect(page.locator(".card").first()).toBeVisible();
 
@@ -138,7 +162,7 @@ test("shows empty state when no training matches", async ({ page }) => {
 });
 
 test("calendar navigates by month and shows training details", async ({ page }) => {
-  await login(page);
+  await registrierenUndAnmelden(page, "E2E Kalender", "e2e-kalender@example.de");
   await page.clock.setFixedTime(new Date("2026-08-26T12:00:00"));
   await page.goto("/");
 
@@ -159,7 +183,7 @@ test("calendar navigates by month and shows training details", async ({ page }) 
 });
 
 test("calendar uses the chronological list on mobile", async ({ page }) => {
-  await login(page);
+  await registrierenUndAnmelden(page, "E2E Mobil", "e2e-mobil@example.de");
   await page.clock.setFixedTime(new Date("2026-08-26T12:00:00"));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
