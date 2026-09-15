@@ -1,7 +1,7 @@
 package de.nordwind.schulungsplaner;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.domain.Rolle;
 import de.nordwind.schulungsplaner.service.KontoFehler;
@@ -11,7 +11,7 @@ import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.env.YamlPropertySourceLoader;
@@ -122,8 +122,8 @@ class BenutzerkontoIntegrationTest {
         assertThat(unbekannt).isEqualTo(falschesPasswort).contains("UNGUELTIGE_ANMELDEDATEN");
         JsonNode fehler = json.readTree(unbekannt);
         assertThat(fehler.size()).isEqualTo(2);
-        assertThat(fehler.path("code").asText()).isEqualTo("UNGUELTIGE_ANMELDEDATEN");
-        assertThat(fehler.path("message").asText())
+        assertThat(fehler.path("code").stringValue()).isEqualTo("UNGUELTIGE_ANMELDEDATEN");
+        assertThat(fehler.path("message").stringValue())
                 .isEqualTo("E-Mail-Adresse oder Passwort ist falsch.");
     }
 
@@ -178,8 +178,8 @@ class BenutzerkontoIntegrationTest {
                     .andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
             JsonNode fehlerAntwort = json.readTree(fehler);
             assertThat(fehlerAntwort.size()).isEqualTo(2);
-            assertThat(fehlerAntwort.path("code").asText()).isEqualTo("UNGUELTIGE_EINGABE");
-            assertThat(fehlerAntwort.path("message").asText()).isEqualTo("Bitte prüfen Sie Ihre Eingaben.");
+            assertThat(fehlerAntwort.path("code").stringValue()).isEqualTo("UNGUELTIGE_EINGABE");
+            assertThat(fehlerAntwort.path("message").stringValue()).isEqualTo("Bitte prüfen Sie Ihre Eingaben.");
         }
     }
 

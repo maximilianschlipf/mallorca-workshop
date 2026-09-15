@@ -1,6 +1,6 @@
 package de.nordwind.schulungsplaner.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.nordwind.schulungsplaner.domain.Abwesenheit;
 import de.nordwind.schulungsplaner.domain.Schulung;
 import de.nordwind.schulungsplaner.domain.Termin;

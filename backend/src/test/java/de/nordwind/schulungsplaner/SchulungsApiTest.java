@@ -1,10 +1,10 @@
 package de.nordwind.schulungsplaner;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithAnonymousUser;
@@ -37,9 +37,9 @@ class SchulungsApiTest {
 
         assertThat(alle).isNotEmpty();
         assertThat(suche).allSatisfy(s ->
-                assertThat(s.get("titel").asText().toLowerCase()).contains("scrum"));
+                assertThat(s.get("titel").stringValue().toLowerCase()).contains("scrum"));
         assertThat(kategorie).allSatisfy(s ->
-                assertThat(s.get("kategorie").asText()).isEqualTo("Cloud & DevOps"));
+                assertThat(s.get("kategorie").stringValue()).isEqualTo("Cloud & DevOps"));
         assertThat(kombiniert).hasSize(1);
         assertThat(leer).isEmpty();
     }
@@ -48,7 +48,7 @@ class SchulungsApiTest {
     void liefertSortierteKategorien() throws Exception {
         JsonNode kategorien = getJson("/api/kategorien");
         assertThat(kategorien).isNotEmpty();
-        assertThat(kategorien.valueStream().map(JsonNode::asText).toList()).isSorted();
+        assertThat(kategorien.valueStream().map(JsonNode::stringValue).toList()).isSorted();
     }
 
     @Test
@@ -58,9 +58,9 @@ class SchulungsApiTest {
         JsonNode abwesend = getJson(
                 "/api/trainer/verfuegbar?schulungId=SCH-001&von=2026-08-03&bis=2026-08-03");
 
-        assertThat(frei.valueStream().map(t -> t.get("name").asText()).toList())
+        assertThat(frei.valueStream().map(t -> t.get("name").stringValue()).toList())
                 .containsExactly("Elena Fischer", "Julia Hoffmann");
-        assertThat(abwesend.valueStream().map(t -> t.get("name").asText()).toList())
+        assertThat(abwesend.valueStream().map(t -> t.get("name").stringValue()).toList())
                 .containsExactly("Elena Fischer");
     }
 

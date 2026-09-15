@@ -1,6 +1,6 @@
 package de.nordwind.schulungsplaner.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.nordwind.schulungsplaner.api.ApiFehler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
