@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,9 +74,10 @@ class BenutzerkontoIntegrationTest {
     @Test
     void ersteUndParalleleRegistrierungErzeugenGenauEinenEigentuemer() throws Exception {
         try (var pool = Executors.newFixedThreadPool(2)) {
+            var start = new CyclicBarrier(2);
             List<Callable<Benutzerkonto>> aufgaben = List.of(
-                    () -> konten.registrieren("Eins", "eins@example.de", "gleich"),
-                    () -> konten.registrieren("Zwei", "zwei@example.de", "gleich"));
+                    () -> { start.await(); return konten.registrieren("Eins", "eins@example.de", "gleich"); },
+                    () -> { start.await(); return konten.registrieren("Zwei", "zwei@example.de", "gleich"); });
             List<Benutzerkonto> ergebnisse = pool.invokeAll(aufgaben).stream()
                     .map(f -> { try { return f.get(); } catch (Exception e) { throw new RuntimeException(e); } })
                     .toList();
@@ -283,10 +285,11 @@ class BenutzerkontoIntegrationTest {
         Benutzerkonto eins = konten.registrieren("Eins", "eins@example.de", "pw");
         Benutzerkonto zwei = konten.registrieren("Zwei", "zwei@example.de", "pw");
         try (var pool = Executors.newFixedThreadPool(2)) {
+            var start = new CyclicBarrier(2);
             List<Callable<Boolean>> uebergaben = List.of(
-                    () -> { konten.eigentuemerUebergeben(
+                    () -> { start.await(); konten.eigentuemerUebergeben(
                             neu.id(), eins.id(), eins.aenderungsstand()); return true; },
-                    () -> { konten.eigentuemerUebergeben(
+                    () -> { start.await(); konten.eigentuemerUebergeben(
                             neu.id(), zwei.id(), zwei.aenderungsstand()); return true; });
             var ergebnisse = pool.invokeAll(uebergaben);
             long erfolgreich = ergebnisse.stream().filter(f -> {
@@ -308,7 +311,8 @@ class BenutzerkontoIntegrationTest {
                 alt.id(), ziel.id(), konten.laden(ziel.id()).aenderungsstand()))
                 .isInstanceOfSatisfying(KontoFehler.class,
                         f -> assertThat(f.code()).isEqualTo("KONTO_STILLGELEGT"));
-        assertThat(konten.laden(alt.id()).rollen()).contains(Rolle.EIGENTUEMER);
+        assertThat(konten.laden(alt.id()).rollen()).containsExactlyInAnyOrder(
+                Rolle.TRAINER, Rolle.ADMINISTRATOR, Rolle.EIGENTUEMER);
         assertThat(konten.laden(ziel.id()).rollen()).containsExactly(Rolle.TRAINER);
     }
 
@@ -378,6 +382,7 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("INSERT INTO trainer_qualifikation VALUES (?, 'SCH-001')", ziel.id());
         jdbc.update("INSERT INTO abwesenheit (benutzerkonto_id, von, bis) VALUES (?, DATE '2099-02-01', DATE '2099-02-02')", ziel.id());
         termin("ROLLEN", "2099-02-03", "geplant", null);
+        einsaetze.aufQualifikationBewerben(ziel.id(), "SCH-002");
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "ROLLEN");
         assertThat(schulungen.findVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
@@ -388,6 +393,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(konten.laden(ziel.id()).rollen()).containsExactly(Rolle.ADMINISTRATOR);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM trainer_qualifikation WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(schulungen.findVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
@@ -401,6 +407,8 @@ class BenutzerkontoIntegrationTest {
 
         konten.rolleErteilen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(schulungen.findVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
                 .extracting("id").contains(ziel.id());
@@ -516,6 +524,8 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES ('HISTORIE', ?, 1)", ziel.id());
         einsaetze.aufQualifikationBewerben(ziel.id(), "SCH-002");
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "ZUKUNFT");
+        jdbc.update("INSERT INTO vormerkung (termin_id, benutzerkonto_id) VALUES ('ZUKUNFT', ?)", ziel.id());
+        jdbc.update("INSERT INTO benachrichtigung (empfaenger_id, anlass) VALUES (?, 'Test')", ziel.id());
 
         konten.stilllegen(chef.id(), ziel.id(), ziel.aenderungsstand());
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='ZUKUNFT'", String.class)).isNull();
@@ -528,6 +538,8 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vormerkung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?", Integer.class, ziel.id())).isOne();
         konten.reaktivieren(chef.id(), ziel.id(),
                 konten.laden(ziel.id()).aenderungsstand());
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='ZUKUNFT'", String.class)).isNull();
@@ -560,16 +572,21 @@ class BenutzerkontoIntegrationTest {
         jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES ('LOESCH-HISTORIE-ASSISTENZ', ?, 1)", ziel.id());
         einsaetze.aufQualifikationBewerben(ziel.id(), "SCH-002");
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "LOESCH-ZUKUNFT-ASSISTENZ");
+        jdbc.update("INSERT INTO vormerkung (termin_id, benutzerkonto_id) VALUES ('LOESCH-ZUKUNFT-TRAINER', ?)", ziel.id());
+        jdbc.update("INSERT INTO benachrichtigung (empfaenger_id, anlass) VALUES (?, 'Test')", ziel.id());
 
         konten.loeschen(chef.id(), ziel.id(), ziel.aenderungsstand());
 
         assertThat(konten.finden(ziel.id())).isEmpty();
         for (String tabelle : List.of("trainer_qualifikation", "qualifikationsbewerbung",
-                "assistenzbewerbung", "abwesenheit")) {
+                "assistenzbewerbung", "abwesenheit", "vormerkung")) {
             assertThat(jdbc.queryForObject(
                     "SELECT COUNT(*) FROM " + tabelle + " WHERE benutzerkonto_id = ?",
                     Integer.class, ziel.id())).isZero();
         }
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id = ?",
+                Integer.class, ziel.id())).isZero();
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='LOESCH-ZUKUNFT-TRAINER'", String.class)).isNull();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM termin_assistent WHERE termin_id='LOESCH-ZUKUNFT-ASSISTENZ'", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='LOESCH-HISTORIE-TRAINER'", String.class)).isNull();
