@@ -45,6 +45,9 @@ npm run dev
 Frontend: http://localhost:15173  
 Backend: http://localhost:18081
 
+Beim ersten Start ist noch kein Benutzerkonto vorhanden. Über
+„Jetzt registrieren“ entsteht das Eigentümerkonto mit allen drei Rollen.
+
 ## Verifizieren
 
 Der vollständige Abschluss-Check wird aus dem Projektverzeichnis gestartet:
@@ -151,7 +154,6 @@ make html SPHINXOPTS=
 
 ## Geplanter Ausbau
 
-- Benutzerkonten mit den Rollen Trainer, Administrator und Eigentümer
 - Freigabeanfragen für Trainerqualifikationen
 - Planung von Schulungsterminen und Zuweisung qualifizierter Trainer
 - Assistenzplätze an Terminen als Weg zum Anlernen
@@ -160,14 +162,16 @@ make html SPHINXOPTS=
 - Übernahmeanfragen zwischen Trainern
 - Teilnehmerbuchungen mit Aufbewahrungsfrist
 
-Bei der Umsetzung kommen `spring-boot-starter-security`, `spring-boot-starter-validation` und `vue-router` hinzu.
+Benutzerkonten und geschützte Ansichten verwenden
+`spring-boot-starter-security`, `spring-boot-starter-validation` und
+`vue-router`.
 
 ### Datenhaltung
 
 Die Daten liegen an zwei Orten, getrennt entlang der Frage, ob etwas versioniert gehört:
 
 - **Der Schulungskatalog** bleibt in JSON-Dateien, je Schulung eine, im Repository versioniert. Er enthält nur die Beschreibung — Titel, Kategorie, Kurzbeschreibung, Voraussetzungen, Dauer und die beiden Teilnehmergrenzen. Eine Änderung daran schreibt die Datei und sichert sie mit einem Commit.
-- **Alles Veränderliche** — Benutzerkonten, Termine, Trainerzuweisungen, Qualifikationen, Abwesenheiten, Teilnehmerbuchungen und Benachrichtigungen — liegt in einer eingebetteten H2-Datenbank im Dateimodus. Sie braucht keine eigene Installation und keinen Serverprozess.
+- **Alles Veränderliche** — Benutzerkonten, Termine, Trainerzuweisungen, Qualifikationen, Abwesenheiten, Teilnehmerbuchungen und Benachrichtigungen — liegt in einer eingebetteten H2-Datenbank im Dateimodus unter `backend/data/`. Sie braucht keine eigene Installation und keinen Serverprozess; das Verzeichnis wird nicht versioniert.
 
 Der Grund für die Trennung: Eine Katalogänderung ist eine seltene, bewusste Handlung und gehört in die Versionsgeschichte. Laufender Betriebszustand nicht — Benachrichtigungen allein würden die Historie mit Commits fluten. Die Schulungs-ID ist die Klammer zwischen beiden Ablagen.
 

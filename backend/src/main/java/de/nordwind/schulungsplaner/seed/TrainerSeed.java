@@ -1,8 +1,10 @@
-package de.nordwind.schulungsplaner.domain;
+package de.nordwind.schulungsplaner.seed;
+
+import de.nordwind.schulungsplaner.domain.Abwesenheit;
 
 import java.util.List;
 
-public record Trainer(
+public record TrainerSeed(
         String id,
         String name,
         String email,

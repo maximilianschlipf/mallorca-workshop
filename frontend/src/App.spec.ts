@@ -1,6 +1,7 @@
 import { mount, flushPromises } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import App from "./App.vue";
+import App from "./views/KatalogView.vue";
+import { aktuellesKonto } from "./auth";
 
 type FetchResponse = { ok: boolean; json: () => Promise<unknown> };
 
@@ -64,6 +65,7 @@ describe("App smoke", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+    aktuellesKonto.value = null;
   });
 
   it("renders at least one training entry from API data", async () => {
@@ -293,5 +295,55 @@ describe("App smoke", () => {
     expect(wrapper.text()).toContain(
       "Keine Schulungen entsprechen den gewählten Filtern",
     );
+  });
+
+  it("bietet Bewerbungen und eine qualifikationsgeprüfte Trainerzuweisung an", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 1, 1));
+    aktuellesKonto.value = {
+      id: "ADMIN-1",
+      email: "admin@example.de",
+      name: "Admin Trainer",
+      aenderungsstand: 0,
+      rollen: ["TRAINER", "ADMINISTRATOR"],
+      zustand: "AKTIV",
+    };
+    const zukunft = {
+      ...schulung,
+      oeffentlicheTermine: [{
+        terminId: "SCH-001-ZUKUNFT",
+        startdatum: "2030-02-10",
+        enddatum: "2030-02-11",
+        ort: "Köln",
+        format: "Präsenz",
+        status: "geplant",
+        trainerId: null,
+      }],
+    };
+    const aufrufe: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      aufrufe.push(url);
+      if (url.includes("/api/auth/csrf")) return jsonResponse({ token: "csrf" }) as Response;
+      if (url.includes("/api/kategorien")) return jsonResponse(["Agile"]) as Response;
+      if (url.includes("/api/trainer/verfuegbar")) {
+        return jsonResponse([{ id: "TRN-1", name: "Qualifizierte Person", email: "q@example.de" }]) as Response;
+      }
+      return jsonResponse(url.includes("/api/schulungen") ? [zukunft] : {}) as Response;
+    });
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await wrapper.get(".course-action").trigger("click");
+    await wrapper.get(".calendar-event").trigger("click");
+    await wrapper.get(".calendar-detail-actions .filter-reset").trigger("click");
+    await wrapper.get(".calendar-detail-actions .primary-action").trigger("click");
+    await flushPromises();
+    await wrapper.get(".trainer-row-actions button").trigger("click");
+    await flushPromises();
+
+    expect(aufrufe).toContain("/api/ich/qualifikationsbewerbungen/SCH-001");
+    expect(aufrufe).toContain("/api/ich/assistenzbewerbungen/SCH-001-ZUKUNFT");
+    expect(aufrufe).toContain("/api/termine/SCH-001-ZUKUNFT/trainer/TRN-1");
   });
 });

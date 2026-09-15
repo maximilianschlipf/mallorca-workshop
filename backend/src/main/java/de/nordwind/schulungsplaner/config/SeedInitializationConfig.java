@@ -10,6 +10,6 @@ public class SeedInitializationConfig {
 
     @Bean
     ApplicationRunner initializeSeedData(SeedService seedService) {
-        return args -> seedService.resetAndSeed();
+        return args -> seedService.initialisieren();
     }
 }

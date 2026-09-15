@@ -213,7 +213,8 @@ Anmeldung
 .. test:: Die Sitzung überdauert den Browser nicht
    :id: TEST_USR_LOGIN_08
    :status: approved
-   :automated: no
+   :automated: yes
+   :level: e2e
    :verifies: REQ_USR_LOGIN_04
 
    Das Sitzungsmerkmal trägt kein Ablaufdatum und wird mit dem Browser

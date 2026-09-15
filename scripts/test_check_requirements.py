@@ -39,8 +39,6 @@ class RequirementsGateTest(unittest.TestCase):
         (self.root / "requirements-scope.txt").write_text(
             "docs/requirements.rst | docs/acceptance.rst\n", encoding="utf-8"
         )
-        (self.root / "requirements-manual-evidence.md").write_text("", encoding="utf-8")
-
     def tearDown(self):
         self.temp.cleanup()
 
@@ -48,15 +46,29 @@ class RequirementsGateTest(unittest.TestCase):
         _, issues = audit(self.root)
         self.assertIn("TEST_TEST_01: vollständiger Testnachweis fehlt", issues)
 
+    def test_manual_tests_are_rejected(self):
+        path = self.root / "docs/acceptance.rst"
+        path.write_text(ACCEPTANCE.replace(":automated: yes", ":automated: no"), encoding="utf-8")
+        _, issues = audit(self.root)
+        self.assertIn("TEST_TEST_01: :automated: muss yes sein", issues)
+
     def test_e2e_evidence_must_be_in_e2e_directory(self):
         marker = "// verifies: TEST_TEST_01\n"
-        (self.root / "frontend/src/example.spec.ts").write_text(marker, encoding="utf-8")
+        test = marker + 'test("Beispiel", () => {})\n'
+        (self.root / "frontend/src/example.spec.ts").write_text(test, encoding="utf-8")
         _, issues = audit(self.root)
         self.assertIn("TEST_TEST_01: vollständiger Testnachweis fehlt", issues)
 
-        (self.root / "frontend/tests/e2e/example.spec.ts").write_text(marker, encoding="utf-8")
+        (self.root / "frontend/tests/e2e/example.spec.ts").write_text(test, encoding="utf-8")
         _, issues = audit(self.root)
         self.assertEqual([], issues)
+
+    def test_marker_must_precede_an_executable_test(self):
+        (self.root / "frontend/tests/e2e/example.spec.ts").write_text(
+            "// verifies: TEST_TEST_01\nasync function helper() {}\n", encoding="utf-8"
+        )
+        _, issues = audit(self.root)
+        self.assertIn("TEST_TEST_01: vollständiger Testnachweis fehlt", issues)
 
 
 if __name__ == "__main__":

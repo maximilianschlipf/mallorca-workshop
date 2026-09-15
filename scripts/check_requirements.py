@@ -15,15 +15,12 @@ ID_PATTERN = re.compile(r"\b(?:REQ|STORY|TEST)_[A-Z0-9]+(?:_[A-Z0-9]+)+\b")
 DIRECTIVE_PATTERN = re.compile(r"^\.\. (concept|decision|req|story|bug|test)::\s*(.*)$")
 OPTION_PATTERN = re.compile(r"^\s+:([a-z_]+):\s*(.*)$")
 EVIDENCE_PATTERN = re.compile(r"verifies:\s*(.*)$")
-MANUAL_PATTERN = re.compile(r"verifies-manually:\s*(.*)$")
+TEST_PATTERN = re.compile(r"^(?:test|it)\s*\(|(?:public\s+)?void\s+\w+\s*\(")
 
 
 @dataclass
 class Need:
     kind: str
-    title: str
-    path: Path
-    line: int
     options: dict[str, str] = field(default_factory=dict)
 
     @property
@@ -34,22 +31,16 @@ class Need:
         return set(ID_PATTERN.findall(self.options.get(option, "")))
 
 
-@dataclass
-class Evidence:
-    path: Path
-    manual: bool
-
-
 def parse_needs(path: Path) -> list[Need]:
     needs: list[Need] = []
     current: Need | None = None
     current_option: str | None = None
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line in path.read_text(encoding="utf-8").splitlines():
         directive = DIRECTIVE_PATTERN.match(line)
         if directive:
             if current:
                 needs.append(current)
-            current = Need(directive.group(1), directive.group(2), path, number)
+            current = Need(directive.group(1))
             current_option = None
             continue
         if not current:
@@ -89,24 +80,21 @@ def load_scopes(root: Path) -> list[tuple[Path, Path]]:
     return scopes
 
 
-def find_evidence(root: Path) -> dict[str, list[Evidence]]:
-    found: dict[str, list[Evidence]] = defaultdict(list)
+def find_evidence(root: Path) -> dict[str, list[Path]]:
+    found: dict[str, list[Path]] = defaultdict(list)
     test_files = list((root / "backend/src/test").rglob("*"))
     test_files += list((root / "frontend/src").rglob("*.spec.ts"))
     test_files += list((root / "frontend/tests").rglob("*"))
     for path in (path for path in test_files if path.is_file()):
-        for line in path.read_text(encoding="utf-8").splitlines():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for index, line in enumerate(lines):
             match = EVIDENCE_PATTERN.search(line)
-            if match:
+            following = (candidate.strip() for candidate in lines[index + 1:index + 7])
+            declaration = next((candidate for candidate in following
+                                if candidate and not candidate.startswith("@")), "")
+            if match and TEST_PATTERN.search(declaration):
                 for test_id in ID_PATTERN.findall(match.group(1)):
-                    found[test_id].append(Evidence(path.relative_to(root), False))
-
-    manual_path = root / "requirements-manual-evidence.md"
-    for line in manual_path.read_text(encoding="utf-8").splitlines():
-        match = MANUAL_PATTERN.search(line)
-        if match and not line.lstrip().startswith("```"):
-            for test_id in ID_PATTERN.findall(match.group(1)):
-                found[test_id].append(Evidence(manual_path.relative_to(root), True))
+                    found[test_id].append(path.relative_to(root))
     return found
 
 
@@ -129,8 +117,8 @@ def audit(root: Path) -> tuple[list[tuple[str, str, str, str, str]], list[str]]:
             for requirement_id in story.ids("implements"):
                 stories_by_requirement[requirement_id].append(story)
         for test in tests:
-            if test.options.get("automated") not in {"yes", "no"}:
-                issues.append(f"{test.id}: :automated: muss yes oder no sein")
+            if test.options.get("automated") != "yes":
+                issues.append(f"{test.id}: :automated: muss yes sein")
             if not test.ids("verifies"):
                 issues.append(f"{test.id}: Test ohne verifies-Link")
             for target_id in test.ids("verifies"):
@@ -151,21 +139,15 @@ def audit(root: Path) -> tuple[list[tuple[str, str, str, str, str]], list[str]]:
             story_ids = ", ".join(story.id for story in linked_stories) or "—"
             for test in sorted(linked_tests.values(), key=lambda item: item.id):
                 candidates = evidence.get(test.id, [])
-                if test.options.get("automated") == "no":
-                    candidates = [item for item in candidates if item.manual]
-                    result = "MANUELL" if candidates else "OFFEN"
-                else:
-                    candidates = [item for item in candidates if not item.manual]
-                    if test.options.get("level") == "e2e":
-                        candidates = [item for item in candidates if "tests/e2e" in item.path.as_posix()]
-                    result = "E2E" if candidates and test.options.get("level") == "e2e" else (
-                        "GETESTET" if candidates else "OFFEN"
-                    )
-                evidence_text = ", ".join(sorted({item.path.as_posix() for item in candidates})) or "—"
+                if test.options.get("level") == "e2e":
+                    candidates = [item for item in candidates if "tests/e2e" in item.as_posix()]
+                result = "E2E" if candidates and test.options.get("level") == "e2e" else (
+                    "GETESTET" if candidates else "OFFEN"
+                )
+                evidence_text = ", ".join(sorted({item.as_posix() for item in candidates})) or "—"
                 rows.append((requirement.id, story_ids, test.id, evidence_text, result))
                 if not candidates:
-                    kind = "manueller Nachweis" if test.options.get("automated") == "no" else "vollständiger Testnachweis"
-                    issues.append(f"{test.id}: {kind} fehlt")
+                    issues.append(f"{test.id}: vollständiger Testnachweis fehlt")
 
     return rows, sorted(set(issues))
 

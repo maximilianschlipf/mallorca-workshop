@@ -47,9 +47,11 @@ public class SchulungsQueryService {
                        t.format,
                        t.status,
                        t.trainer_id,
+                       COALESCE(bt.name, t.trainer_name_snapshot) AS trainer_name,
                        v.text AS voraussetzung
                 FROM schulung s
                 LEFT JOIN termin t ON t.schulung_id = s.id
+                LEFT JOIN benutzerkonto bt ON bt.id = t.trainer_id
                 LEFT JOIN voraussetzung v ON v.schulung_id = s.id
                 WHERE s.id IN (%s)
                 ORDER BY s.id, t.startdatum, t.termin_id
@@ -90,7 +92,9 @@ public class SchulungsQueryService {
                         rs.getString("ort"),
                         rs.getString("format"),
                         rs.getString("status"),
-                        rs.getString("trainer_id")
+                        rs.getString("trainer_id"),
+                        rs.getString("trainer_name"),
+                        findAssistenten(terminId)
                 ));
             }
         }, matchingIds.toArray());
@@ -109,13 +113,16 @@ public class SchulungsQueryService {
             String schulungId, LocalDate von, LocalDate bis) {
         return jdbcTemplate.query("""
                 SELECT t.id, t.name, t.email
-                FROM trainer t
-                JOIN trainer_qualifikation q ON q.trainer_id = t.id
+                FROM benutzerkonto t
+                JOIN benutzerkonto_rolle r
+                  ON r.benutzerkonto_id = t.id AND r.rolle = 'TRAINER'
+                JOIN trainer_qualifikation q ON q.benutzerkonto_id = t.id
                 WHERE q.schulung_id = ?
+                  AND t.aktiv = TRUE
                   AND NOT EXISTS (
                     SELECT 1
                     FROM abwesenheit a
-                    WHERE a.trainer_id = t.id
+                    WHERE a.benutzerkonto_id = t.id
                       AND a.von <= ?
                       AND a.bis >= ?
                   )
@@ -128,6 +135,16 @@ public class SchulungsQueryService {
                 ),
                 schulungId, bis, von
         );
+    }
+
+    private List<String> findAssistenten(String terminId) {
+        return jdbcTemplate.queryForList("""
+                SELECT COALESCE(k.name, a.name_snapshot)
+                FROM termin_assistent a
+                LEFT JOIN benutzerkonto k ON k.id = a.benutzerkonto_id
+                WHERE a.termin_id = ?
+                ORDER BY a.platz
+                """, String.class, terminId);
     }
 
     private List<String> findMatchingIds(String titelFilter, String kategorieFilter) {
