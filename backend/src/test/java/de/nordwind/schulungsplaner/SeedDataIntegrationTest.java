@@ -18,7 +18,7 @@ class SeedDataIntegrationTest {
         assertCount("schulung", 8);
         assertCount("termin", 14);
         assertCount("voraussetzung", 8);
-        assertCount("trainer", 5);
+        assertCount("benutzerkonto", 5);
         assertCount("trainer_qualifikation", 10);
         assertCount("abwesenheit", 5);
     }

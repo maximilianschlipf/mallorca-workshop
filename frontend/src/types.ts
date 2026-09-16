@@ -6,6 +6,8 @@ export interface Termin {
   format?: string | null
   status: string
   trainerId?: string | null
+  trainerName?: string | null
+  assistenten?: string[]
 }
 
 export interface Schulung {
@@ -24,4 +26,16 @@ export interface Trainer {
   id: string
   name: string
   email: string
+}
+
+export type Rolle = "TRAINER" | "ADMINISTRATOR" | "EIGENTUEMER";
+export type Kontozustand = "AKTIV" | "STILLGELEGT";
+
+export interface Benutzerkonto {
+  id: string;
+  email: string;
+  name: string;
+  aenderungsstand: number;
+  rollen: Rolle[];
+  zustand: Kontozustand;
 }

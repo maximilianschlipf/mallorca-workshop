@@ -1,5 +1,7 @@
 package de.nordwind.schulungsplaner.domain;
 
+import java.util.List;
+
 public record Termin(
         String terminId,
         String startdatum,
@@ -7,6 +9,8 @@ public record Termin(
         String ort,
         String format,
         String status,
-        String trainerId
+        String trainerId,
+        String trainerName,
+        List<String> assistenten
 ) {
 }

@@ -131,6 +131,10 @@ needs_fields = {
     "priority":  {"schema": {"type": "string"}, "description": "Priorität, z. B. high/medium/low"},
     "component": {"schema": {"type": "string"}, "description": "Betroffene Komponente"},
     "automated": {"schema": {"type": "string"}, "description": "Testfall automatisiert (yes/no)"},
+    "level": {
+        "schema": {"type": "string", "enum": ["unit", "integration", "e2e", "manual"]},
+        "description": "Verbindliche Nachweisebene, wenn eine bestimmte Ebene erforderlich ist",
+    },
 }
 
 # Hinweis: Eine farbliche Reife-Darstellung im needflow-Graphen lässt sich

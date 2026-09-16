@@ -77,12 +77,13 @@ if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
   (cd "$FRONTEND_DIR" && npm ci)
 fi
 
+wait_for_server "Backend" "http://localhost:18081/api/health" "$backend_pid" 120
+
 echo "Starte Frontend (http://localhost:15173)..."
 (cd "$FRONTEND_DIR" && npm run dev) &
 frontend_pid=$!
 pids+=("$frontend_pid")
 
-wait_for_server "Backend" "http://localhost:18081/api/health" "$backend_pid" 120
 wait_for_server "Frontend" "http://localhost:15173" "$frontend_pid" 30
 echo "Beide Server sind bereit. Mit Strg+C beenden."
 
