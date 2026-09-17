@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-003",
+  "titel" : "Java Spring Boot Intensivkurs",
+  "kategorie" : "Softwareentwicklung",
+  "kurzbeschreibung" : "Aufbau von REST-Services mit Spring Boot – von Grundlagen bis Best Practices.",
+  "voraussetzungen" : [ "Java-Grundkenntnisse (mind. 1 Jahr Erfahrung)" ],
+  "dauerInTagen" : 3,
+  "mindestteilnehmerExklusiv" : 6,
+  "maxTeilnehmerOeffentlich" : 10
+}

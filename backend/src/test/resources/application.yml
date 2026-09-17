@@ -11,3 +11,10 @@ spring:
 
 app:
   demo-seed: true
+
+schulungsplaner:
+  katalog:
+    pfad: ../katalog
+    commit:
+      name: Schulungsplaner Test
+      email: schulungsplaner-test@localhost

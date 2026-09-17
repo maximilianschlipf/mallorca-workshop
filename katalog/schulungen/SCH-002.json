@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-002",
+  "titel" : "Kubernetes Grundlagen",
+  "kategorie" : "Cloud & DevOps",
+  "kurzbeschreibung" : "Einstieg in Container-Orchestrierung mit Kubernetes.",
+  "voraussetzungen" : [ "Linux-Grundkenntnisse", "Docker-Basiswissen" ],
+  "dauerInTagen" : 3,
+  "mindestteilnehmerExklusiv" : 8,
+  "maxTeilnehmerOeffentlich" : 14
+}

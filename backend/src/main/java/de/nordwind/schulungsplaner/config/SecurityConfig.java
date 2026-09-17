@@ -33,6 +33,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/registrieren", "/api/auth/anmelden").permitAll()
                         .requestMatchers("/api/benutzerkonten/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/schulungen/**", "/api/kategorien/**")
+                                .hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/schulungen/**", "/api/kategorien/**")
+                                .hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/schulungen/**", "/api/kategorien/**")
+                                .hasRole("ADMINISTRATOR")
                         .anyRequest().authenticated())
                 .exceptionHandling(fehler -> fehler
                         .authenticationEntryPoint((request, response, ex) ->

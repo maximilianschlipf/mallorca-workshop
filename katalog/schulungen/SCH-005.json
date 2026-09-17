@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-005",
+  "titel" : "Effektive Kommunikation im Team",
+  "kategorie" : "Soft Skills & Führung",
+  "kurzbeschreibung" : "Kommunikationstechniken für den Arbeitsalltag im Team.",
+  "voraussetzungen" : [ ],
+  "dauerInTagen" : 1,
+  "mindestteilnehmerExklusiv" : 8,
+  "maxTeilnehmerOeffentlich" : 16
+}

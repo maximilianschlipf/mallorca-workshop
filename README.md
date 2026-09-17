@@ -76,7 +76,12 @@ npm run build
 npm run test:e2e
 ```
 
-Der E2E-Befehl startet Backend und Frontend bei Bedarf selbst.
+Der E2E-Befehl startet Backend und Frontend selbst. Er verwendet dabei
+bewusst **kein** laufendes Backend weiter: Die Tests legen Schulungen an und
+löschen sie, und jede Änderung am Katalog erzeugt einen Commit. Sie laufen
+deshalb gegen eine Kopie des Katalogs in einem eigenen Repository unter
+`$TMPDIR`. Läuft auf Port 18081 schon ein Backend, bricht der Lauf ab --
+beende es vorher.
 
 ## Dokumentation
 
@@ -162,9 +167,9 @@ make html SPHINXOPTS=
 - Übernahmeanfragen zwischen Trainern
 - Teilnehmerbuchungen mit Aufbewahrungsfrist
 
-Benutzerkonten und geschützte Ansichten verwenden
-`spring-boot-starter-security`, `spring-boot-starter-validation` und
-`vue-router`.
+Benutzerkonten und Schulungskatalog verwenden
+`spring-boot-starter-security`, `spring-boot-starter-validation`,
+`vue-router` und JGit.
 
 ### Datenhaltung
 

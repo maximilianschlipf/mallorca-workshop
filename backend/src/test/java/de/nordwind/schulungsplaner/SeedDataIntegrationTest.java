@@ -15,9 +15,8 @@ class SeedDataIntegrationTest {
 
     @Test
     void shouldImportCompleteSeedGraph() {
-        assertCount("schulung", 8);
+        assertCount("schulung_zustand", 8);
         assertCount("termin", 14);
-        assertCount("voraussetzung", 8);
         assertCount("benutzerkonto", 5);
         assertCount("trainer_qualifikation", 10);
         assertCount("abwesenheit", 5);

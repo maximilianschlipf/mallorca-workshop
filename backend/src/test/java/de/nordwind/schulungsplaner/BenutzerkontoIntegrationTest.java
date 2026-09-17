@@ -4,9 +4,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.domain.Rolle;
+import de.nordwind.schulungsplaner.katalog.KatalogAnsichtService;
 import de.nordwind.schulungsplaner.service.KontoFehler;
 import de.nordwind.schulungsplaner.service.KontoService;
-import de.nordwind.schulungsplaner.service.SchulungsQueryService;
+import de.nordwind.schulungsplaner.service.TrainerQueryService;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,8 @@ class BenutzerkontoIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
-    @Autowired SchulungsQueryService schulungen;
+    @Autowired TrainerQueryService schulungen;
+    @Autowired KatalogAnsichtService katalog;
     @Autowired TrainereinsatzService einsaetze;
 
     @BeforeEach
@@ -384,7 +386,7 @@ class BenutzerkontoIntegrationTest {
         termin("ROLLEN", "2099-02-03", "geplant", null);
         einsaetze.aufQualifikationBewerben(ziel.id(), "SCH-002");
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "ROLLEN");
-        assertThat(schulungen.findVerfuegbareTrainer(
+        assertThat(schulungen.findeVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
                 .extracting("id").contains(ziel.id());
         konten.rolleEntziehen(chef.id(), ziel.id(), Rolle.TRAINER,
@@ -395,7 +397,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
-        assertThat(schulungen.findVerfuegbareTrainer(
+        assertThat(schulungen.findeVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
                 .extracting("id").doesNotContain(ziel.id());
         assertThatThrownBy(() -> einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id()))
@@ -409,10 +411,10 @@ class BenutzerkontoIntegrationTest {
                 konten.laden(ziel.id()).aenderungsstand());
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
-        assertThat(schulungen.findVerfuegbareTrainer(
+        assertThat(schulungen.findeVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
                 .extracting("id").contains(ziel.id());
-        assertThat(schulungen.findVerfuegbareTrainer(
+        assertThat(schulungen.findeVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 1), LocalDate.of(2099, 2, 2)))
                 .extracting("id").doesNotContain(ziel.id());
         einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id());
@@ -551,7 +553,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(konten.finden(ziel.id())).isEmpty();
         assertThat(jdbc.queryForObject("SELECT trainer_name_snapshot FROM termin WHERE termin_id='HISTORIE'", String.class)).isEqualTo("Ziel");
         assertThat(jdbc.queryForObject("SELECT name_snapshot FROM termin_assistent WHERE termin_id='HISTORIE'", String.class)).isEqualTo("Ziel");
-        assertThat(schulungen.findSchulungen(null, null).stream()
+        assertThat(katalog.findeSchulungen(null, null).stream()
                 .flatMap(s -> s.oeffentlicheTermine().stream())
                 .filter(t -> t.terminId().equals("HISTORIE")).findFirst().orElseThrow().trainerName())
                 .isEqualTo("Ziel");
@@ -593,7 +595,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT trainer_name_snapshot FROM termin WHERE termin_id='LOESCH-HISTORIE-TRAINER'", String.class)).isEqualTo("Ziel");
         assertThat(jdbc.queryForObject("SELECT benutzerkonto_id FROM termin_assistent WHERE termin_id='LOESCH-HISTORIE-ASSISTENZ'", String.class)).isNull();
         assertThat(jdbc.queryForObject("SELECT name_snapshot FROM termin_assistent WHERE termin_id='LOESCH-HISTORIE-ASSISTENZ'", String.class)).isEqualTo("Ziel");
-        assertThat(schulungen.findSchulungen(null, null).stream()
+        assertThat(katalog.findeSchulungen(null, null).stream()
                 .flatMap(s -> s.oeffentlicheTermine().stream())
                 .filter(t -> t.terminId().equals("LOESCH-HISTORIE-ASSISTENZ"))
                 .findFirst().orElseThrow().assistenten()).containsExactly("Ziel");

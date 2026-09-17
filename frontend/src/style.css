@@ -1433,3 +1433,248 @@ p {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- Verwaltung ------------------------------------------------------- */
+
+.page-section {
+  width: min(1120px, 100% - 3rem);
+  margin: 0 auto;
+  padding: 3rem 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.verwaltung-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.sekundaer-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.verwaltungstabelle {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.verwaltungstabelle th,
+.verwaltungstabelle td {
+  padding: 0.75rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.verwaltungstabelle th {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.zeilen-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.zeilen-aktionen button,
+.zeilen-aktionen a {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.gefahr {
+  border-color: color-mix(in srgb, #ff6b5e 55%, transparent) !important;
+  color: #ff8d83;
+}
+
+.zustand {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.zustand-aktiv {
+  background: #e3f3e8;
+  color: #17502c;
+}
+
+.zustand-archiviert {
+  background: #ece9e4;
+  color: #5a5248;
+}
+
+.kennung {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.05em;
+}
+
+.angaben {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.angaben dt {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.angaben dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+
+.schulungsformular {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.schulungsformular .breit {
+  grid-column: 1 / -1;
+}
+
+.schulungsformular textarea,
+.kategorienliste input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 0.6rem 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  resize: vertical;
+}
+
+.kategorienliste input[type="text"] {
+  flex: 0 1 16rem;
+  resize: none;
+}
+
+.formular-aktionen {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.feldfehler {
+  margin: 0.35rem 0 0;
+  color: #ff8d83;
+  font-size: 0.85rem;
+}
+
+.state-warnung {
+  border-left: 4px solid #b58900;
+}
+
+.dialog-hintergrund {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.45);
+  z-index: 50;
+  padding: 1.5rem;
+}
+
+.dialog {
+  max-width: 34rem;
+  padding: 1.75rem;
+  /* "card" ist im Projekt nur ein Merkmal für Tests und trägt keine Gestaltung.
+     Der Dialog braucht seinen Grund deshalb selbst -- sonst steht sein Text
+     über dem, was er verdecken soll. */
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+}
+
+.dialog h3 {
+  margin-top: 0;
+}
+
+.dialog-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.dialog-aktionen button {
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.kategorienliste {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.kategorienliste li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+
+.kategorienliste li > span:first-child {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.aufnahmebericht {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.aufnahmebericht li {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}

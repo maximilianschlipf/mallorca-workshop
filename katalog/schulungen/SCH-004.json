@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-004",
+  "titel" : "Angular für Fortgeschrittene",
+  "kategorie" : "Softwareentwicklung",
+  "kurzbeschreibung" : "Vertiefende Konzepte in Angular: State Management, Performance, Testing.",
+  "voraussetzungen" : [ "HTML, CSS und JavaScript", "Grundlagen in TypeScript" ],
+  "dauerInTagen" : 2,
+  "mindestteilnehmerExklusiv" : 6,
+  "maxTeilnehmerOeffentlich" : 12
+}

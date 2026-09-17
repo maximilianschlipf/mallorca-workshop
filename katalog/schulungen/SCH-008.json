@@ -1,0 +1,10 @@
+{
+  "id" : "SCH-008",
+  "titel" : "Terraform & Infrastructure as Code",
+  "kategorie" : "Cloud & DevOps",
+  "kurzbeschreibung" : "Infrastruktur automatisiert und versioniert bereitstellen mit Terraform.",
+  "voraussetzungen" : [ "Grundlegende Cloud-Kenntnisse", "Kubernetes Grundlagen (SCH-002) empfohlen" ],
+  "dauerInTagen" : 2,
+  "mindestteilnehmerExklusiv" : 6,
+  "maxTeilnehmerOeffentlich" : 10
+}
