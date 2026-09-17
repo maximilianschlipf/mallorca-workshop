@@ -145,9 +145,11 @@ public class KatalogAnsichtService {
     private Map<String, List<Termin>> termineJeSchulung() {
         Map<String, List<Termin>> jeSchulung = new java.util.HashMap<>();
         jdbcTemplate.query("""
-                SELECT termin_id, schulung_id, startdatum, enddatum, ort, format,
-                       status, trainer_id
-                FROM termin
+                SELECT t.termin_id, t.schulung_id, t.startdatum, t.enddatum, t.ort, t.format,
+                       t.status, t.trainer_id,
+                       COALESCE(k.name, t.trainer_name_snapshot) AS trainer_name
+                FROM termin t
+                LEFT JOIN benutzerkonto k ON k.id = t.trainer_id
                 ORDER BY startdatum, termin_id
                 """, rs -> {
             jeSchulung.computeIfAbsent(rs.getString("schulung_id"), id -> new ArrayList<>())
@@ -158,9 +160,21 @@ public class KatalogAnsichtService {
                             rs.getString("ort"),
                             rs.getString("format"),
                             rs.getString("status"),
-                            rs.getString("trainer_id")));
+                            rs.getString("trainer_id"),
+                            rs.getString("trainer_name"),
+                            assistenten(rs.getString("termin_id"))));
         });
         return jeSchulung;
+    }
+
+    private List<String> assistenten(String terminId) {
+        return jdbcTemplate.queryForList("""
+                SELECT COALESCE(k.name, a.name_snapshot)
+                FROM termin_assistent a
+                LEFT JOIN benutzerkonto k ON k.id = a.benutzerkonto_id
+                WHERE a.termin_id = ?
+                ORDER BY a.platz
+                """, String.class, terminId);
     }
 
     /** Die Suche findet jeden Titel, der den Begriff enthaelt (REQ_KAT_SUCH_01). */

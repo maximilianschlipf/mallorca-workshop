@@ -402,17 +402,14 @@ Ansehen, suchen und filtern
 
 .. test:: Trainer kann den Katalog nicht verändern
    :id: TEST_KAT_SICHT_01
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_SICHT_01
 
    Ein Konto ohne Administratorrolle kann den Katalog lesen; Anlegen,
    Ändern, Archivieren und Löschen werden ihm verweigert.
 
-   Noch nicht umgesetzt: Der Test setzt Benutzerkonten und Rollen (Bereich USR) voraus.
-
-   Der Katalog ist in diesem Punkt fertig beschrieben; es fehlt der
-   Bereich, gegen den der Test prueft.
+   Besteht als ``SchulungsApiTest.trainerDarfDenKatalogNichtVeraendern``.
 
 .. test:: Archivierte stehen gekennzeichnet hinter den aktiven
    :id: TEST_KAT_SICHT_02

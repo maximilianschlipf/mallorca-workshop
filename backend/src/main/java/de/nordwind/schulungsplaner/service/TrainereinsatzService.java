@@ -2,6 +2,8 @@ package de.nordwind.schulungsplaner.service;
 
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.domain.Rolle;
+import de.nordwind.schulungsplaner.katalog.SchulungId;
+import de.nordwind.schulungsplaner.katalog.ablage.KatalogRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,18 +18,21 @@ import java.util.List;
 public class TrainereinsatzService {
     private final JdbcTemplate jdbc;
     private final KontoService konten;
+    private final KatalogRepository katalog;
     private final Clock clock;
 
-    public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten, Clock clock) {
+    public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten,
+                                 KatalogRepository katalog, Clock clock) {
         this.jdbc = jdbc;
         this.konten = konten;
+        this.katalog = katalog;
         this.clock = clock;
     }
 
     @Transactional
     public void aufQualifikationBewerben(String kontoId, String schulungId) {
         pruefeAktivenTrainer(kontoId);
-        if (!existiert("SELECT COUNT(*) FROM schulung WHERE id = ?", schulungId)) {
+        if (!katalog.existiert(SchulungId.von(schulungId))) {
             throw fehler(HttpStatus.NOT_FOUND, "SCHULUNG_NICHT_GEFUNDEN",
                     "Die Schulung wurde nicht gefunden.");
         }

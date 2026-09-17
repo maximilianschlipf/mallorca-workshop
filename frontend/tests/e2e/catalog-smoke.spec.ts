@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
-
-const eigentuemerEmail = "e2e-eigentuemer@example.de";
-const eigentuemerPasswort = "e2e-eigentuemer-passwort";
+import {
+  eigentuemerAnmelden,
+  eigentuemerEmail,
+  eigentuemerPasswort,
+} from "./anmeldung";
 
 async function login(
   page: import("@playwright/test").Page,
@@ -48,7 +50,8 @@ async function logout(page: import("@playwright/test").Page) {
 // verifies: TEST_USR_E2E_01, TEST_USR_LOGIN_01
 test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", async ({ page }) => {
   const trainerEmail = "e2e-trainer@example.de";
-  await registrieren(page, "E2E Eigentümer", eigentuemerEmail, eigentuemerPasswort);
+  await eigentuemerAnmelden(page);
+  await logout(page);
   await registrieren(page, "E2E Trainer", trainerEmail, "trainer-startpasswort");
 
   await login(page, trainerEmail, "trainer-startpasswort");

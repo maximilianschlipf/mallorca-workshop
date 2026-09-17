@@ -11,6 +11,12 @@ export class StartSeite extends Seite {
     return this.page.getByRole("heading", { name: "Schulungskatalog" });
   }
 
+  override async oeffnen(): Promise<this> {
+    await super.oeffnen();
+    await this.page.locator(".course-card.skeleton").first().waitFor({ state: "detached" });
+    return this;
+  }
+
   // --- Katalog ----------------------------------------------------------
 
   get schulungskarten(): Locator {

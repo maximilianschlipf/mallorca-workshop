@@ -1,4 +1,5 @@
 import type { Page, Locator } from "@playwright/test";
+import { eigentuemerAnmelden } from "../anmeldung";
 
 /**
  * Gemeinsame Grundlage aller Seitenobjekte.
@@ -22,6 +23,7 @@ export abstract class Seite {
   protected abstract get kennzeichen(): Locator;
 
   async oeffnen(): Promise<this> {
+    await eigentuemerAnmelden(this.page);
     await this.page.goto(this.pfad);
     await this.kennzeichen.waitFor();
     return this;

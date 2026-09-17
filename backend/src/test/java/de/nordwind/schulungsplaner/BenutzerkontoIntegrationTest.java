@@ -4,6 +4,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.domain.Rolle;
+import de.nordwind.schulungsplaner.katalog.KatalogAnsichtService;
 import de.nordwind.schulungsplaner.service.KontoFehler;
 import de.nordwind.schulungsplaner.service.KontoService;
 import de.nordwind.schulungsplaner.service.TrainerQueryService;
@@ -55,6 +56,7 @@ class BenutzerkontoIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired TrainerQueryService schulungen;
+    @Autowired KatalogAnsichtService katalog;
     @Autowired TrainereinsatzService einsaetze;
 
     @BeforeEach
@@ -551,7 +553,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(konten.finden(ziel.id())).isEmpty();
         assertThat(jdbc.queryForObject("SELECT trainer_name_snapshot FROM termin WHERE termin_id='HISTORIE'", String.class)).isEqualTo("Ziel");
         assertThat(jdbc.queryForObject("SELECT name_snapshot FROM termin_assistent WHERE termin_id='HISTORIE'", String.class)).isEqualTo("Ziel");
-        assertThat(schulungen.findSchulungen(null, null).stream()
+        assertThat(katalog.findeSchulungen(null, null).stream()
                 .flatMap(s -> s.oeffentlicheTermine().stream())
                 .filter(t -> t.terminId().equals("HISTORIE")).findFirst().orElseThrow().trainerName())
                 .isEqualTo("Ziel");
@@ -593,7 +595,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT trainer_name_snapshot FROM termin WHERE termin_id='LOESCH-HISTORIE-TRAINER'", String.class)).isEqualTo("Ziel");
         assertThat(jdbc.queryForObject("SELECT benutzerkonto_id FROM termin_assistent WHERE termin_id='LOESCH-HISTORIE-ASSISTENZ'", String.class)).isNull();
         assertThat(jdbc.queryForObject("SELECT name_snapshot FROM termin_assistent WHERE termin_id='LOESCH-HISTORIE-ASSISTENZ'", String.class)).isEqualTo("Ziel");
-        assertThat(schulungen.findSchulungen(null, null).stream()
+        assertThat(katalog.findeSchulungen(null, null).stream()
                 .flatMap(s -> s.oeffentlicheTermine().stream())
                 .filter(t -> t.terminId().equals("LOESCH-HISTORIE-ASSISTENZ"))
                 .findFirst().orElseThrow().assistenten()).containsExactly("Ziel");

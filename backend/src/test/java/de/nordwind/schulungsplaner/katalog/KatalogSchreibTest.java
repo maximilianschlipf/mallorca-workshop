@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -72,6 +74,24 @@ abstract class KatalogSchreibTest {
         jdbcTemplate.update("DELETE FROM trainer_qualifikation");
         jdbcTemplate.update("DELETE FROM termin");
         jdbcTemplate.update("DELETE FROM schulung_zustand");
+
+        var csrf = restTestClient.get().uri("/api/auth/csrf").exchange()
+                .expectStatus().isOk().returnResult(Map.class);
+        String token = (String) csrf.getResponseBody().get("token");
+        String csrfCookie = csrf.getResponseCookies().getFirst("XSRF-TOKEN").getValue();
+        var login = restTestClient.post().uri("/api/auth/anmelden")
+                .cookie("XSRF-TOKEN", csrfCookie)
+                .header("X-XSRF-TOKEN", token)
+                .body(Map.of(
+                        "email", "julia.hoffmann@simplytest-academy.de",
+                        "passwort", "test-passwort"))
+                .exchange().expectStatus().isOk().returnResult();
+        ResponseCookie session = login.getResponseCookies().getFirst("JSESSIONID");
+        restTestClient = restTestClient.mutate()
+                .defaultCookie("JSESSIONID", session.getValue())
+                .defaultCookie("XSRF-TOKEN", csrfCookie)
+                .defaultHeader("X-XSRF-TOKEN", token)
+                .build();
     }
 
     // --- Hilfsmittel fuer die abgeleiteten Tests ---------------------------

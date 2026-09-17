@@ -1,14 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { startSeite } from "./seiten/StartSeite";
 
-test("Katalog ist sichtbar und die Schnittstelle antwortet", async ({
-  page,
-  request,
-}) => {
-  expect((await request.get("/api/schulungen")).status()).toBe(200);
-
+test("Katalog ist sichtbar und die Schnittstelle antwortet", async ({ page }) => {
   const start = await startSeite(page).oeffnen();
 
+  expect((await page.request.get("/api/schulungen")).status()).toBe(200);
   await expect(start.schulungskarten.first()).toBeVisible();
 });
 

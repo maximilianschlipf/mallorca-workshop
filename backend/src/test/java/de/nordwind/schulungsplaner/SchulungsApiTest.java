@@ -13,8 +13,10 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -71,6 +73,25 @@ class SchulungsApiTest {
                         .param("von", "2026-08-04")
                         .param("bis", "2026-08-03"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // verifies: TEST_KAT_SICHT_01
+    @Test
+    void trainerDarfDenKatalogNichtVeraendern() throws Exception {
+        mvc.perform(get("/api/schulungen"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/schulungen").with(csrf())
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/schulungen/SCH-001").with(csrf())
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/schulungen/SCH-001/archivierung").with(csrf()))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/schulungen/SCH-001").with(csrf()))
+                .andExpect(status().isForbidden());
     }
 
     @Test
