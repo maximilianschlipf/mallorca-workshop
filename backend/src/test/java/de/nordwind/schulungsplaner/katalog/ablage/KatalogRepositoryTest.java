@@ -59,6 +59,7 @@ class KatalogRepositoryTest {
      * weder den Zustand aktiv oder archiviert noch Termine, Trainer oder
      * Teilnehmer.
      */
+    // verifies: TEST_KAT_ANL_07
     @Test
     void shouldWriteExactlyTheFieldsOfTheCatalogAndNothingElse() throws IOException {
         repository.speichere(schulung("SCH-009"));

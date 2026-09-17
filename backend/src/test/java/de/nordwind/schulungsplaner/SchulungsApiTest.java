@@ -26,9 +26,12 @@ class SchulungsApiTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
 
+    // verifies: TEST_KAT_SUCH_01, TEST_KAT_SUCH_02, TEST_KAT_SUCH_03, TEST_KAT_SUCH_04, TEST_KAT_SUCH_05
     @Test
     void liefertUndFiltertSchulungen() throws Exception {
         JsonNode alle = getJson("/api/schulungen");
+        JsonNode leereParameter = getJson(mvc.perform(get("/api/schulungen")
+                .param("suche", " ").param("kategorie", " ")));
         JsonNode suche = getJson(mvc.perform(get("/api/schulungen").param("suche", "  scRUM  ")));
         JsonNode kategorie = getJson(mvc.perform(get("/api/schulungen")
                 .param("kategorie", "Cloud & DevOps")));
@@ -38,19 +41,25 @@ class SchulungsApiTest {
                 .param("suche", "gibtesnicht123")));
 
         assertThat(alle).isNotEmpty();
+        assertThat(leereParameter).isEqualTo(alle);
         assertThat(suche).allSatisfy(s ->
                 assertThat(s.get("titel").stringValue().toLowerCase()).contains("scrum"));
         assertThat(kategorie).allSatisfy(s ->
                 assertThat(s.get("kategorie").stringValue()).isEqualTo("Cloud & DevOps"));
-        assertThat(kombiniert).hasSize(1);
+        assertThat(kombiniert).singleElement().satisfies(s -> {
+            assertThat(s.get("titel").stringValue().toLowerCase()).contains("kubernetes");
+            assertThat(s.get("kategorie").stringValue()).isEqualTo("Cloud & DevOps");
+        });
         assertThat(leer).isEmpty();
     }
 
+    // verifies: TEST_KAT_SUCH_06
     @Test
     void liefertSortierteKategorien() throws Exception {
         JsonNode kategorien = getJson("/api/kategorien");
         assertThat(kategorien).isNotEmpty();
-        assertThat(kategorien.valueStream().map(JsonNode::stringValue).toList()).isSorted();
+        assertThat(kategorien.valueStream().map(JsonNode::stringValue).toList())
+                .isSorted().doesNotHaveDuplicates();
     }
 
     @Test
@@ -107,6 +116,7 @@ class SchulungsApiTest {
                 .andExpect(status().isOk());
         mvc.perform(get("/api/schulungen")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/auth/ich")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/ich/termine")).andExpect(status().isUnauthorized());
     }
 
     private JsonNode getJson(String url) throws Exception {

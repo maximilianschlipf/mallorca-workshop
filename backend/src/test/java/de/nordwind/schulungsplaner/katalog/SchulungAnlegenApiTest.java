@@ -22,6 +22,7 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
      * TEST_KAT_ANL_01: Nach dem Anlegen mit allen Pflichtangaben existiert die
      * Schulung, ist aktiv und gibt die eingegebenen Werte unveraendert zurueck.
      */
+    // verifies: TEST_KAT_ANL_01
     @Test
     void shouldCreateAnActiveSchulungReturningTheValuesUnchanged() {
         anlegen(vollstaendig())
@@ -46,11 +47,13 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ABL_01: genau eine neue Datei, benannt nach der Schulungs-ID. */
+    // verifies: TEST_KAT_ABL_01
     @Test
     void shouldWriteExactlyOneFileNamedAfterTheId() {
         anlegen(vollstaendig()).expectStatus().isCreated();
 
         assertThat(katalogdatei("SCH-009")).exists();
+        assertThat(katalogdatei("SCH-009").getParent().toFile().list()).containsExactly("SCH-009.json");
     }
 
     /** TEST_KAT_ABL_02: Die Aenderung wird als Commit gesichert. */
@@ -64,6 +67,7 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ID_02: Eine bereits vergebene ID wird abgewiesen. */
+    // verifies: TEST_KAT_ID_02
     @Test
     void shouldRejectAnIdThatIsAlreadyTaken() throws Exception {
         anlegen(vollstaendig()).expectStatus().isCreated();
@@ -80,16 +84,26 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ANL_02: Fehlende Pflichtangaben werden abgewiesen. */
+    // verifies: TEST_KAT_ANL_02
     @Test
     void shouldRejectMissingMandatoryFieldsWithoutWritingAnything() {
-        anlegen(vollstaendig().ohne("titel"))
-                .expectStatus().isBadRequest()
-                .expectBody()
-                .jsonPath("$.fehler[0].feld").isEqualTo("titel")
-                .jsonPath("$.fehler[0].code").isEqualTo("PFLICHTANGABE_FEHLT");
+        for (String feld : List.of("id", "titel", "kategorie", "kurzbeschreibung",
+                "dauerInTagen", "mindestteilnehmerExklusiv")) {
+            anlegen(vollstaendig().ohne(feld))
+                    .expectStatus().isBadRequest()
+                    .expectBody()
+                    .jsonPath("$.fehler[0].feld").isEqualTo(feld)
+                    .jsonPath("$.fehler[0].code").isEqualTo("PFLICHTANGABE_FEHLT");
+        }
 
         assertThat(imKatalog()).isEmpty();
         assertThat(commits()).isEmpty();
+
+        anlegen(vollstaendig().ohne("voraussetzungen").ohne("maxTeilnehmerOeffentlich"))
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.schulung.voraussetzungen").isEmpty()
+                .jsonPath("$.schulung.maxTeilnehmerOeffentlich").doesNotExist();
     }
 
     /** TEST_KAT_ANL_02: Ohne die beiden freiwilligen Angaben gelingt es. */
@@ -106,6 +120,7 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
      * TEST_KAT_ID_01: Unerlaubte Zeichen werden abgewiesen, und es entsteht
      * keine Datei ausserhalb des Ablageverzeichnisses.
      */
+    // verifies: TEST_KAT_ID_01
     @Test
     void shouldRejectForbiddenCharactersWithoutEscapingTheStorageDirectory() {
         for (String id : List.of("Scrum / Basis", "sch-009", "SCH_009", "../SCH-009")) {
@@ -121,6 +136,7 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ID_04: Ohne Eingabe einer ID wird das Anlegen abgewiesen. */
+    // verifies: TEST_KAT_ID_04
     @Test
     void shouldRejectCreationWithoutAnId() {
         anlegen(vollstaendig().ohne("id"))
@@ -128,6 +144,14 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
                 .expectBody()
                 .jsonPath("$.fehler[0].feld").isEqualTo("id")
                 .jsonPath("$.fehler[0].code").isEqualTo("PFLICHTANGABE_FEHLT");
+
+        anlegen(vollstaendig()).expectStatus().isCreated();
+        anlegen(vollstaendig().with("id", "SCH-010")).expectStatus().isCreated();
+        restTestClient.get().uri("/api/schulungen/id-schema")
+                .exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$.muster").isEqualTo("AAA-999")
+                .jsonPath("$.beispiele[0]").isEqualTo("SCH-009")
+                .jsonPath("$.vorschlag").doesNotExist();
     }
 
     /** TEST_KAT_ID_04: Das Schema der bestehenden Kennungen wird angezeigt. */
@@ -146,6 +170,7 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_KATG_01: Eine Kategorie ausserhalb der Liste wird abgewiesen. */
+    // verifies: TEST_KAT_KATG_01
     @Test
     void shouldRejectACategoryOutsideTheMaintainedList() {
         anlegen(vollstaendig().with("kategorie", "IT Security"))
@@ -158,25 +183,39 @@ class SchulungAnlegenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ANL_03 und TEST_KAT_ANL_04 an der Schnittstelle. */
+    // verifies: TEST_KAT_ANL_03, TEST_KAT_ANL_04
     @Test
     void shouldRejectInvalidDurationAndParticipantLimits() {
-        anlegen(vollstaendig().with("dauerInTagen", 0))
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.fehler[0].code").isEqualTo("DAUER_ZU_KLEIN");
+        for (int dauer : List.of(0, -1)) {
+            anlegen(vollstaendig().with("dauerInTagen", dauer))
+                    .expectStatus().isBadRequest()
+                    .expectBody().jsonPath("$.fehler[0].code").isEqualTo("DAUER_ZU_KLEIN");
+        }
 
-        anlegen(vollstaendig().with("mindestteilnehmerExklusiv", 6)
+        anlegen(vollstaendig().with("id", "SCH-010").with("dauerInTagen", 1))
+                .expectStatus().isCreated();
+
+        anlegen(vollstaendig().with("id", "SCH-011").with("mindestteilnehmerExklusiv", 6)
                 .with("maxTeilnehmerOeffentlich", 4))
                 .expectStatus().isBadRequest()
                 .expectBody().jsonPath("$.fehler[0].code")
                 .isEqualTo("HOECHSTZAHL_NICHT_UEBER_MINDESTZAHL");
+
+        anlegen(vollstaendig().with("id", "SCH-012")
+                .with("mindestteilnehmerExklusiv", 6)
+                .with("maxTeilnehmerOeffentlich", 12)).expectStatus().isCreated();
     }
 
     /** TEST_KAT_ANL_05: Fehlende und 0-Hoechstzahl bedeuten keine Obergrenze. */
+    // verifies: TEST_KAT_ANL_05
     @Test
     void shouldAcceptZeroAsNoUpperLimit() {
-        anlegen(vollstaendig().with("maxTeilnehmerOeffentlich", 0))
+        anlegen(vollstaendig().ohne("maxTeilnehmerOeffentlich"))
                 .expectStatus().isCreated()
                 .expectBody()
+                .jsonPath("$.schulung.maxTeilnehmerOeffentlich").doesNotExist();
+        anlegen(vollstaendig().with("id", "SCH-010").with("maxTeilnehmerOeffentlich", 0))
+                .expectStatus().isCreated().expectBody()
                 .jsonPath("$.schulung.maxTeilnehmerOeffentlich").doesNotExist();
     }
 

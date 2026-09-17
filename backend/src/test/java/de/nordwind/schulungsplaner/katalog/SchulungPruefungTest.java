@@ -198,6 +198,7 @@ class SchulungPruefungTest {
     class Voraussetzungen {
 
         /** TEST_KAT_ANL_06: unveraenderter Freitext, kein Bezug auf andere Schulungen. */
+        // verifies: TEST_KAT_ANL_06
         @Test
         void shouldKeepFreeTextExactlyAsEntered() {
             List<String> eingegeben = List.of("  Grundkenntnisse agiler Methoden  ", "SCH-001");
@@ -206,6 +207,8 @@ class SchulungPruefungTest {
                     angenommen(pruefe(vollstaendig().mitVoraussetzungen(eingegeben)));
 
             assertThat(schulung.voraussetzungen()).containsExactlyElementsOf(eingegeben);
+            assertThat(angenommen(pruefe(vollstaendig().mitVoraussetzungen(List.of())))
+                    .voraussetzungen()).isEmpty();
         }
 
         @Test

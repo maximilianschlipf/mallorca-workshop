@@ -34,6 +34,7 @@ class KatalogAnsichtServiceTest {
     private JdbcTemplate jdbcTemplate;
 
     /** TEST_KAT_TERM_01: Der Termin zieht seine Daten ueber die Schulungs-ID. */
+    // verifies: TEST_KAT_TERM_01
     @Test
     void shouldJoinTerminDataFromTheDatabaseToTheCatalogDescription() {
         Schulung schulung = eine("SCH-001");
@@ -68,6 +69,7 @@ class KatalogAnsichtServiceTest {
      * TEST_KAT_SICHT_02: Archivierte Schulungen erscheinen gekennzeichnet und
      * nach allen aktiven.
      */
+    // verifies: TEST_KAT_SICHT_02
     @Test
     void shouldListArchivedSchulungenMarkedAndAfterAllActiveOnes() {
         zustaende.archiviere(SchulungId.von("SCH-001"), LocalDate.of(2026, 3, 1));
@@ -112,6 +114,7 @@ class KatalogAnsichtServiceTest {
      * wird erkannt und gemeldet -- statt stillschweigend ohne Schulungsdaten
      * aufzutauchen.
      */
+    // verifies: TEST_KAT_TERM_02
     @Test
     void shouldDetectTerminePointingAtAMissingSchulung() {
         assertThat(ansicht.verwaisteTermine()).isEmpty();

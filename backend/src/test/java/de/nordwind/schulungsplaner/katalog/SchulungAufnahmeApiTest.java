@@ -32,6 +32,7 @@ class SchulungAufnahmeApiTest extends KatalogSchreibTest {
             """;
 
     /** TEST_KAT_IMP_01: Eine gueltige Datei wird aufgenommen. */
+    // verifies: TEST_KAT_IMP_01
     @Test
     void shouldTakeInAValidFile() {
         aufnehmen(false, datei("SCH-009.json", GUELTIG))
@@ -70,6 +71,7 @@ class SchulungAufnahmeApiTest extends KatalogSchreibTest {
      * Dauer 0 und Hoechstzahl unter der Mindestzahl werden je einzeln
      * abgewiesen, und die Rueckmeldung nennt den Grund.
      */
+    // verifies: TEST_KAT_IMP_02
     @Test
     void shouldRejectEachInvalidFileNamingTheReason() {
         aufnehmen(false,
@@ -107,6 +109,7 @@ class SchulungAufnahmeApiTest extends KatalogSchreibTest {
      * TEST_KAT_IMP_03: Eine unbekannte Kategorie wird abgewiesen, und die
      * Kategorienliste bleibt unveraendert.
      */
+    // verifies: TEST_KAT_IMP_03
     @Test
     void shouldRejectAnUnknownCategoryWithoutCreatingIt() {
         aufnehmen(false, datei("SCH-009.json",
@@ -128,6 +131,7 @@ class SchulungAufnahmeApiTest extends KatalogSchreibTest {
      * Rueckfrage uebernommen; ohne ausdrueckliche Entscheidung bleibt die
      * bestehende Schulung unveraendert.
      */
+    // verifies: TEST_KAT_IMP_04
     @Test
     void shouldNotSilentlyReplaceAnExistingSchulung() {
         aufnehmen(false, datei("SCH-009.json", GUELTIG)).expectStatus().isOk();
@@ -144,6 +148,14 @@ class SchulungAufnahmeApiTest extends KatalogSchreibTest {
                 .exchange()
                 .expectBody().jsonPath("$.titel").isEqualTo("Scrum Master Zertifizierung");
         assertThat(commits()).hasSize(1);
+
+        aufnehmen(true, datei("SCH-009.json",
+                GUELTIG.replace("Scrum Master Zertifizierung", "Ein anderer Titel")))
+                .expectStatus().isOk().expectBody()
+                .jsonPath("$.aufgenommen").isEqualTo(1)
+                .jsonPath("$.ergebnisse[0].ergebnis").isEqualTo("ERSETZT");
+        restTestClient.get().uri("/api/schulungen/SCH-009")
+                .exchange().expectBody().jsonPath("$.titel").isEqualTo("Ein anderer Titel");
     }
 
     /** TEST_KAT_IMP_04: Mit ausdruecklicher Entscheidung wird ersetzt. */

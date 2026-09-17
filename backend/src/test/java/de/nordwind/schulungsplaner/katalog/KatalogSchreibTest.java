@@ -71,6 +71,8 @@ abstract class KatalogSchreibTest {
                 }
                 """);
 
+        jdbcTemplate.update("DELETE FROM benachrichtigung");
+        jdbcTemplate.update("DELETE FROM qualifikationsbewerbung");
         jdbcTemplate.update("DELETE FROM trainer_qualifikation");
         jdbcTemplate.update("DELETE FROM termin");
         jdbcTemplate.update("DELETE FROM schulung_zustand");

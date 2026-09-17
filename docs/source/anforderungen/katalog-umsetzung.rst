@@ -305,12 +305,14 @@ Ablage und Versionierung
 
 .. test:: Der Abgleich läuft nicht über die Anwendung
    :id: TEST_KAT_ABL_04
-   :status: approved
-   :automated: no
+   :status: verified
+   :automated: yes
    :verifies: REQ_KAT_ABL_04
 
    Die Anwendung bietet keine Funktion, Katalogdaten mit einer anderen
    Instanz abzugleichen; Datenbankinhalte liegen nicht im Repository.
+
+   Besteht als ``KatalogArchitekturTest.shouldOfferNoSynchronizationAndKeepTheProductionDatabaseOutsideTheCatalog``.
 
 Ansehen, suchen und filtern
 ---------------------------
@@ -424,31 +426,25 @@ Ansehen, suchen und filtern
 
 .. test:: Keine Bewerbung auf eine archivierte Schulung
    :id: TEST_KAT_SICHT_03
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_SICHT_03
 
    Der Versuch, sich auf die Qualifikation für eine archivierte Schulung zu
    bewerben, wird abgewiesen.
 
-   Noch nicht umgesetzt: Der Test setzt Qualifikationen und Freigabeanfragen (Bereich QUA) voraus.
-
-   Der Katalog ist in diesem Punkt fertig beschrieben; es fehlt der
-   Bereich, gegen den der Test prueft.
+   Besteht als ``SchulungLebenszyklusApiTest.shouldRejectQualificationApplicationForAnArchivedSchulung``.
 
 .. test:: Termin einer archivierten Schulung bleibt sichtbar
    :id: TEST_KAT_SICHT_04
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_SICHT_04
 
    Ein Trainer ist einem zukünftigen Termin zugewiesen; dessen Schulung wird
    archiviert. Der Termin erscheint weiterhin in seiner Übersicht.
 
-   Noch nicht umgesetzt: Der Test setzt die Trainersicht (Bereich TRA) voraus.
-
-   Der Katalog ist in diesem Punkt fertig beschrieben; es fehlt der
-   Bereich, gegen den der Test prueft.
+   Besteht als ``SchulungLebenszyklusApiTest.shouldKeepAnArchivedSchulungsTerminInTheAssignedTrainersView``.
 
 Verknüpfung mit den Terminen
 ----------------------------
@@ -512,47 +508,37 @@ Archivieren
 
 .. test:: Kein neuer Termin zu einer archivierten Schulung
    :id: TEST_KAT_ARCH_02
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_ARCH_03
 
    Der Versuch, zu einer archivierten Schulung einen Termin anzulegen, wird
    abgewiesen. Nach dem Reaktivieren gelingt er.
 
-   Besteht als ``KatalogRegelnTest.shouldRefuseANewTerminForAnArchivedSchulung`` und ``KatalogRegelnTest.shouldAllowANewTerminAgainAfterReactivation``.
-
-   Die Regel selbst ist umgesetzt und geprueft; sie liegt beim Katalog, weil
-   er weiss, ob eine Schulung angeboten wird. Der Nachweis am Endpunkt
-   folgt mit der Terminplanung -- einen Endpunkt zum Anlegen eines Termins
-   gibt es noch nicht.
+   Die Regel liegt beim Katalog, weil er weiss, ob eine Schulung angeboten
+   wird. Besteht als ``KatalogRegelnTest.shouldRefuseANewTerminForAnArchivedSchulung``.
 
 .. test:: Archivieren lehnt offene Freigabeanfragen ab
    :id: TEST_KAT_ARCH_03
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_ARCH_05
 
    Zu einer Schulung besteht eine offene Freigabeanfrage. Nach dem
    Archivieren ist sie abgelehnt und der Trainer benachrichtigt.
 
-   Noch nicht umgesetzt: Der Test setzt Freigabeanfragen (Bereich QUA) voraus.
-
-   Der Katalog ist in diesem Punkt fertig beschrieben; es fehlt der
-   Bereich, gegen den der Test prueft.
+   Besteht als ``SchulungLebenszyklusApiTest.shouldRejectOpenQualificationApplicationsNotifyAndKeepThemRejected``.
 
 .. test:: Reaktivieren belebt keine Freigabeanfrage
    :id: TEST_KAT_ARCH_04
-   :status: approved
+   :status: verified
    :automated: yes
    :verifies: REQ_KAT_ARCH_04
 
    Nach dem Reaktivieren einer Schulung sind die beim Archivieren
    abgelehnten Freigabeanfragen weiterhin abgelehnt.
 
-   Noch nicht umgesetzt: Der Test setzt Freigabeanfragen (Bereich QUA) voraus.
-
-   Der Katalog ist in diesem Punkt fertig beschrieben; es fehlt der
-   Bereich, gegen den der Test prueft.
+   Besteht als ``SchulungLebenszyklusApiTest.shouldRejectOpenQualificationApplicationsNotifyAndKeepThemRejected``.
 
 Löschen
 -------

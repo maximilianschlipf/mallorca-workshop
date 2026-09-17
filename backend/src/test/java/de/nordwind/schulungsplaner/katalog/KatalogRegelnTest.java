@@ -34,6 +34,7 @@ class KatalogRegelnTest extends KatalogSchreibTest {
                 () -> regeln.verlangeTerminfaehig(SchulungId.von("SCH-009")));
     }
 
+    // verifies: TEST_KAT_ARCH_02
     @Test
     void shouldRefuseANewTerminForAnArchivedSchulung() {
         legeSchulungAn("SCH-009");
@@ -46,6 +47,12 @@ class KatalogRegelnTest extends KatalogSchreibTest {
                         .singleElement()
                         .satisfies(f -> assertThat(f.code())
                                 .isEqualTo(Fehlercode.SCHULUNG_ARCHIVIERT)));
+
+        restTestClient.method(org.springframework.http.HttpMethod.DELETE)
+                .uri("/api/schulungen/SCH-009/archivierung")
+                .exchange().expectStatus().isOk();
+        assertThatNoException().isThrownBy(
+                () -> regeln.verlangeTerminfaehig(SchulungId.von("SCH-009")));
     }
 
     /** Nach dem Reaktivieren sind neue Termine wieder moeglich (REQ_KAT_ARCH_04). */

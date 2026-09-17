@@ -132,6 +132,18 @@ public class KatalogPflegeService {
     public Katalogantwort archiviere(SchulungId id) {
         verlangeImKatalog(id);
         zustaende.archiviere(id, LocalDate.now(uhr));
+        List<String> bewerber = jdbcTemplate.queryForList("""
+                SELECT benutzerkonto_id FROM qualifikationsbewerbung
+                WHERE schulung_id = ? AND status = 'OFFEN'
+                """, String.class, id.wert());
+        jdbcTemplate.update("""
+                UPDATE qualifikationsbewerbung SET status = 'ABGELEHNT'
+                WHERE schulung_id = ? AND status = 'OFFEN'
+                """, id.wert());
+        bewerber.forEach(kontoId -> jdbcTemplate.update("""
+                INSERT INTO benachrichtigung (empfaenger_id, anlass)
+                VALUES (?, ?)
+                """, kontoId, "Qualifikationsbewerbung für " + id + " abgelehnt"));
         return Katalogantwort.ohneWarnung(ansicht.findeSchulung(id).orElseThrow());
     }
 
@@ -166,6 +178,8 @@ public class KatalogPflegeService {
         // Gegenstand mehr.
         jdbcTemplate.update(
                 "DELETE FROM trainer_qualifikation WHERE schulung_id = ?", id.wert());
+        jdbcTemplate.update(
+                "DELETE FROM qualifikationsbewerbung WHERE schulung_id = ?", id.wert());
         zustaende.entferne(id);
 
         Path datei = katalog.dateiFuer(id);

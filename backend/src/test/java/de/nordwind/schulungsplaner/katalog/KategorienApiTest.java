@@ -33,6 +33,7 @@ class KategorienApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_KATG_04: Die Liste liegt versioniert im Katalog. */
+    // verifies: TEST_KAT_KATG_04
     @Test
     void shouldSecureANewCategoryWithACommit() {
         anlegen("Datenbanken").expectStatus().isCreated();
@@ -62,6 +63,7 @@ class KategorienApiTest extends KatalogSchreibTest {
      * TEST_KAT_KATG_02: Nach dem Umbenennen fuehren alle zuvor zugeordneten
      * Schulungen den neuen Namen, und der Filter findet sie darunter.
      */
+    // verifies: TEST_KAT_KATG_02
     @Test
     void shouldRenameACategoryAcrossEveryAssignedSchulung() {
         legeSchulungAn("SCH-009", "Cloud & DevOps");
@@ -114,6 +116,7 @@ class KategorienApiTest extends KatalogSchreibTest {
      * TEST_KAT_KATG_03: Eine Kategorie in Gebrauch laesst sich nicht loeschen;
      * nach dem Umhaengen der letzten Schulung gelingt es.
      */
+    // verifies: TEST_KAT_KATG_03
     @Test
     void shouldRefuseToDeleteACategoryInUseAndAllowItAfterTheLastSchulungMoved() {
         legeSchulungAn("SCH-009", "Cloud & DevOps");

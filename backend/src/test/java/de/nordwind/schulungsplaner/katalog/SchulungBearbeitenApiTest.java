@@ -28,6 +28,7 @@ class SchulungBearbeitenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_PFLEG_01: Alle Felder ausser der ID sind aenderbar. */
+    // verifies: TEST_KAT_PFLEG_01
     @Test
     void shouldChangeEveryFieldExceptTheId() {
         Map<String, Object> geaendert = felder();
@@ -58,6 +59,7 @@ class SchulungBearbeitenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ID_03: Ein Aenderungsversuch an der ID wird abgewiesen. */
+    // verifies: TEST_KAT_ID_03
     @Test
     void shouldRejectAnAttemptToChangeTheId() throws Exception {
         String vorher = Files.readString(katalogdatei("SCH-009"));
@@ -80,6 +82,7 @@ class SchulungBearbeitenApiTest extends KatalogSchreibTest {
     }
 
     /** TEST_KAT_ABL_02: Nach dem Aendern ein neuer Commit auf der Datei. */
+    // verifies: TEST_KAT_ABL_02
     @Test
     void shouldSecureTheChangeWithACommit() {
         Map<String, Object> geaendert = felder();
@@ -104,6 +107,7 @@ class SchulungBearbeitenApiTest extends KatalogSchreibTest {
      * der Schulung besteht ein geplanter Termin. Die Aenderung wird mit einer
      * Warnung ausgefuehrt, Start- und Enddatum des Termins bleiben unberuehrt.
      */
+    // verifies: TEST_KAT_PFLEG_02
     @Test
     void shouldWarnWhenChangingTheDurationOfASchulungThatHasTermine() {
         legeTerminAn("SCH-009-T1", "SCH-009", "2026-09-14", "2026-09-15");
