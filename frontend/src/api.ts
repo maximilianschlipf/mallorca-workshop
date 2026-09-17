@@ -8,6 +8,9 @@ import type {
   Schulung,
   Schulungseingabe,
   Trainer,
+  TerminDetail,
+  TerminEingabe,
+  DashboardTermin,
   VerwaisterTermin,
 } from "./types";
 
@@ -183,7 +186,31 @@ export const abwesenheitEintragen = (von: string, bis: string, grund: string) =>
   api<void>("/api/ich/abwesenheiten", {
     method: "POST", body: JSON.stringify({ von, bis, grund: grund || null }),
   });
-export const trainerZuweisen = (terminId: string, trainerId: string) =>
-  api<void>(`/api/termine/${terminId}/trainer/${trainerId}`, { method: "PUT" });
+export const trainerZuweisen = (terminId: string, trainerId: string, rollenwechselBestaetigt = false) =>
+  api<void>(`/api/termine/${terminId}/trainer/${trainerId}${rollenwechselBestaetigt ? "?rollenwechselBestaetigt=true" : ""}`, { method: "PUT" });
 export const assistentZuweisen = (terminId: string, trainerId: string) =>
   api<void>(`/api/termine/${terminId}/assistenten/${trainerId}`, { method: "PUT" });
+
+export const fetchTermin = (terminId: string) =>
+  api<TerminDetail>(`/api/termine/${encodeURIComponent(terminId)}`);
+export const fetchTerminDashboard = () => api<DashboardTermin[]>("/api/termine/dashboard");
+export const schlageEnddatumVor = (schulungId: string, startdatum: string) =>
+  api<{ enddatum: string }>(`/api/termine/enddatum-vorschlag?${new URLSearchParams({ schulungId, startdatum })}`);
+export const legeTerminAn = (eingabe: TerminEingabe) =>
+  api<TerminDetail>("/api/termine", { method: "POST", body: JSON.stringify(eingabe) });
+export const aendereTermin = (terminId: string, eingabe: TerminEingabe) =>
+  api<TerminDetail>(`/api/termine/${encodeURIComponent(terminId)}`, {
+    method: "PUT", body: JSON.stringify(eingabe),
+  });
+export const bestaetigeTermin = (terminId: string) =>
+  api<TerminDetail>(`/api/termine/${encodeURIComponent(terminId)}/bestaetigung`, { method: "POST" });
+export const sageTerminAb = (terminId: string, grund: string | null) =>
+  api<TerminDetail>(`/api/termine/${encodeURIComponent(terminId)}/absage`, {
+    method: "POST", body: JSON.stringify({ grund }),
+  });
+export const loescheTermin = (terminId: string) =>
+  api<void>(`/api/termine/${encodeURIComponent(terminId)}`, { method: "DELETE" });
+export const zieheTrainerAb = (terminId: string) =>
+  api<void>(`/api/termine/${encodeURIComponent(terminId)}/trainer`, { method: "DELETE" });
+export const fetchTrainerOptionen = (terminId: string) =>
+  api<Trainer[]>(`/api/termine/${encodeURIComponent(terminId)}/traineroptionen`);

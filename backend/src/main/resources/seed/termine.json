@@ -1,144 +1,18 @@
 {
   "termine": [
-    {
-      "terminId": "SCH-001-T1",
-      "schulungId": "SCH-001",
-      "startdatum": "2026-09-14",
-      "enddatum": "2026-09-15",
-      "ort": "Köln",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": "TRN-001"
-    },
-    {
-      "terminId": "SCH-001-T2",
-      "schulungId": "SCH-001",
-      "startdatum": "2026-11-09",
-      "enddatum": "2026-11-10",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-005"
-    },
-    {
-      "terminId": "SCH-002-T1",
-      "schulungId": "SCH-002",
-      "startdatum": "2026-09-21",
-      "enddatum": "2026-09-23",
-      "ort": "Berlin",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": "TRN-002"
-    },
-    {
-      "terminId": "SCH-002-T2",
-      "schulungId": "SCH-002",
-      "startdatum": "2026-12-07",
-      "enddatum": "2026-12-09",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-002"
-    },
-    {
-      "terminId": "SCH-003-T1",
-      "schulungId": "SCH-003",
-      "startdatum": "2026-10-05",
-      "enddatum": "2026-10-07",
-      "ort": "München",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": "TRN-003"
-    },
-    {
-      "terminId": "SCH-003-T2",
-      "schulungId": "SCH-003",
-      "startdatum": "2027-01-18",
-      "enddatum": "2027-01-20",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-003"
-    },
-    {
-      "terminId": "SCH-004-T1",
-      "schulungId": "SCH-004",
-      "startdatum": "2026-10-12",
-      "enddatum": "2026-10-13",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-003"
-    },
-    {
-      "terminId": "SCH-004-T2",
-      "schulungId": "SCH-004",
-      "startdatum": "2027-02-01",
-      "enddatum": "2027-02-02",
-      "ort": "Hamburg",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": null
-    },
-    {
-      "terminId": "SCH-005-T1",
-      "schulungId": "SCH-005",
-      "startdatum": "2026-09-03",
-      "enddatum": "2026-09-03",
-      "ort": "Frankfurt",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": "TRN-004"
-    },
-    {
-      "terminId": "SCH-006-T1",
-      "schulungId": "SCH-006",
-      "startdatum": "2026-08-25",
-      "enddatum": "2026-08-25",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-005"
-    },
-    {
-      "terminId": "SCH-006-T2",
-      "schulungId": "SCH-006",
-      "startdatum": "2026-11-24",
-      "enddatum": "2026-11-24",
-      "ort": "Stuttgart",
-      "format": "Präsenz",
-      "status": "ausgebucht",
-      "trainerId": "TRN-005"
-    },
-    {
-      "terminId": "SCH-007-T1",
-      "schulungId": "SCH-007",
-      "startdatum": "2026-09-28",
-      "enddatum": "2026-09-29",
-      "ort": "Köln",
-      "format": "Präsenz",
-      "status": "geplant",
-      "trainerId": "TRN-001"
-    },
-    {
-      "terminId": "SCH-007-T2",
-      "schulungId": "SCH-007",
-      "startdatum": "2027-01-11",
-      "enddatum": "2027-01-12",
-      "ort": "Berlin",
-      "format": "Präsenz",
-      "status": "abgesagt",
-      "trainerId": "TRN-004"
-    },
-    {
-      "terminId": "SCH-008-T1",
-      "schulungId": "SCH-008",
-      "startdatum": "2026-10-19",
-      "enddatum": "2026-10-20",
-      "ort": "Online",
-      "format": "Online",
-      "status": "geplant",
-      "trainerId": "TRN-002"
-    }
+    {"schulungId":"SCH-001","trainerId":"TRN-001"},
+    {"schulungId":"SCH-001","trainerId":"TRN-005"},
+    {"schulungId":"SCH-002","trainerId":"TRN-002"},
+    {"schulungId":"SCH-002","trainerId":"TRN-002"},
+    {"schulungId":"SCH-003","trainerId":"TRN-003"},
+    {"schulungId":"SCH-003","trainerId":"TRN-003"},
+    {"schulungId":"SCH-004","trainerId":"TRN-003"},
+    {"schulungId":"SCH-004","trainerId":null},
+    {"schulungId":"SCH-005","trainerId":"TRN-004"},
+    {"schulungId":"SCH-006","trainerId":"TRN-005"},
+    {"schulungId":"SCH-006","trainerId":"TRN-005"},
+    {"schulungId":"SCH-007","trainerId":"TRN-001"},
+    {"schulungId":"SCH-007","trainerId":"TRN-004"},
+    {"schulungId":"SCH-008","trainerId":"TRN-002"}
   ]
 }

@@ -7,6 +7,7 @@ import de.nordwind.schulungsplaner.katalog.ablage.KategorienRepository;
 import de.nordwind.schulungsplaner.katalog.zustand.SchulungszustandRepository;
 import de.nordwind.schulungsplaner.katalog.zustand.Schulungszustand;
 import de.nordwind.schulungsplaner.katalog.zustand.Zustandseintrag;
+import de.nordwind.schulungsplaner.service.TerminService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -30,15 +31,18 @@ public class KatalogAnsichtService {
     private final KategorienRepository kategorien;
     private final SchulungszustandRepository zustaende;
     private final JdbcTemplate jdbcTemplate;
+    private final TerminService terminService;
 
     public KatalogAnsichtService(KatalogRepository katalog,
                                  KategorienRepository kategorien,
                                  SchulungszustandRepository zustaende,
-                                 JdbcTemplate jdbcTemplate) {
+                                 JdbcTemplate jdbcTemplate,
+                                 TerminService terminService) {
         this.katalog = katalog;
         this.kategorien = kategorien;
         this.zustaende = zustaende;
         this.jdbcTemplate = jdbcTemplate;
+        this.terminService = terminService;
     }
 
     /**
@@ -48,6 +52,7 @@ public class KatalogAnsichtService {
      * (REQ_KAT_SUCH_05).
      */
     public List<Schulung> findeSchulungen(String suche, String kategorie) {
+        terminService.nachziehen();
         String titelFilter = normalisiere(suche);
         String kategorieFilter = normalisiere(kategorie);
 
@@ -64,6 +69,7 @@ public class KatalogAnsichtService {
 
     /** Eine einzelne Schulung samt Zustand und Terminen. */
     public java.util.Optional<Schulung> findeSchulung(SchulungId id) {
+        terminService.nachziehen();
         return katalog.lade(id).map(schulung -> zusammenfuehren(
                 schulung, zustaende.alleZustaende(), termineJeSchulung()));
     }

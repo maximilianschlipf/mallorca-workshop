@@ -22,8 +22,8 @@ const kalenderSchulung = {
   oeffentlicheTermine: [
     {
       terminId: "SCH-001-T1",
-      startdatum: "2026-08-27",
-      enddatum: "2026-08-29",
+      startdatum: "2026-08-28",
+      enddatum: "2026-09-01",
       ort: "Köln",
       format: "Präsenz",
       status: "geplant",
@@ -31,11 +31,11 @@ const kalenderSchulung = {
     },
     {
       terminId: "SCH-001-T2",
-      startdatum: "2026-08-30",
-      enddatum: "2026-08-30",
+      startdatum: "2026-08-31",
+      enddatum: "2026-08-31",
       ort: "Online",
       format: "Online",
-      status: "ausgebucht",
+      status: "abgeschlossen",
       trainerId: "TRN-001",
     },
     {
@@ -243,9 +243,7 @@ describe("App smoke", () => {
       .trigger("click");
 
     expect(wrapper.find(".calendar-toolbar h3").text()).toBe("September 2026");
-    expect(wrapper.text()).toContain(
-      "In diesem Monat finden keine Schulungen statt",
-    );
+    expect(wrapper.find(".calendar-event").text()).toContain("Scrum Master");
   });
 
   it("shows multi-day events, status variants and selected details", async () => {
@@ -259,8 +257,8 @@ describe("App smoke", () => {
     await flushPromises();
 
     expect(wrapper.findAll(".calendar-event.status-geplant")).toHaveLength(3);
-    expect(wrapper.find(".calendar-event.status-ausgebucht").text()).toContain(
-      "Ausgebucht",
+    expect(wrapper.find(".calendar-event.status-abgeschlossen").text()).toContain(
+      "Abgeschlossen",
     );
     expect(wrapper.find(".calendar-event.status-abgesagt").text()).toContain(
       "Abgesagt",
@@ -268,7 +266,7 @@ describe("App smoke", () => {
 
     await wrapper.find(".calendar-event.status-geplant").trigger("click");
     expect(wrapper.find(".calendar-detail").text()).toContain(
-      "27.08.2026 - 29.08.2026",
+      "28.08.2026 - 01.09.2026",
     );
     expect(wrapper.find(".calendar-detail").text()).toContain("Köln");
     expect(wrapper.find(".calendar-detail").text()).toContain("Geplant");
@@ -326,8 +324,15 @@ describe("App smoke", () => {
       aufrufe.push(url);
       if (url.includes("/api/auth/csrf")) return jsonResponse({ token: "csrf" }) as Response;
       if (url.includes("/api/kategorien")) return jsonResponse(["Agile"]) as Response;
-      if (url.includes("/api/trainer/verfuegbar")) {
+      if (url.includes("/api/trainer/verfuegbar") || url.includes("/traineroptionen")) {
         return jsonResponse([{ id: "TRN-1", name: "Qualifizierte Person", email: "q@example.de" }]) as Response;
+      }
+      if (url === "/api/termine/SCH-001-ZUKUNFT") {
+        return jsonResponse({
+          ...zukunft.oeffentlicheTermine[0], schulungId: "SCH-001",
+          schulungTitel: schulung.titel, schulungsTage: 2, anzahlBuchungen: 0,
+          assistenten: [], teilnehmer: [], warnungen: [],
+        }) as Response;
       }
       return jsonResponse(url.includes("/api/schulungen") ? [zukunft] : {}) as Response;
     });
@@ -336,9 +341,12 @@ describe("App smoke", () => {
     await flushPromises();
     await wrapper.get(".course-action").trigger("click");
     await wrapper.get(".calendar-event").trigger("click");
+    await flushPromises();
     await wrapper.get(".calendar-detail-actions .filter-reset").trigger("click");
     await wrapper.get(".calendar-detail-actions .primary-action").trigger("click");
     await flushPromises();
+    await wrapper.vm.$nextTick();
+    expect(aufrufe).toContain("/api/termine/SCH-001-ZUKUNFT/traineroptionen");
     await wrapper.get(".trainer-row-actions button").trigger("click");
     await flushPromises();
 

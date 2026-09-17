@@ -364,10 +364,6 @@ p {
   font-size: 0.65rem;
 }
 
-.calendar-event.status-ausgebucht {
-  border-style: dashed;
-}
-
 .calendar-event.status-abgesagt span {
   text-decoration: line-through;
 }
@@ -1677,4 +1673,52 @@ p {
   padding: 0.75rem 1rem;
   border: 1px solid var(--line);
   border-radius: 0.75rem;
+}
+
+.dashboard-section {
+  padding: 2rem max(1.25rem, calc((100vw - 1180px) / 2));
+  background: var(--surface-raised);
+}
+
+.dashboard-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dashboard-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--line);
+}
+
+.dashboard-list li.dringend,
+.termin-warnungen {
+  border-left-color: #b58900;
+  color: var(--text);
+}
+
+.termin-dialog {
+  width: min(52rem, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+}
+
+.termin-dialog select,
+.termin-dialog input {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  .dialog-hintergrund { padding: 0; }
+  .termin-dialog { width: 100%; min-height: 100vh; max-height: 100vh; border-radius: 0; }
 }

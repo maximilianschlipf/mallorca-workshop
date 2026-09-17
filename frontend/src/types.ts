@@ -2,12 +2,54 @@ export interface Termin {
   terminId: string;
   startdatum: string;
   enddatum: string;
-  ort: string;
+  ort: string | null;
   format?: string | null;
   status: string;
   trainerId?: string | null;
   trainerName?: string | null;
   assistenten?: string[];
+}
+
+export interface TerminDetail extends Omit<Termin, "assistenten"> {
+  schulungId: string;
+  schulungTitel: string;
+  schulungsTage: number;
+  zugangsart?: "oeffentlich" | "exklusiv" | null;
+  durchfuehrungsart?: "remote" | "vor_ort" | "beim_kunden" | "hybrid" | null;
+  kundenfirma?: string | null;
+  onlineZugang?: string | null;
+  anzahlBuchungen: number;
+  abschlussart?: "manuell" | "automatisch" | null;
+  abgeschlossenAm?: string | null;
+  abgesagtAm?: string | null;
+  absagegrund?: string | null;
+  assistenten: Array<{ id: string; name: string; platz: number }>;
+  teilnehmer: Array<{ id: number; name: string; firma: string | null; bemerkung: string | null; teilnahmestatus: string }>;
+  warnungen: string[];
+}
+
+export interface TerminEingabe {
+  schulungId: string;
+  startdatum: string;
+  enddatum: string;
+  zugangsart: string | null;
+  durchfuehrungsart: string | null;
+  ort: string | null;
+  kundenfirma: string | null;
+  onlineZugang: string | null;
+  trainerId?: string | null;
+  entfernenBestaetigt?: boolean;
+}
+
+export interface DashboardTermin {
+  terminId: string;
+  schulungTitel: string;
+  startdatum: string;
+  enddatum: string;
+  ueberfaellig: boolean;
+  ohneTrainer: boolean;
+  dringend: boolean;
+  mindestteilnehmerUnterschritten: boolean;
 }
 
 export type Schulungszustand = "AKTIV" | "ARCHIVIERT";
@@ -85,7 +127,10 @@ export interface VerwaisterTermin {
 export interface Trainer {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  verfuegbar?: boolean;
+  grund?: string | null;
+  kalender?: Array<{ art: string; von: string; bis: string }>;
 }
 
 export type Rolle = "TRAINER" | "ADMINISTRATOR" | "EIGENTUEMER";
