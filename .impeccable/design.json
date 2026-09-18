@@ -1,0 +1,424 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T00:00:00Z",
+  "title": "Design System: SimplyTest Academy",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Arbeitsblau",
+        "canonical": "#006fae",
+        "darkModeValue": "#39a8df",
+        "tonalRamp": [
+          "#04243a",
+          "#043a5c",
+          "#05537f",
+          "#006fae",
+          "#2b8fc8",
+          "#66b2da",
+          "#a4d3ea",
+          "#dcf0f9"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Arbeitsblau Gedrückt",
+        "canonical": "#005d92",
+        "darkModeValue": "#5ab7e5",
+        "tonalRamp": [
+          "#031e30",
+          "#04314e",
+          "#054670",
+          "#005d92",
+          "#2b80b0",
+          "#66a7cc",
+          "#a4cce2",
+          "#dcedf6"
+        ]
+      },
+      "brand-highlight": {
+        "role": "secondary",
+        "displayName": "Signaturorange (reserviert)",
+        "canonical": "#ff6633",
+        "tonalRamp": [
+          "#3d1405",
+          "#63210a",
+          "#8c3110",
+          "#b8431a",
+          "#e05527",
+          "#ff6633",
+          "#ff9a75",
+          "#ffd6c6"
+        ]
+      },
+      "seam-orange": {
+        "role": "secondary",
+        "displayName": "Nahtorange",
+        "canonical": "#ea6839",
+        "tonalRamp": [
+          "#391407",
+          "#5d220c",
+          "#853313",
+          "#af441c",
+          "#d55628",
+          "#ea6839",
+          "#f5987a",
+          "#fcd5c7"
+        ]
+      },
+      "seam-blue": {
+        "role": "secondary",
+        "displayName": "Nahtblau",
+        "canonical": "#1c85c3",
+        "tonalRamp": [
+          "#06222f",
+          "#08384e",
+          "#0b4f6f",
+          "#0f6792",
+          "#1c85c3",
+          "#4fa4d5",
+          "#8dc6e6",
+          "#cfe8f5"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Marineschrift",
+        "canonical": "#171942",
+        "darkModeValue": "#f3f5f7",
+        "tonalRamp": [
+          "#0a0b1d",
+          "#171942",
+          "#262a63",
+          "#3a3f85",
+          "#5a5fa5",
+          "#8b8fc4",
+          "#bcbfdf",
+          "#e6e7f2"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Gedämpftes Blaugrau",
+        "canonical": "#565d70",
+        "darkModeValue": "#b3b7c8",
+        "tonalRamp": [
+          "#16181f",
+          "#262a33",
+          "#3a3f4c",
+          "#565d70",
+          "#767d90",
+          "#9ba1b0",
+          "#c4c8d2",
+          "#e8eaef"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Planungsgrau",
+        "canonical": "#e7ecf0",
+        "darkModeValue": "#111328",
+        "tonalRamp": [
+          "#1a1f24",
+          "#2c343c",
+          "#414c57",
+          "#5f6d7a",
+          "#8b98a5",
+          "#b6c1cb",
+          "#e7ecf0",
+          "#f7f9fb"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Trägerweiß",
+        "canonical": "#ffffff",
+        "darkModeValue": "#1b1e3b",
+        "tonalRamp": [
+          "#1a1a1a",
+          "#333333",
+          "#4d4d4d",
+          "#737373",
+          "#a6a6a6",
+          "#d4d4d4",
+          "#f0f0f0",
+          "#ffffff"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Haarlinie",
+        "canonical": "rgba(23, 25, 66, 0.16)",
+        "darkModeValue": "rgba(243, 245, 247, 0.16)"
+      },
+      "success-text": {
+        "role": "tertiary",
+        "displayName": "Bestätigungsgrün",
+        "canonical": "#175c3a",
+        "darkModeValue": "#91dab2",
+        "tonalRamp": [
+          "#06180f",
+          "#0c2e1d",
+          "#12452b",
+          "#175c3a",
+          "#26855a",
+          "#4fb182",
+          "#93d5b4",
+          "#eaf8f0"
+        ]
+      },
+      "danger-text": {
+        "role": "tertiary",
+        "displayName": "Warnrot",
+        "canonical": "#8e1f1b",
+        "darkModeValue": "#ff9bad",
+        "tonalRamp": [
+          "#240807",
+          "#46100e",
+          "#6a1714",
+          "#8e1f1b",
+          "#bc3c36",
+          "#d97a75",
+          "#eeb3af",
+          "#fff0ef"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Seitentitel im Abschnittskopf, max. 13ch."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Kartentitel und Kalenderüberschrift, max. 20ch."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Kartenköpfe im Kontobereich und Termindetail."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Fließtext, max. 54–58ch Zeilenlänge."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Formularlabels, Tabellenköpfe, Eyebrow, Statusangaben."
+      }
+    },
+    "shadows": [
+      {
+        "name": "kartenerdung",
+        "value": "0 8px 24px rgba(23, 25, 66, 0.06)",
+        "purpose": "Katalog- und Kontokarten. Erdet, hebt nicht."
+      },
+      {
+        "name": "einstiegskarte",
+        "value": "0 18px 52px var(--shadow)",
+        "purpose": "Die allein stehende Anmelde-/Registrierkarte."
+      },
+      {
+        "name": "kopfzeile",
+        "value": "0 8px 28px rgba(23, 25, 66, 0.18)",
+        "purpose": "Trennt die dunkle Navigation vom Inhalt."
+      },
+      {
+        "name": "dialog",
+        "value": "0 24px 60px var(--shadow)",
+        "purpose": "Modale Ebene über abgedunkeltem Hintergrund."
+      }
+    ],
+    "motion": [
+      {
+        "name": "zustand",
+        "value": "180ms ease",
+        "purpose": "Farb-, Kanten- und Fokuswechsel an Bedienelementen."
+      },
+      {
+        "name": "karte",
+        "value": "240ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Karten-Hover mit 2px Anhebung."
+      },
+      {
+        "name": "puls",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Skelettbalken im Ladezustand."
+      },
+      {
+        "name": "druck",
+        "value": "scale(0.98)",
+        "purpose": "Taktile Stauchung beim Drücken."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "kontozeile",
+        "value": "860px"
+      },
+      {
+        "name": "kalender-liste",
+        "value": "680px"
+      },
+      {
+        "name": "navigation-stapel",
+        "value": "520px"
+      },
+      {
+        "name": "container",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primäre Aktion",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Die eine Handlung, die einen Schritt abschließt — Speichern, Anmelden, Anlegen.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Schulung anlegen</button>",
+      "css": ".ds-btn-primary { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0 22px; border: 0; border-radius: 6px; background: var(--accent, #006fae); color: var(--accent-contrast, #fff); font-family: Roboto, Arial, sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: transform 180ms ease, background 180ms ease; } .ds-btn-primary:hover { background: var(--accent-hover, #005d92); } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(0, 132, 202, 0.45); outline-offset: 4px; }"
+    },
+    {
+      "name": "Sekundäre Aktion",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Nebenhandlungen in Zeilen und Werkzeugleisten. Transparent mit Haarlinie.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Bearbeiten</button>",
+      "css": ".ds-btn-secondary { min-height: 42px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid var(--line, rgba(23,25,66,0.16)); border-radius: 6px; background: transparent; color: var(--text, #171942); font-family: Roboto, Arial, sans-serif; font-size: 0.78rem; font-weight: 650; cursor: pointer; white-space: nowrap; transition: border-color 180ms ease, color 180ms ease, transform 180ms ease; } .ds-btn-secondary:hover { border-color: var(--accent, #006fae); color: var(--accent, #006fae); } .ds-btn-secondary:active { transform: scale(0.98); } .ds-btn-secondary:focus-visible { outline: none; border-color: var(--accent, #006fae); box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16); }"
+    },
+    {
+      "name": "Destruktive Aktion",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Löschen und Stilllegen. Sekundäre Form, Warnrot statt Blau.",
+      "html": "<button class=\"ds-btn-danger\" type=\"button\">Konto stilllegen</button>",
+      "css": ".ds-btn-danger { min-height: 42px; display: inline-flex; align-items: center; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--danger-text, #8e1f1b) 38%, transparent); border-radius: 6px; background: transparent; color: var(--danger-text, #8e1f1b); font-family: Roboto, Arial, sans-serif; font-size: 0.78rem; font-weight: 650; cursor: pointer; transition: border-color 180ms ease, background 180ms ease; } .ds-btn-danger:hover { border-color: var(--danger-text, #8e1f1b); background: var(--danger-surface, #fff0ef); } .ds-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16); }"
+    },
+    {
+      "name": "Formularfeld",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Label über Feld, 8px Abstand. 46px hoch, blauer Hof im Fokus.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-titel\">Titel</label><input id=\"ds-titel\" type=\"text\" value=\"Testautomatisierung mit Playwright\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; font-family: Roboto, Arial, sans-serif; } .ds-field label { color: var(--muted, #565d70); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.02em; } .ds-field input { width: 100%; height: 46px; padding: 0 16px; border: 1px solid var(--line, rgba(23,25,66,0.16)); border-radius: 6px; background: var(--surface-raised, #fff); color: var(--text, #171942); font: inherit; transition: border-color 180ms ease, box-shadow 180ms ease; } .ds-field input:focus-visible { outline: none; border-color: var(--accent, #006fae); box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16); }"
+    },
+    {
+      "name": "Schulungskarte",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Der Träger des Katalogs. Kategorie oben, Titel groß, Aktion in der Fußzeile.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-top\"><span class=\"ds-category\">IT-Security</span><span>SCH-004</span></div><h3>Sichere Webanwendungen entwickeln</h3><p>Angriffsflächen erkennen, Schwachstellen schließen und Sicherheitsprüfungen in die Entwicklung holen.</p><div class=\"ds-card-foot\"><span>2 Tage · max. 12 Teilnehmer</span><button class=\"ds-card-action\" type=\"button\">Details</button></div></article>",
+      "css": ".ds-card { min-height: 290px; display: flex; flex-direction: column; padding: clamp(24px, 3vw, 38px); border: 1px solid var(--line, rgba(23,25,66,0.16)); border-radius: 10px; background: var(--surface-raised, #fff); box-shadow: 0 8px 24px rgba(23, 25, 66, 0.06); font-family: Roboto, Arial, sans-serif; color: var(--text, #171942); transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), border-color 240ms ease; } .ds-card:hover { transform: translateY(-2px); border-color: rgba(0, 132, 202, 0.42); } .ds-card-top, .ds-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; color: var(--muted, #565d70); font-size: 0.76rem; } .ds-category { color: var(--accent, #006fae); font-weight: 700; } .ds-card h3 { max-width: 20ch; margin: 42px 0 16px; font-size: clamp(1.45rem, 2.2vw, 2rem); font-weight: 700; line-height: 1.08; letter-spacing: -0.04em; } .ds-card > p { max-width: 54ch; margin: 0 0 36px; color: var(--muted, #565d70); line-height: 1.55; } .ds-card-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line, rgba(23,25,66,0.16)); } .ds-card-action { height: 38px; padding: 0 14px; border: 0; border-radius: 6px; background: var(--accent, #006fae); color: #fff; font: inherit; font-size: 0.74rem; font-weight: 700; cursor: pointer; } .ds-card-action:hover { background: var(--accent-hover, #005d92); }"
+    },
+    {
+      "name": "Zustandsschild",
+      "kind": "chip",
+      "refersTo": "chip-state",
+      "description": "Kennzeichnet Zustände — aktiv, archiviert. Nie Filter, nie Aktion.",
+      "html": "<span class=\"ds-chip ds-chip-aktiv\">Aktiv</span> <span class=\"ds-chip ds-chip-archiviert\">Archiviert</span>",
+      "css": ".ds-chip { display: inline-block; padding: 3px 10px; border-radius: 6px; font-family: Roboto, Arial, sans-serif; font-size: 0.8rem; font-weight: 600; } .ds-chip-aktiv { background: var(--success-surface, #eaf8f0); color: var(--success-text, #175c3a); } .ds-chip-archiviert { background: color-mix(in srgb, var(--muted, #565d70) 12%, transparent); color: var(--muted, #565d70); }"
+    },
+    {
+      "name": "Hauptnavigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Dunkle Kopfzeile mit Signaturnaht, Wortmarke und blauem Aktivstrich.",
+      "html": "<header class=\"ds-header\"><nav class=\"ds-nav\"><span class=\"ds-brand\">SimplyTest<strong>Academy</strong></span><span class=\"ds-nav-links\"><a class=\"ds-nav-link is-active\" href=\"#\">Planer</a><a class=\"ds-nav-link\" href=\"#\">Katalog</a><a class=\"ds-nav-link\" href=\"#\">Profil</a></span></nav></header>",
+      "css": ".ds-header { background: linear-gradient(90deg, #ea6839, #1c85c3) top / 100% 3px no-repeat, radial-gradient(circle at 82% 0, rgba(28, 133, 195, 0.2), transparent 22rem), #171942; box-shadow: 0 8px 28px rgba(23, 25, 66, 0.18); font-family: Roboto, Arial, sans-serif; } .ds-nav { height: 78px; display: flex; align-items: center; justify-content: space-between; padding-inline: 24px; color: #fff; } .ds-brand { display: inline-flex; align-items: center; gap: 16px; font-size: 0.9rem; font-weight: 650; } .ds-brand strong { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, 0.3); font-size: 1.05rem; } .ds-nav-links { display: flex; gap: 24px; } .ds-nav-link { padding: 29px 0 25px; border-bottom: 2px solid transparent; color: rgba(255, 255, 255, 0.76); font-size: 0.86rem; text-decoration: none; transition: color 180ms ease; } .ds-nav-link:hover, .ds-nav-link.is-active { color: #fff; border-bottom-color: #1c85c3; } .ds-nav-link:focus-visible { outline: 3px solid rgba(0, 132, 202, 0.45); outline-offset: 4px; }"
+    },
+    {
+      "name": "Verwaltungstabelle",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Die Listenform der Verwaltung. Randlos, Haarlinien als Zeilentrenner, Versalien im Kopf.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Kennung</th><th>Titel</th><th>Zustand</th></tr></thead><tbody><tr><td class=\"ds-kennung\">SCH-001</td><td>Testautomatisierung mit Playwright</td><td><span class=\"ds-chip ds-chip-aktiv\">Aktiv</span></td></tr><tr><td class=\"ds-kennung\">SCH-002</td><td>Agiles Anforderungsmanagement</td><td><span class=\"ds-chip ds-chip-archiviert\">Archiviert</span></td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: Roboto, Arial, sans-serif; color: var(--text, #171942); } .ds-table th, .ds-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--line, rgba(23,25,66,0.16)); vertical-align: top; } .ds-table th { color: var(--muted, #565d70); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; } .ds-kennung { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.05em; } .ds-chip { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; } .ds-chip-aktiv { background: #eaf8f0; color: #175c3a; } .ds-chip-archiviert { background: rgba(86, 93, 112, 0.12); color: #565d70; }"
+    },
+    {
+      "name": "Zustandsblock",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Trägt Lade-, Leer- und Fehlerzustände. Eine Fläche, drei Gesichter.",
+      "html": "<div class=\"ds-state ds-state-error\" role=\"alert\"><p>Der Schulungskatalog konnte nicht geladen werden.</p><small>Verbindung zum Server fehlgeschlagen.</small></div>",
+      "css": ".ds-state { padding: 48px; border: 1px solid var(--line, rgba(23,25,66,0.16)); border-radius: 10px; background: var(--surface-raised, #fff); font-family: Roboto, Arial, sans-serif; color: var(--text, #171942); } .ds-state p { margin: 0 0 8px; font-weight: 650; } .ds-state small { color: var(--muted, #565d70); } .ds-state-error { border-color: #a53848; } .ds-state-error p { color: #8d2638; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Das disziplinierte Planungsbrett",
+    "overview": "Der Schulungsplaner ist ein Arbeitsgerät, kein Schaufenster. Die Oberfläche verhält sich wie ein sauber geführtes Planungsbrett: eine ruhige, leicht kühle Fläche, auf der weiße Karten und harte Raster liegen. Nichts glänzt, nichts wippt. Wer hier arbeitet, hat mehrere Termine, Qualifikationen und Verfügbarkeiten gleichzeitig im Kopf — die Gestaltung nimmt Last ab, statt Aufmerksamkeit zu fordern.\n\nFarbe ist knapp und funktional. Das Blau markiert genau die Stellen, an denen eine Entscheidung ansteht: die primäre Aktion, der aktive Tag, die Kategorie, der Fokusring. Das Orange ist kein zweiter Akzent, sondern ein Signaturton — es erscheint als 3–4 px starke Verlaufsnaht an Kopf, Fuß und Anmeldekarte. Diese Naht ist das einzige dekorative Element im ganzen System und trägt allein die Markenpräsenz.\n\nDie dunkle Kopf- und Fußzone klammert das Arbeitsfeld ein. Dazwischen arbeitet die Seite mit einem breiten, zentrierten Maß (max. 1280 px) und großzügigem vertikalen Atem, damit Tabellen, Kalenderraster und Kartenlisten nebeneinander lesbar bleiben.",
+    "keyCharacteristics": [
+      "Ruhige Grundfläche, weiße erhobene Träger, dünne Trennlinien statt Schatten.",
+      "Ein einziger Akzentton für Entscheidungen; Orange nur als Signaturnaht.",
+      "Enge, negativ laufende Überschriften (-0.04em) gegen weich gesetzten Fließtext.",
+      "Kompakte, gleich hohe Steuerelemente: 48 px primär, 46 px Feld, 42 px sekundär.",
+      "Vollständiger Dark Mode über dieselben semantischen Variablen.",
+      "Deutschsprachig durchgehend, Fachsprache aus CONTEXT.md."
+    ],
+    "rules": [
+      {
+        "name": "The One Decision Rule",
+        "body": "Arbeitsblau markiert ausschließlich das, worüber gerade entschieden wird. Zwei blaue Flächen, die um dieselbe Aufmerksamkeit konkurrieren, sind ein Fehler — nicht Geschmackssache.",
+        "section": "colors"
+      },
+      {
+        "name": "The Seam Rule",
+        "body": "Orange ist keine Bedienfarbe. Es erscheint als linear-gradient(90deg, #ea6839, #1c85c3) mit 3–4 px Höhe an der Oberkante von Kopfzeile, Fußzeile und Anmeldekarte. Sonst nirgends.",
+        "section": "colors"
+      },
+      {
+        "name": "The Token-Only Rule",
+        "body": "Jede Farbe in neuem CSS kommt aus einer Custom Property. Ein Hex-Wert außerhalb des :root-Blocks und der Signaturnaht ist ein Defekt: er überlebt den Dark Mode nicht.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measure Rule",
+        "body": "Kein Fließtext läuft breiter als 58ch, keine Überschrift breiter als 20ch. Die Breite wird am Element begrenzt, nicht am Container.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight-Not-Caps Rule",
+        "body": "Hierarchie entsteht durch Gewicht und Größe. Versalien sind der Tabellenkopfzeile vorbehalten; Schaltflächen und Labels bleiben gemischt gesetzt.",
+        "section": "typography"
+      },
+      {
+        "name": "The Full-Bleed Band Rule",
+        "body": "Ein Band, das eine eigene Hintergrundfarbe trägt, läuft immer über die volle Breite; sein Inhalt wird über padding-inline ins 1280er-Maß gezogen — nie über einen zentrierten Wrapper mit sichtbarer Kante.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-At-Rest Rule",
+        "body": "Flächen liegen im Ruhezustand flach. Hover hebt eine Karte höchstens um 2 px und färbt ihre Kante blau ein — der Schatten wächst dabei nicht mit.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Three-Radii Rule",
+        "body": "6 px bedienbar, 8 px Kalendereintrag, 10 px Träger. Ein vierter Radius — insbesondere die Pille (999px) — gehört nicht in dieses System.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Hairline-Urgency Rule",
+        "body": "Dringlichkeit und Warnung werden über eine getönte Fläche mit eingefärbter Haarlinie ausgedrückt, nie über eine dicke farbige Seitenkante.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do jede Farbe aus einer Custom Property ziehen, damit der Dark Mode geschlossen bleibt.",
+      "Do die drei Radien einhalten: 6 px bedienbar, 8 px Kalendereintrag, 10 px Träger.",
+      "Do Steuerelemente auf ihren festen Höhen halten: 48 px primär, 46 px Feld, 42 px sekundär.",
+      "Do Abstände aus der 8-px-Basis nehmen (6 / 8 / 16 / 24 / 38) und Abschnittsluft über clamp() skalieren.",
+      "Do ganzbreite Bänder über padding-inline: max(24px, calc((100vw - 1280px) / 2)) ins Maß ziehen.",
+      "Do jedem interaktiven Element einen sichtbaren Fokuszustand geben — 3 px blauer Ring oder Hof, nie outline: none ohne Ersatz.",
+      "Do Tabellen mit .verwaltungstabelle auszeichnen; eine nackte <table> fällt aus dem System."
+    ],
+    "donts": [
+      "Don't Pillenformen (border-radius: 999px) verwenden. Sie stammen aus einer abweichenden Schicht und gehören nicht zum System.",
+      "Don't Orange als Bedienfarbe einsetzen — es ist die Naht, niemals Schaltfläche.",
+      "Don't feste Hex-Werte außerhalb von :root und der Signaturnaht schreiben; sie brechen im Dark Mode.",
+      "Don't rem-Abstände neben der px-Skala mischen. Das System rechnet in px.",
+      "Don't !important verwenden. Wenn es nötig scheint, ist die Spezifität falsch aufgebaut.",
+      "Don't Schatten zur Hierarchiebildung benutzen. Tiefe kommt aus Tonwert und Haarlinie.",
+      "Don't einen zweiten Akzentton einführen. Eine Entscheidung, eine Farbe.",
+      "Don't Dringlichkeit über eine dicke farbige Seitenkante (border-left: 4px) markieren -- getönte Fläche plus Haarlinie sagt dasselbe ruhiger."
+    ]
+  }
+}
