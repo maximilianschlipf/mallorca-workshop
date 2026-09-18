@@ -152,3 +152,90 @@ Entzug
 
    Nach einem Entzug kann sich der Trainer für dieselbe Schulung erneut
    bewerben. Die Sperrfrist aus einer Ablehnung gilt hier nicht.
+
+Selbst-Ablegen
+---------------
+
+.. req:: Qualifikation selbst ablegen
+   :id: REQ_QUA_ABLEGEN_01
+   :status: draft
+   :priority: high
+   :links: REQ_QUA_UMF_01
+
+   Ein Trainer kann eine eigene bestätigte Qualifikation selbst ablegen.
+   Der Vorgang verlangt eine ausdrückliche Bestätigung, damit sie nicht
+   durch einen Fehlklick verloren geht.
+
+.. req:: Ablegen löst zukünftige Zuweisungen mit Warnung
+   :id: REQ_QUA_ABLEGEN_02
+   :status: draft
+   :priority: high
+   :links: REQ_QUA_ABLEGEN_01
+
+   Bestehen für den Trainer künftige Termine dieser Schulung als
+   ausführender Trainer, weist die Bestätigung ausdrücklich darauf hin.
+   Nach dem Ablegen wechseln diese Termine in den Zustand "nicht
+   zugewiesen"; bei abgeschlossenen Terminen bleibt er eingetragen.
+
+.. req:: Bewerbung nach dem Ablegen ohne Sperrfrist
+   :id: REQ_QUA_ABLEGEN_03
+   :status: draft
+   :links: REQ_QUA_ABLEGEN_01, REQ_QUA_BEW_01
+
+   Nach dem Ablegen kann sich der Trainer für dieselbe Schulung sofort
+   erneut bewerben. Die Sperrfrist aus einer Ablehnung gilt hier nicht.
+
+.. req:: Benachrichtigung des Adminbereichs über das Ablegen
+   :id: REQ_QUA_ABLEGEN_04
+   :status: draft
+   :links: REQ_QUA_ABLEGEN_01
+
+   Administratoren werden benachrichtigt, wenn ein Trainer eine
+   Qualifikation ablegt.
+
+Direktvergabe
+--------------
+
+.. decision:: Qualifikationsverwaltung liegt an der Schulung
+   :id: DEC_QUA_VERWALTUNG_01
+   :status: draft
+
+   Offene Freigabeanfragen entscheiden, bestätigte Qualifikationen
+   entziehen und Trainer direkt qualifizieren laufen gebündelt in einer
+   Tabelle an der jeweiligen Schulung zusammen, nicht am Benutzerkonto des
+   Trainers. Das Selbst-Ablegen einer eigenen Qualifikation bleibt davon
+   unberührt und liegt am Profil des Trainers.
+
+.. req:: Administrator qualifiziert einen Trainer direkt
+   :id: REQ_QUA_DIREKT_01
+   :status: draft
+   :priority: high
+   :links: REQ_QUA_UMF_01, DEC_QUA_VERWALTUNG_01
+
+   Ein Administrator kann einen Trainer für eine Schulung qualifizieren,
+   ohne dass dazu eine Bewerbung des Trainers vorliegt.
+
+.. req:: Keine Direktvergabe bei bestehender Qualifikation
+   :id: REQ_QUA_DIREKT_04
+   :status: draft
+   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_05
+
+   Für eine Schulung, für die ein Trainer bereits qualifiziert ist, bietet
+   die Tabelle keine Direktvergabe an.
+
+.. req:: Direktvergabe schließt eine offene Bewerbung
+   :id: REQ_QUA_DIREKT_02
+   :status: draft
+   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_06
+
+   Hat der Trainer für dieselbe Schulung bereits eine offene
+   Freigabeanfrage, gilt sie durch die Direktvergabe als genehmigt, statt
+   parallel zur neu entstandenen Qualifikation offen zu bleiben.
+
+.. req:: Benachrichtigung über die Direktvergabe
+   :id: REQ_QUA_DIREKT_03
+   :status: draft
+   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_03
+
+   Der Trainer wird über die Direktvergabe benachrichtigt, wie bei der
+   Genehmigung einer Bewerbung.

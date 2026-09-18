@@ -29,6 +29,7 @@ Kürzel     Bereich
    benutzerkonten
    benutzerkonten-umsetzung
    qualifikationen
+   qualifikationen-umsetzung
    trainersicht
    abwesenheiten
    abwesenheiten-umsetzung
