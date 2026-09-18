@@ -4,6 +4,11 @@
   background: #e7ecf0;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  /* Ohne diese Angabe zeichnet der Browser seine eigenen Bedienelemente immer
+     im hellen Schema: Das Kalendersymbol im Datumsfeld und der Pfeil im
+     Auswahlfeld blieben dunkel und verschwanden auf dunklem Grund. */
+  color-scheme: light dark;
+  accent-color: #006fae;
   --surface: #e7ecf0;
   --surface-raised: #ffffff;
   --text: #171942;
@@ -566,8 +571,15 @@ p {
   box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
 }
 
-.filter-field input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator {
+  padding: 2px;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background 180ms ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background: rgba(0, 132, 202, 0.16);
 }
 
 .filter-reset {
@@ -1179,6 +1191,7 @@ p {
     --warning-text: #e8c06a;
     --warning-surface: rgba(181, 137, 0, 0.18);
     --shadow: rgba(6, 8, 28, 0.3);
+    accent-color: #39a8df;
   }
 
   .primary-action:hover {
@@ -1195,10 +1208,6 @@ p {
   .calendar-event {
     border-color: rgba(120, 162, 255, 0.3);
     background: rgba(120, 162, 255, 0.09);
-  }
-
-  .filter-field input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
   }
 
   .state-error {
