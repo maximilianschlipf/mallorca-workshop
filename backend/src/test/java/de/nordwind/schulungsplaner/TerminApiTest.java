@@ -3,15 +3,25 @@ package de.nordwind.schulungsplaner;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -19,9 +29,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TerminApiTest.FesteZeit.class)
 class TerminApiTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+
+    static class FesteZeit {
+        @Bean @Primary Clock testClock() {
+            return Clock.fixed(Instant.parse("2026-09-17T10:00:00Z"), ZoneId.of("Europe/Berlin"));
+        }
+    }
 
     @Test
     void geschuetzteTerminmutationenErfordernAnmeldungCsrfUndAdministratorrolle() throws Exception {
@@ -42,6 +59,27 @@ class TerminApiTest {
                 .andExpect(status().isCreated());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "PUT /api/termine/T", "POST /api/termine/T/bestaetigung",
+            "POST /api/termine/T/absage", "DELETE /api/termine/T",
+            "POST /api/termine/T/buchungen", "PUT /api/termine/T/buchungen/1/teilnahmestatus",
+            "DELETE /api/termine/T/buchungen/1", "PUT /api/termine/T/trainer/TRN-005",
+            "DELETE /api/termine/T/trainer", "PUT /api/termine/T/assistenten/TRN-003"
+    })
+    void jedeTerminmutationErfordertCsrf(String fall) throws Exception {
+        MockHttpSession admin = anmelden("julia.hoffmann@simplytest-academy.de");
+        String[] teile = fall.split(" ", 2);
+        var anfrage = switch (teile[0]) {
+            case "POST" -> post(teile[1]);
+            case "PUT" -> put(teile[1]);
+            case "DELETE" -> delete(teile[1]);
+            default -> throw new IllegalArgumentException(fall);
+        };
+        mvc.perform(anfrage.session(admin).contentType("application/json").content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     void mitgesendeteTerminIdWirdNichtAlsKennungUebernommen() throws Exception {
         MockHttpSession admin = anmelden("julia.hoffmann@simplytest-academy.de");
@@ -52,6 +90,15 @@ class TerminApiTest {
                                 """))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
         assertThat(antwort.get("terminId").stringValue()).isNotEqualTo("FREMD-T0042");
+    }
+
+    @Test
+    void zuLangerAbsagegrundWirdVorDerFachlogikAbgewiesen() throws Exception {
+        MockHttpSession admin = anmelden("julia.hoffmann@simplytest-academy.de");
+        mvc.perform(post("/api/termine/NICHT-VORHANDEN/absage").session(admin).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"grund\":\"" + "x".repeat(1001) + "\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

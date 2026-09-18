@@ -139,20 +139,23 @@ public class SeedService {
             String firma = "exklusiv".equals(zugang) ? "Demo GmbH" : null;
             String online = Set.of("remote", "hybrid").contains(durchfuehrung)
                     ? "https://academy.example/termin-" + (index + 1) : null;
+            if ("abgeschlossen".equals(status)) online = null;
             int nummer = nummern.merge(termin.schulungId(), 1, Integer::sum);
             String terminId = "%s-T%04d".formatted(termin.schulungId(), nummer);
             jdbc.update("""
                     INSERT INTO termin
                     (termin_id, schulung_id, startdatum, enddatum, ort, format, status, trainer_id,
                      zugangsart, durchfuehrungsart, kundenfirma, online_zugang,
-                     abschlussart, abgeschlossen_am, abgesagt_am)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     abschlussart, abgeschlossen_am, bestaetigt_von, abgesagt_am, abgesagt_von)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, terminId, termin.schulungId(), zeitraum[0], zeitraum[1], ort,
                     durchfuehrung, status, mitTrainern && index != 2 ? termin.trainerId() : null,
                     zugang, durchfuehrung, firma, online,
-                    "abgeschlossen".equals(status) ? "manuell" : null,
+                    "abgeschlossen".equals(status) ? (mitTrainern ? "manuell" : "automatisch") : null,
                     "abgeschlossen".equals(status) ? zeitraum[1] : null,
-                    "abgesagt".equals(status) ? heute : null);
+                    "abgeschlossen".equals(status) && mitTrainern ? termin.trainerId() : null,
+                    "abgesagt".equals(status) ? heute : null,
+                    "abgesagt".equals(status) && mitTrainern ? "TRN-001" : null);
             if (index == 1 && mitTrainern) {
                 String assistent = "TRN-003".equals(termin.trainerId()) ? "TRN-001" : "TRN-003";
                 jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)", terminId, assistent);

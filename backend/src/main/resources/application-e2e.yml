@@ -5,3 +5,4 @@ spring:
 app:
   demo-seed: true
   demo-trainer-seed: false
+  clock-fixed: "2026-09-17T10:00:00Z"

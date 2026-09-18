@@ -402,10 +402,10 @@ class BenutzerkontoIntegrationTest {
                 .extracting("id").doesNotContain(ziel.id());
         assertThatThrownBy(() -> einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id()))
                 .isInstanceOfSatisfying(KontoFehler.class,
-                        f -> assertThat(f.code()).isEqualTo("TRAINERROLLE_ERFORDERLICH"));
+                        f -> assertThat(f.code()).isEqualTo("TRAINER_ERFORDERLICH"));
         assertThatThrownBy(() -> einsaetze.assistentZuweisen(chef.id(), "ROLLEN", ziel.id()))
                 .isInstanceOfSatisfying(KontoFehler.class,
-                        f -> assertThat(f.code()).isEqualTo("TRAINERROLLE_ERFORDERLICH"));
+                        f -> assertThat(f.code()).isEqualTo("TRAINER_ERFORDERLICH"));
 
         konten.rolleErteilen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());
@@ -417,11 +417,12 @@ class BenutzerkontoIntegrationTest {
         assertThat(schulungen.findeVerfuegbareTrainer(
                 "SCH-001", LocalDate.of(2099, 2, 1), LocalDate.of(2099, 2, 2)))
                 .extracting("id").doesNotContain(ziel.id());
+        termin("ROLLEN-ASSISTENZ", "2099-02-04", "geplant", null);
         einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id());
-        einsaetze.assistentZuweisen(chef.id(), "ROLLEN", ziel.id());
+        einsaetze.assistentZuweisen(chef.id(), "ROLLEN-ASSISTENZ", ziel.id());
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='ROLLEN'", String.class))
                 .isEqualTo(ziel.id());
-        assertThat(jdbc.queryForObject("SELECT benutzerkonto_id FROM termin_assistent WHERE termin_id='ROLLEN'", String.class))
+        assertThat(jdbc.queryForObject("SELECT benutzerkonto_id FROM termin_assistent WHERE termin_id='ROLLEN-ASSISTENZ'", String.class))
                 .isEqualTo(ziel.id());
     }
 
@@ -502,8 +503,8 @@ class BenutzerkontoIntegrationTest {
         termin("HISTORIE-ASSISTENZ", "2020-01-02", "abgeschlossen", null);
         einsaetze.trainerZuweisen(chef.id(), "ZUKUNFT-TRAINER", ziel.id());
         einsaetze.assistentZuweisen(chef.id(), "ZUKUNFT-ASSISTENZ", ziel.id());
-        einsaetze.trainerZuweisen(chef.id(), "HISTORIE-TRAINER", ziel.id());
-        einsaetze.assistentZuweisen(chef.id(), "HISTORIE-ASSISTENZ", ziel.id());
+        jdbc.update("UPDATE termin SET trainer_id=? WHERE termin_id='HISTORIE-TRAINER'", ziel.id());
+        jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES ('HISTORIE-ASSISTENZ', ?, 1)", ziel.id());
 
         konten.rolleEntziehen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());

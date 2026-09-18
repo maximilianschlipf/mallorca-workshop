@@ -71,7 +71,7 @@ public class TerminController {
     @PostMapping("/{terminId}/absage")
     public TerminService.TerminAnsicht absagen(@AuthenticationPrincipal KontoPrincipal konto,
                                                @PathVariable String terminId,
-                                               @RequestBody(required = false) Absage anfrage) {
+                                               @Valid @RequestBody(required = false) Absage anfrage) {
         return termine.absagen(konto.id(), terminId, anfrage == null ? null : anfrage.grund());
     }
 
@@ -91,6 +91,15 @@ public class TerminController {
     public List<TerminService.TrainerOption> traineroptionen(@AuthenticationPrincipal KontoPrincipal konto,
                                                             @PathVariable String terminId) {
         return termine.trainerOptionen(konto.id(), terminId);
+    }
+
+    @GetMapping("/traineroptionen")
+    public List<TerminService.TrainerOption> traineroptionen(
+            @AuthenticationPrincipal KontoPrincipal konto,
+            @RequestParam String schulungId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startdatum,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate enddatum) {
+        return termine.trainerOptionen(konto.id(), schulungId, startdatum, enddatum);
     }
 
     @PostMapping("/{terminId}/buchungen")

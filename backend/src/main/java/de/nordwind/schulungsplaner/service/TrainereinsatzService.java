@@ -22,15 +22,18 @@ public class TrainereinsatzService {
     private final KatalogRepository katalog;
     private final SchulungszustandRepository zustaende;
     private final Clock clock;
+    private final TerminService termine;
 
     public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten,
                                  KatalogRepository katalog,
-                                 SchulungszustandRepository zustaende, Clock clock) {
+                                 SchulungszustandRepository zustaende, Clock clock,
+                                 TerminService termine) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
         this.zustaende = zustaende;
         this.clock = clock;
+        this.termine = termine;
     }
 
     @Transactional
@@ -61,6 +64,7 @@ public class TrainereinsatzService {
 
     @Transactional
     public void aufAssistenzplatzBewerben(String kontoId, String terminId) {
+        termine.nachziehen();
         pruefeAktivenTrainer(kontoId);
         TerminDaten termin = terminLaden(terminId, false);
         if (termin.enddatum().isBefore(LocalDate.now(clock)) || "abgeschlossen".equals(termin.status())) {
@@ -87,7 +91,9 @@ public class TrainereinsatzService {
                 """, kontoId, von, bis, grund);
     }
 
+    @Transactional
     public List<TrainerTermin> meineTermine(String kontoId) {
+        termine.nachziehen();
         return jdbc.query("""
                 SELECT termin_id, schulung_id, startdatum, enddatum, ort, status
                 FROM termin WHERE trainer_id = ? ORDER BY startdatum, termin_id
@@ -107,44 +113,12 @@ public class TrainereinsatzService {
 
     @Transactional
     public void trainerZuweisen(String administratorId, String terminId, String trainerId) {
-        pruefeAdministrator(administratorId);
-        TerminDaten termin = terminLaden(terminId, true);
-        pruefeAktivenTrainer(trainerId);
-        if (!existiert("""
-                SELECT COUNT(*) FROM trainer_qualifikation
-                WHERE benutzerkonto_id = ? AND schulung_id = ?
-                """, trainerId, termin.schulungId())) {
-            throw fehler(HttpStatus.CONFLICT, "QUALIFIKATION_ERFORDERLICH",
-                    "Der Trainer ist für diese Schulung nicht qualifiziert.");
-        }
-        jdbc.update("UPDATE termin SET trainer_id = ?, trainer_name_snapshot = NULL WHERE termin_id = ?",
-                trainerId, terminId);
+        termine.trainerZuweisen(administratorId, terminId, trainerId, false);
     }
 
     @Transactional
     public void assistentZuweisen(String administratorId, String terminId, String trainerId) {
-        pruefeAdministrator(administratorId);
-        terminLaden(terminId, true);
-        pruefeAktivenTrainer(trainerId);
-        List<Integer> belegtePlaetze = jdbc.queryForList(
-                "SELECT platz FROM termin_assistent WHERE termin_id = ?", Integer.class, terminId);
-        int freierPlatz = java.util.stream.IntStream.rangeClosed(1, 3)
-                .filter(platz -> !belegtePlaetze.contains(platz))
-                .findFirst()
-                .orElseThrow(() -> fehler(HttpStatus.CONFLICT, "KEIN_ASSISTENZPLATZ",
-                        "Für diesen Termin sind bereits drei Assistenzplätze belegt."));
-        einfuegenOderKonflikt("""
-                INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz)
-                VALUES (?, ?, ?)
-                """, "BEREITS_ZUGEWIESEN", "Das Benutzerkonto ist diesem Termin bereits zugewiesen.",
-                terminId, trainerId, freierPlatz);
-    }
-
-    private void pruefeAdministrator(String kontoId) {
-        if (!konten.laden(kontoId).rollen().contains(Rolle.ADMINISTRATOR)) {
-            throw fehler(HttpStatus.FORBIDDEN, "ADMINISTRATOR_ERFORDERLICH",
-                    "Für diese Aktion sind Administratorrechte erforderlich.");
-        }
+        termine.assistentZuweisen(administratorId, terminId, trainerId);
     }
 
     private void pruefeAktivenTrainer(String kontoId) {

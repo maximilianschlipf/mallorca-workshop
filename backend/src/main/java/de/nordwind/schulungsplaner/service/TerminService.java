@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 import java.net.URI;
@@ -45,7 +46,9 @@ public class TerminService {
         this.clock = clock;
     }
 
+    @Transactional
     public LocalDate enddatumVorschlagen(String schulungId, LocalDate startdatum) {
+        nachziehen();
         Katalogschulung schulung = schulung(schulungId, false);
         if (startdatum == null) throw fehler(HttpStatus.BAD_REQUEST, "STARTDATUM_FEHLT", "Das Startdatum fehlt.");
         LocalDate tag = startdatum;
@@ -58,6 +61,7 @@ public class TerminService {
 
     @Transactional
     public TerminAnsicht anlegen(String administratorId, TerminEingabe eingabe) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         if (eingabe == null || eingabe.schulungId() == null) {
             throw fehler(HttpStatus.BAD_REQUEST, "SCHULUNG_FEHLT", "Die Schulung fehlt.");
@@ -82,6 +86,7 @@ public class TerminService {
 
     @Transactional
     public TerminAnsicht aendern(String administratorId, String terminId, TerminEingabe eingabe) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile alt = lade(terminId, true);
         verlangeGeplant(alt);
@@ -118,6 +123,7 @@ public class TerminService {
     @Transactional
     public void trainerZuweisen(String administratorId, String terminId, String trainerId,
                                 boolean rollenwechselBestaetigt) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
@@ -143,6 +149,7 @@ public class TerminService {
 
     @Transactional
     public void trainerAbziehen(String administratorId, String terminId) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
@@ -153,6 +160,7 @@ public class TerminService {
 
     @Transactional
     public void assistentZuweisen(String administratorId, String terminId, String trainerId) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
@@ -188,6 +196,11 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "TRAINER_FEHLT",
                     "Für die manuelle Bestätigung muss ein Trainer zugewiesen sein.");
         }
+        if (!existiert("SELECT COUNT(*) FROM trainer_qualifikation WHERE benutzerkonto_id=? AND schulung_id=?",
+                termin.trainerId(), termin.schulungId())) {
+            throw fehler(HttpStatus.CONFLICT, "QUALIFIKATION_ERFORDERLICH",
+                    "Der zugewiesene Trainer ist für diese Schulung nicht qualifiziert.");
+        }
         if (!admin && !kontoId.equals(termin.trainerId())) {
             throw fehler(HttpStatus.FORBIDDEN, "NICHT_AUSFUEHRENDER_TRAINER",
                     "Nur der ausführende Trainer oder ein Administrator darf bestätigen.");
@@ -210,6 +223,7 @@ public class TerminService {
 
     @Transactional
     public TerminAnsicht absagen(String administratorId, String terminId, String grund) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
@@ -225,6 +239,7 @@ public class TerminService {
 
     @Transactional
     public void loeschen(String administratorId, String terminId) {
+        nachziehen();
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         if ("abgeschlossen".equals(termin.status()) || !LocalDate.now(clock).isBefore(termin.startdatum())) {
@@ -235,7 +250,9 @@ public class TerminService {
         jdbc.update("DELETE FROM termin WHERE termin_id=?", terminId);
     }
 
+    @Transactional
     public Loeschwarnung warnung(String kontoId, String terminId) {
+        nachziehen();
         konten.laden(kontoId);
         TerminZeile termin = lade(terminId, false);
         int buchungen = anzahl("SELECT COUNT(*) FROM teilnehmerbuchung WHERE termin_id=?", terminId);
@@ -247,6 +264,7 @@ public class TerminService {
 
     @Transactional
     public Teilnehmerbuchung buchungAnlegen(String kontoId, String terminId, BuchungEingabe eingabe) {
+        nachziehen();
         TerminZeile termin = lade(terminId, true);
         pruefeTeilnehmerpflege(kontoId, termin);
         String firma = leerZuNull(eingabe.firma());
@@ -274,6 +292,7 @@ public class TerminService {
 
     @Transactional
     public void buchungStatus(String kontoId, String terminId, long buchungId, String status) {
+        nachziehen();
         TerminZeile termin = lade(terminId, true);
         pruefeTeilnehmerpflege(kontoId, termin);
         if (!Set.of("teilgenommen", "nicht_teilgenommen").contains(status)) {
@@ -287,6 +306,7 @@ public class TerminService {
 
     @Transactional
     public void buchungLoeschen(String kontoId, String terminId, long buchungId) {
+        nachziehen();
         TerminZeile termin = lade(terminId, true);
         pruefeTeilnehmerpflege(kontoId, termin);
         if (jdbc.update("DELETE FROM teilnehmerbuchung WHERE id=? AND termin_id=?", buchungId, terminId) == 0) {
@@ -304,12 +324,16 @@ public class TerminService {
                 SELECT termin_id FROM termin WHERE startdatum<=? AND enddatum>=?
                 ORDER BY startdatum, termin_id
                 """, (rs, row) -> rs.getString(1), bis, von).stream()
-                .map(id -> details(kontoId, id)).toList();
+                .map(id -> detailsOhneNachziehen(kontoId, id)).toList();
     }
 
     @Transactional
     public TerminAnsicht details(String kontoId, String terminId) {
         nachziehen();
+        return detailsOhneNachziehen(kontoId, terminId);
+    }
+
+    private TerminAnsicht detailsOhneNachziehen(String kontoId, String terminId) {
         Benutzerkonto konto = konten.laden(kontoId);
         TerminZeile t = lade(terminId, false);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
@@ -318,14 +342,15 @@ public class TerminService {
                 terminId, kontoId);
         List<Teilnehmerbuchung> buchungen = admin || trainer ? buchungen(terminId) : List.of();
         String online = admin || trainer || assistent ? t.onlineZugang() : null;
-        Katalogschulung schulung = schulung(t.schulungId(), false);
+        Katalogschulung schulung = katalog.lade(SchulungId.von(t.schulungId())).orElse(null);
         int anzahl = buchungenAnzahl(terminId);
         List<String> warnungen = new ArrayList<>();
-        if ("oeffentlich".equals(t.zugangsart()) && schulung.hatObergrenze()
+        if (schulung != null && "oeffentlich".equals(t.zugangsart()) && schulung.hatObergrenze()
                 && anzahl > schulung.maxTeilnehmerOeffentlich()) warnungen.add("Höchstteilnehmerzahl überschritten");
-        if ("exklusiv".equals(t.zugangsart()) && anzahl < schulung.mindestteilnehmerExklusiv())
+        if (schulung != null && "exklusiv".equals(t.zugangsart()) && anzahl < schulung.mindestteilnehmerExklusiv())
             warnungen.add("Mindestteilnehmerzahl nicht erreicht");
-        return new TerminAnsicht(t.terminId(), t.schulungId(), schulung.titel(), t.startdatum(), t.enddatum(),
+        return new TerminAnsicht(t.terminId(), t.schulungId(),
+                schulung == null ? t.schulungTitel() : schulung.titel(), t.startdatum(), t.enddatum(),
                 schulungsTage(t.startdatum(), t.enddatum()), t.zugangsart(), t.durchfuehrungsart(), t.ort(),
                 t.kundenfirma(), online, t.status(), t.trainerId(), name(t.trainerId()),
                 assistenten(terminId), buchungen, anzahl, t.abschlussart(), t.abgeschlossenAm(),
@@ -347,22 +372,39 @@ public class TerminService {
                 """, (rs, row) -> rs.getString(1), admin ? new Object[]{heute} : new Object[]{kontoId, heute});
         return ids.stream().map(id -> {
             TerminZeile t = lade(id, false);
-            Katalogschulung s = schulung(t.schulungId(), false);
+            Katalogschulung s = katalog.lade(SchulungId.von(t.schulungId())).orElse(null);
             boolean ueberfaellig = t.enddatum().isBefore(heute);
             boolean ohneTrainer = t.trainerId() == null;
-            boolean zuWenig = "exklusiv".equals(t.zugangsart())
+            boolean zuWenig = s != null && "exklusiv".equals(t.zugangsart())
                     && buchungenAnzahl(id) < s.mindestteilnehmerExklusiv()
                     && t.startdatum().isBefore(heute.plusWeeks(4));
             boolean dringend = (ohneTrainer && t.startdatum().isBefore(heute.plusWeeks(4))) || zuWenig;
-            return new DashboardEintrag(id, s.titel(), t.startdatum(), t.enddatum(), ueberfaellig,
+            return new DashboardEintrag(id, s == null ? t.schulungTitel() : s.titel(), t.startdatum(), t.enddatum(), ueberfaellig,
                     ohneTrainer, dringend, zuWenig);
         }).filter(e -> !admin || e.ueberfaellig() || e.ohneTrainer()
                 || e.mindestteilnehmerUnterschritten()).toList();
     }
 
+    @Transactional
     public List<TrainerOption> trainerOptionen(String kontoId, String terminId) {
+        nachziehen();
         pruefeAdministrator(kontoId);
         TerminZeile termin = lade(terminId, false);
+        return trainerOptionen(termin.schulungId(), termin.startdatum(), termin.enddatum(), terminId);
+    }
+
+    @Transactional
+    public List<TrainerOption> trainerOptionen(String kontoId, String schulungId,
+                                                LocalDate startdatum, LocalDate enddatum) {
+        nachziehen();
+        pruefeAdministrator(kontoId);
+        schulung(schulungId, true);
+        pruefeZeitraum(startdatum, enddatum, true);
+        return trainerOptionen(schulungId, startdatum, enddatum, null);
+    }
+
+    private List<TrainerOption> trainerOptionen(String schulungId, LocalDate startdatum,
+                                                 LocalDate enddatum, String ausnahmeTermin) {
         return jdbc.query("""
                 SELECT k.id, k.name, k.email FROM benutzerkonto k
                 JOIN benutzerkonto_rolle r ON r.benutzerkonto_id=k.id AND r.rolle='TRAINER'
@@ -370,10 +412,10 @@ public class TerminService {
                 WHERE k.aktiv=TRUE AND q.schulung_id=? ORDER BY LOWER(k.name), k.name
                 """, (rs, row) -> {
             String id = rs.getString("id");
-            String grund = nichtVerfuegbarGrund(id, termin.startdatum(), termin.enddatum(), terminId);
+            String grund = nichtVerfuegbarGrund(id, startdatum, enddatum, ausnahmeTermin);
             return new TrainerOption(id, rs.getString("name"), rs.getString("email"), grund == null, grund,
-                    belegungen(id, termin.startdatum().minusWeeks(2), termin.enddatum().plusWeeks(2)));
-        }, termin.schulungId());
+                    belegungen(id, startdatum.minusWeeks(2), enddatum.plusWeeks(2)));
+        }, schulungId);
     }
 
     @Transactional
@@ -391,6 +433,12 @@ public class TerminService {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void beiStartNachziehen() {
+        nachziehen();
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void taeglichNachziehen() {
         nachziehen();
     }
 
@@ -526,6 +574,7 @@ public class TerminService {
     }
 
     private void pruefeVerfuegbar(String kontoId, LocalDate start, LocalDate ende, String ausnahmeTermin) {
+        jdbc.queryForObject("SELECT id FROM benutzerkonto WHERE id=? FOR UPDATE", String.class, kontoId);
         String grund = nichtVerfuegbarGrund(kontoId, start, ende, ausnahmeTermin);
         if (grund != null) throw fehler(HttpStatus.CONFLICT, "TRAINER_NICHT_VERFUEGBAR", grund);
     }
@@ -570,7 +619,7 @@ public class TerminService {
     }
 
     private static TerminZeile zeile(java.sql.ResultSet rs) throws java.sql.SQLException {
-        return new TerminZeile(rs.getString("termin_id"), rs.getString("schulung_id"),
+        return new TerminZeile(rs.getString("termin_id"), rs.getString("schulung_id"), rs.getString("schulung_titel"),
                 rs.getDate("startdatum").toLocalDate(), rs.getDate("enddatum").toLocalDate(),
                 rs.getString("zugangsart"), rs.getString("durchfuehrungsart"), rs.getString("ort"),
                 rs.getString("kundenfirma"), rs.getString("online_zugang"), rs.getString("status"),
@@ -705,7 +754,7 @@ public class TerminService {
     public record Auswertung(int bestaetigteTermine, int teilgenommen) {}
     private record NormalisierteFelder(String zugangsart, String durchfuehrungsart, String ort,
             String kundenfirma, String onlineZugang) {}
-    private record TerminZeile(String terminId, String schulungId, LocalDate startdatum,
+    private record TerminZeile(String terminId, String schulungId, String schulungTitel, LocalDate startdatum,
             LocalDate enddatum, String zugangsart, String durchfuehrungsart, String ort,
             String kundenfirma, String onlineZugang, String status, String trainerId,
             String abschlussart, LocalDate abgeschlossenAm, String bestaetigtVon,

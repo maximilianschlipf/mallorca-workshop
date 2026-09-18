@@ -214,3 +214,5 @@ export const zieheTrainerAb = (terminId: string) =>
   api<void>(`/api/termine/${encodeURIComponent(terminId)}/trainer`, { method: "DELETE" });
 export const fetchTrainerOptionen = (terminId: string) =>
   api<Trainer[]>(`/api/termine/${encodeURIComponent(terminId)}/traineroptionen`);
+export const fetchTrainerOptionenFuerPlanung = (schulungId: string, startdatum: string, enddatum: string) =>
+  api<Trainer[]>(`/api/termine/traineroptionen?${new URLSearchParams({ schulungId, startdatum, enddatum })}`);
