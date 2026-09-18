@@ -2,8 +2,11 @@ package de.nordwind.schulungsplaner.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
 /**
  * Die Uhr als Bohne.
@@ -16,7 +19,8 @@ import java.time.Clock;
 public class ZeitKonfiguration {
 
     @Bean
-    Clock uhr() {
-        return Clock.systemDefaultZone();
+    Clock uhr(@Value("${app.clock-fixed:}") String fixed) {
+        return fixed.isBlank() ? Clock.systemDefaultZone()
+                : Clock.fixed(Instant.parse(fixed), ZoneId.systemDefault());
     }
 }

@@ -1,7 +1,5 @@
 # Arbeitsregeln
 
-Don't over engineer!
-
 ## Abschluss-Gates für Anforderungen
 
 Bei Änderungen, die Requirements umsetzen oder verändern:

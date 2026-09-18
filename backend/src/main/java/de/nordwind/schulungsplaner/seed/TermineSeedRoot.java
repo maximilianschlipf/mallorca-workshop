@@ -10,13 +10,7 @@ import java.util.List;
 public record TermineSeedRoot(List<TerminSeed> termine) {
 
     public record TerminSeed(
-            String terminId,
             String schulungId,
-            String startdatum,
-            String enddatum,
-            String ort,
-            String format,
-            String status,
             String trainerId
     ) {
     }

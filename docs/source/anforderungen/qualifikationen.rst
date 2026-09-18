@@ -113,72 +113,8 @@ Entscheidung
    :links: REQ_QUA_BEW_02, REQ_TRA_UEBER_02
 
    Sobald ein Trainer für eine Schulung qualifiziert ist, erscheinen deren
-   zukünftige Termine in seiner Übersicht der relevanten Termine. Vorher
-   sind sie dort nicht sichtbar.
-
-Angebot aus proaktiver Zuweisung
---------------------------------
-
-.. req:: Qualifikationsangebot aus proaktiver Zuweisung
-   :id: REQ_QUA_ANG_01
-   :status: draft
-   :links: REQ_QUA_UMF_01
-
-   Weist ein Administrator einen nicht qualifizierten Trainer einem Termin
-   zu, erhält der Trainer ein Qualifikationsangebot für die zugehörige
-   Schulung. Die Trainerzuweisung gilt ab der Zuweisung; das Angebot wird
-   nicht abgewartet.
-
-.. req:: Annahme des Qualifikationsangebots
-   :id: REQ_QUA_ANG_02
-   :status: draft
-   :links: REQ_QUA_ANG_01
-
-   Nimmt der Trainer das Angebot an, entsteht seine Qualifikation für die
-   Schulung und die bestehende Trainerzuweisung bleibt unverändert.
-
-.. req:: Ablehnung des Qualifikationsangebots
-   :id: REQ_QUA_ANG_03
-   :status: draft
-   :priority: high
-   :links: REQ_QUA_ANG_01
-
-   Lehnt der Trainer das Angebot ab, entsteht keine Qualifikation und die
-   Trainerzuweisung des Termins entfällt. Der Termin wechselt in den Zustand
-   "nicht zugewiesen" und wird damit wieder unter den Terminen ohne Trainer
-   geführt.
-
-.. req:: Administrator sieht die Ablehnung
-   :id: REQ_QUA_ANG_04
-   :status: draft
-   :links: REQ_QUA_ANG_03
-
-   Lehnt ein Trainer ein Qualifikationsangebot ab, wird das den
-   Administratoren angezeigt. Aus der Anzeige geht hervor, welcher Trainer
-   für welchen Termin abgelehnt hat.
-
-.. req:: Offene Angebote bleiben offen
-   :id: REQ_QUA_ANG_05
-   :status: draft
-   :priority: high
-   :links: REQ_QUA_ANG_01
-
-   Ein Qualifikationsangebot verfällt nicht. Antwortet ein Trainer nicht,
-   bleibt er dem Termin zugewiesen und das Angebot offen. Es gibt keine
-   Frist, nach der die Zuweisung selbsttätig entfällt.
-
-.. req:: Offene Angebote sind für Administratoren sichtbar
-   :id: REQ_QUA_ANG_06
-   :status: draft
-   :priority: high
-   :links: REQ_QUA_ANG_05
-
-   Administratoren sehen, welche Qualifikationsangebote unbeantwortet sind,
-   zu welchem Termin sie gehören und wie nah dieser Termin ist.
-
-   Nachzuhalten, ob ein Trainer antwortet, liegt in der Verantwortung des
-   Administrators. Diese Anzeige ist die Voraussetzung dafür -- ohne sie
-   wäre ein unbeantwortetes Angebot unsichtbar, bis der Termin da ist.
+   zukünftige geplante Termine in seiner Übersicht der relevanten Termine.
+   Vorher sind sie dort nicht sichtbar.
 
 Entzug
 ------

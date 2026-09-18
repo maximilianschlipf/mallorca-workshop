@@ -156,8 +156,8 @@ function zeitraumText(termin: Termin) {
 function statusText(termin: Termin) {
   const status: Record<string, string> = {
     geplant: "Geplant",
-    ausgebucht: "Ausgebucht",
     abgesagt: "Abgesagt",
+    abgeschlossen: "Abgeschlossen",
   };
   const text = status[termin.status] ?? termin.status;
   return termin.enddatum < heuteIso() ? `${text}, vergangen` : text;
@@ -343,7 +343,7 @@ onMounted(async () => {
             </div>
             <div>
               <dt>Ort</dt>
-              <dd>{{ cleanText(ausgewaehlterTermin.termin.ort) }}</dd>
+              <dd>{{ cleanText(ausgewaehlterTermin.termin.ort || "Nicht angegeben") }}</dd>
             </div>
             <div>
               <dt>Format</dt>

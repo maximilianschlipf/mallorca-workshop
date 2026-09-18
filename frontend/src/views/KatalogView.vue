@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import {
+  aendereTermin,
   aufAssistenzplatzBewerben,
   aufQualifikationBewerben,
+  bestaetigeTermin,
   fetchKategorien,
   fetchSchulungen,
+  fetchTermin,
+  fetchTerminDashboard,
+  fetchTrainerOptionen,
+  fetchTrainerOptionenFuerPlanung,
   fetchVerfuegbareTrainer,
+  legeTerminAn,
+  loescheTermin,
+  sageTerminAb,
+  schlageEnddatumVor,
   trainerZuweisen,
+  zieheTrainerAb,
 } from "../api";
 import { aktuellesKonto } from "../auth";
-import type { Schulung, Termin, Trainer } from "../types";
+import type { DashboardTermin, Schulung, Termin, TerminDetail, TerminEingabe, Trainer } from "../types";
 
 interface KalenderTermin {
   schulungId: string;
@@ -28,6 +39,18 @@ const kalenderMonat = ref(
   new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 );
 const ausgewaehlterTermin = ref<KalenderTermin | null>(null);
+const terminDetail = ref<TerminDetail | null>(null);
+const dashboard = ref<DashboardTermin[]>([]);
+const terminDialog = ref(false);
+const terminDialogElement = ref<HTMLElement | null>(null);
+const terminDetailDialog = ref(false);
+const terminDetailDialogElement = ref<HTMLElement | null>(null);
+const terminTrainer = ref<Trainer[]>([]);
+const bearbeiteterTermin = ref<string | null>(null);
+const terminForm = ref<TerminEingabe>({
+  schulungId: "", startdatum: "", enddatum: "", zugangsart: null,
+  durchfuehrungsart: null, ort: null, kundenfirma: null, onlineZugang: null,
+});
 const aktionsmeldung = ref("");
 const aktionsfehler = ref("");
 const qualifikationsbewerbungen = ref(new Set<string>());
@@ -50,7 +73,7 @@ const filterAktiv = computed(
   () => suche.value.trim() !== "" || kategorie.value !== "",
 );
 
-const cleanText = (text: string) => text.replace(/[—–]/g, "-");
+const cleanText = (text: string | null | undefined) => (text ?? "Nicht angegeben").replace(/[—–]/g, "-");
 
 const wochentage = [
   "Montag",
@@ -79,6 +102,8 @@ const kalenderTermine = computed<KalenderTermin[]>(() =>
     )
     .sort((a, b) => a.termin.startdatum.localeCompare(b.termin.startdatum)),
 );
+
+const aktiveSchulungen = computed(() => schulungen.value.filter((s) => s.zustand !== "ARCHIVIERT"));
 
 const heuteIso = () => datumZuIso(new Date());
 
@@ -116,7 +141,8 @@ const kalenderTage = computed(() => {
       imMonat: datum.getMonth() === monat.getMonth(),
       heute: iso === heuteIso(),
       termine: kalenderTermine.value.filter(
-        ({ termin }) => termin.startdatum <= iso && termin.enddatum >= iso,
+        ({ termin }) => datum.getDay() !== 0 && datum.getDay() !== 6
+          && termin.startdatum <= iso && termin.enddatum >= iso,
       ),
     };
   });
@@ -154,7 +180,7 @@ function datumText(iso: string) {
   );
 }
 
-function zeitraumText(termin: Termin) {
+function zeitraumText(termin: Pick<Termin, "startdatum" | "enddatum">) {
   const format = new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
     month: "2-digit",
@@ -168,20 +194,207 @@ function zeitraumText(termin: Termin) {
 function statusText(termin: Termin) {
   const status: Record<string, string> = {
     geplant: "Geplant",
-    ausgebucht: "Ausgebucht",
+    abgeschlossen: "Abgeschlossen",
     abgesagt: "Abgesagt",
   };
   const text = status[termin.status] ?? termin.status;
   return termin.enddatum < heuteIso() ? `${text}, vergangen` : text;
 }
 
-function terminAuswaehlen(eintrag: KalenderTermin) {
+async function terminAuswaehlen(eintrag: KalenderTermin) {
   ausgewaehlterTermin.value = eintrag;
+  terminDetail.value = null;
+  terminDetailDialog.value = true;
   trainerSchulungId.value = eintrag.schulungId;
   trainerVon.value = eintrag.termin.startdatum;
   trainerBis.value = eintrag.termin.enddatum;
   trainer.value = [];
   trainerGesucht.value = false;
+  const angefragterTermin = eintrag.termin.terminId;
+  try {
+    const detail = await fetchTermin(eintrag.termin.terminId);
+    if (detail?.terminId && ausgewaehlterTermin.value?.termin.terminId === angefragterTermin) {
+      terminDetail.value = detail;
+    }
+  } catch {
+    // Die kompakte Kalenderansicht bleibt auch bei einem Detailfehler nutzbar.
+  }
+}
+
+function neuerTermin() {
+  terminDetailDialog.value = false;
+  bearbeiteterTermin.value = null;
+  terminForm.value = { schulungId: "", startdatum: "", enddatum: "", zugangsart: null,
+    durchfuehrungsart: null, ort: null, kundenfirma: null, onlineZugang: null, trainerId: null };
+  terminTrainer.value = [];
+  terminDialog.value = true;
+}
+
+function terminBearbeiten() {
+  if (!terminDetail.value) return;
+  const t = terminDetail.value;
+  bearbeiteterTermin.value = t.terminId;
+  terminForm.value = { schulungId: t.schulungId, startdatum: t.startdatum, enddatum: t.enddatum,
+    zugangsart: t.zugangsart ?? null, durchfuehrungsart: t.durchfuehrungsart ?? null,
+    ort: t.ort || null, kundenfirma: t.kundenfirma ?? null, onlineZugang: t.onlineZugang ?? null };
+  terminDetailDialog.value = false;
+  terminDialog.value = true;
+}
+
+async function enddatumVorschlagen() {
+  if (bearbeiteterTermin.value || !terminForm.value.schulungId || !terminForm.value.startdatum) return;
+  const schulungId = terminForm.value.schulungId;
+  const startdatum = terminForm.value.startdatum;
+  try {
+    const { enddatum } = await schlageEnddatumVor(schulungId, startdatum);
+    if (terminForm.value.schulungId !== schulungId || terminForm.value.startdatum !== startdatum) return;
+    terminForm.value.enddatum = enddatum;
+    await trainerFuerNeuanlageLaden();
+  } catch (err) {
+    if (terminForm.value.schulungId === schulungId && terminForm.value.startdatum === startdatum) {
+      aktionsfehler.value = err instanceof Error ? err.message : "Enddatum konnte nicht vorgeschlagen werden.";
+    }
+  }
+}
+
+async function terminSpeichern() {
+  await aktion(async () => {
+    const eingabe: TerminEingabe = {
+      ...terminForm.value,
+      ort: ["vor_ort", "beim_kunden", "hybrid"].includes(terminForm.value.durchfuehrungsart || "")
+        ? terminForm.value.ort : null,
+      kundenfirma: terminForm.value.zugangsart === "exklusiv" ? terminForm.value.kundenfirma : null,
+      onlineZugang: ["remote", "hybrid"].includes(terminForm.value.durchfuehrungsart || "")
+        ? terminForm.value.onlineZugang : null,
+    };
+    let gespeichert: TerminDetail;
+    try {
+      gespeichert = bearbeiteterTermin.value
+        ? await aendereTermin(bearbeiteterTermin.value, eingabe)
+        : await legeTerminAn(eingabe);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("bestätigt") && window.confirm(err.message)) {
+        gespeichert = bearbeiteterTermin.value
+          ? await aendereTermin(bearbeiteterTermin.value, { ...eingabe, entfernenBestaetigt: true })
+          : await legeTerminAn(eingabe);
+      } else throw err;
+    }
+    terminDialog.value = false;
+    terminDetail.value = gespeichert;
+    await ladeSchulungen(true);
+    kalenderMonat.value = new Date(Number(gespeichert.startdatum.slice(0, 4)), Number(gespeichert.startdatum.slice(5, 7)) - 1, 1);
+    const schulung = kalenderSchulungen.value.find((s) => s.id === gespeichert.schulungId);
+    const termin = schulung?.oeffentlicheTermine.find((t) => t.terminId === gespeichert.terminId);
+    if (schulung && termin) ausgewaehlterTermin.value = { schulungId: schulung.id, schulungTitel: schulung.titel, termin };
+    terminDetailDialog.value = true;
+  }, bearbeiteterTermin.value ? "Termin geändert." : "Termin angelegt.");
+}
+
+async function trainerFuerNeuanlageLaden() {
+  if (bearbeiteterTermin.value || !terminForm.value.schulungId
+      || !terminForm.value.startdatum || !terminForm.value.enddatum) return;
+  const { schulungId, startdatum, enddatum } = terminForm.value;
+  terminTrainer.value = [];
+  terminForm.value.trainerId = null;
+  try {
+    const ergebnis = await fetchTrainerOptionenFuerPlanung(schulungId, startdatum, enddatum);
+    if (terminForm.value.schulungId === schulungId && terminForm.value.startdatum === startdatum
+        && terminForm.value.enddatum === enddatum) terminTrainer.value = ergebnis;
+  } catch {
+    if (terminForm.value.schulungId === schulungId && terminForm.value.startdatum === startdatum
+        && terminForm.value.enddatum === enddatum) terminTrainer.value = [];
+  }
+}
+
+let fokusVorDialog: HTMLElement | null = null;
+watch(terminDialog, async (offen) => {
+  if (offen) {
+    fokusVorDialog = document.activeElement as HTMLElement;
+    await nextTick();
+    terminDialogElement.value?.querySelector<HTMLElement>(
+      "select:not([disabled]), input:not([disabled]), button:not([disabled])",
+    )?.focus();
+  } else {
+    fokusVorDialog?.focus();
+  }
+});
+
+function dialogTaste(event: KeyboardEvent) {
+  modalTaste(event, terminDialogElement.value, () => { terminDialog.value = false; });
+}
+
+let fokusVorTermindetail: HTMLElement | null = null;
+watch(terminDetailDialog, async (offen) => {
+  if (offen) {
+    fokusVorTermindetail = document.activeElement as HTMLElement;
+    await nextTick();
+    terminDetailDialogElement.value?.querySelector<HTMLElement>("button:not([disabled])")?.focus();
+  } else {
+    fokusVorTermindetail?.focus();
+  }
+});
+
+function terminDetailSchliessen() {
+  terminDetailDialog.value = false;
+}
+
+function terminDetailDialogTaste(event: KeyboardEvent) {
+  modalTaste(event, terminDetailDialogElement.value, terminDetailSchliessen);
+}
+
+function modalTaste(event: KeyboardEvent, element: HTMLElement | null, schliessen: () => void) {
+  if (event.key === "Escape") {
+    schliessen();
+    return;
+  }
+  if (event.key !== "Tab" || !element) return;
+  const elemente = [...element.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex="0"]',
+  )];
+  if (!elemente.length) return;
+  const erstes = elemente[0];
+  const letztes = elemente.at(-1)!;
+  if (event.shiftKey && document.activeElement === erstes) {
+    event.preventDefault();
+    letztes.focus();
+  } else if (!event.shiftKey && document.activeElement === letztes) {
+    event.preventDefault();
+    erstes.focus();
+  }
+}
+
+async function terminBestaetigen() {
+  if (!terminDetail.value || !window.confirm("Durchführung endgültig bestätigen?")) return;
+  await aktion(async () => { aktualisiereTermin(await bestaetigeTermin(terminDetail.value!.terminId)); await ladeSchulungen(true); }, "Durchführung bestätigt.");
+}
+
+async function terminAbsagen() {
+  if (!terminDetail.value || !window.confirm(`${warntext(terminDetail.value)} absagen?`)) return;
+  const grund = window.prompt("Optionaler Absagegrund") || null;
+  await aktion(async () => { aktualisiereTermin(await sageTerminAb(terminDetail.value!.terminId, grund)); await ladeSchulungen(true); }, "Termin abgesagt.");
+}
+
+async function terminLoeschen() {
+  if (!terminDetail.value || !window.confirm(`${warntext(terminDetail.value)} löschen?`)) return;
+  await aktion(async () => { await loescheTermin(terminDetail.value!.terminId); terminDetailSchliessen(); terminDetail.value = null; ausgewaehlterTermin.value = null; await ladeSchulungen(true); }, "Termin gelöscht.");
+}
+
+function warntext(termin: TerminDetail) {
+  const beteiligte = [termin.trainerName, ...(termin.assistenten ?? []).map((a) => a.name)].filter(Boolean);
+  return `Termin mit ${termin.anzahlBuchungen} Buchungen${beteiligte.length ? ` und ${beteiligte.join(", ")}` : ""}`;
+}
+
+async function trainerAbziehen() {
+  if (!terminDetail.value) return;
+  await aktion(async () => { await zieheTrainerAb(terminDetail.value!.terminId); aktualisiereTermin(await fetchTermin(terminDetail.value!.terminId)); await ladeSchulungen(true); }, "Trainerzuweisung aufgehoben.");
+}
+
+function aktualisiereTermin(detail: TerminDetail) {
+  terminDetail.value = detail;
+  if (!ausgewaehlterTermin.value) return;
+  ausgewaehlterTermin.value.termin.status = detail.status;
+  ausgewaehlterTermin.value.termin.trainerId = detail.trainerId;
+  ausgewaehlterTermin.value.termin.trainerName = detail.trainerName;
 }
 
 async function aktion(ausfuehren: () => Promise<void>, erfolg: string) {
@@ -211,9 +424,15 @@ async function assistenzBewerben(terminId: string) {
 async function trainerEinsetzen(person: Trainer) {
   if (!ausgewaehlterTermin.value) return;
   await aktion(async () => {
-    await trainerZuweisen(ausgewaehlterTermin.value!.termin.terminId, person.id);
-    ausgewaehlterTermin.value!.termin.trainerId = person.id;
-    ausgewaehlterTermin.value!.termin.trainerName = person.name;
+    const terminId = ausgewaehlterTermin.value!.termin.terminId;
+    try {
+      await trainerZuweisen(terminId, person.id);
+    } catch (err) {
+      if (!(err instanceof Error) || !err.message.includes("bestätigt") || !window.confirm(err.message)) throw err;
+      await trainerZuweisen(terminId, person.id, true);
+    }
+    aktualisiereTermin(await fetchTermin(terminId));
+    await ladeSchulungen(true);
   }, `${person.name} wurde dem Termin als Trainer zugewiesen.`);
 }
 
@@ -225,12 +444,15 @@ async function ladeSchulungen(kalenderInitialisieren = false) {
     kalenderError.value = null;
   }
   try {
-    const ergebnis = await fetchSchulungen({
-      suche: suche.value,
-      kategorie: kategorie.value,
-    });
+    const [ergebnis, ungefilterterKalender] = await Promise.all([
+      fetchSchulungen({ suche: suche.value, kategorie: kategorie.value }),
+      kalenderInitialisieren && filterAktiv.value ? fetchSchulungen() : Promise.resolve(null),
+    ]);
     schulungen.value = ergebnis;
-    if (kalenderInitialisieren) kalenderSchulungen.value = ergebnis;
+    if (kalenderInitialisieren) {
+      kalenderSchulungen.value = ungefilterterKalender ?? ergebnis;
+      await ladeDashboard();
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Unbekannter Fehler";
     if (kalenderInitialisieren) kalenderError.value = error.value;
@@ -240,12 +462,22 @@ async function ladeSchulungen(kalenderInitialisieren = false) {
   }
 }
 
+async function ladeDashboard() {
+  try {
+    const eintraege = await fetchTerminDashboard();
+    dashboard.value = Array.isArray(eintraege)
+      ? eintraege.filter((eintrag) => typeof eintrag?.terminId === "string") : [];
+  } catch {
+    dashboard.value = [];
+  }
+}
+
 function filterZuruecksetzen() {
   suche.value = "";
   kategorie.value = "";
 }
 
-async function trainerSuchen() {
+async function trainerSuchen(fuerTermin = false) {
   trainerGesucht.value = true;
   trainer.value = [];
   trainerError.value = null;
@@ -258,16 +490,19 @@ async function trainerSuchen() {
 
   trainerLoading.value = true;
   try {
-    trainer.value = await fetchVerfuegbareTrainer(
-      trainerSchulungId.value,
-      trainerVon.value,
-      trainerBis.value,
-    );
+    trainer.value = fuerTermin && terminDetail.value
+      ? await fetchTrainerOptionen(terminDetail.value.terminId)
+      : await fetchVerfuegbareTrainer(trainerSchulungId.value, trainerVon.value, trainerBis.value);
   } catch (err) {
     trainerError.value =
       err instanceof Error ? err.message : "Unbekannter Fehler";
   } finally {
     trainerLoading.value = false;
+    if (fuerTermin) {
+      terminDetailSchliessen();
+      await nextTick();
+      document.querySelector<HTMLElement>("#trainer .trainer-results, #trainer .state")?.focus();
+    }
   }
 }
 
@@ -290,6 +525,22 @@ onMounted(async () => {
 <template>
   <div>
 
+    <section v-if="dashboard.length" class="dashboard-section" aria-labelledby="dashboard-heading">
+      <div class="section-heading compact-heading">
+        <h1 id="dashboard-heading">Offene Aufgaben</h1>
+        <p>Überfällige Termine zuerst, danach die nächsten Planungslücken.</p>
+      </div>
+      <ul class="dashboard-list">
+        <li v-for="eintrag in dashboard" :key="eintrag.terminId" :class="{ dringend: eintrag.dringend || eintrag.ueberfaellig }">
+          <strong>{{ cleanText(eintrag.schulungTitel) }}</strong>
+          <span>{{ zeitraumText(eintrag) }}</span>
+          <span v-if="eintrag.ueberfaellig">Durchführungsbestätigung ausstehend</span>
+          <span v-else-if="eintrag.ohneTrainer">Ohne Trainer</span>
+          <span v-if="eintrag.mindestteilnehmerUnterschritten">Mindestteilnehmerzahl nicht erreicht</span>
+        </li>
+      </ul>
+    </section>
+
     <section
       id="kalender"
       class="calendar-section"
@@ -298,8 +549,9 @@ onMounted(async () => {
       <div class="section-heading compact-heading">
         <h1 id="calendar-heading">Schulungskalender</h1>
         <p>
-          Alle öffentlichen Schulungen mit Zeitraum, Ort und aktuellem Status.
+          Alle Termine mit Zeitraum, Ort und aktuellem Status.
         </p>
+        <button v-if="istAdministrator" class="primary-action" type="button" @click="neuerTermin">Neuer Termin</button>
       </div>
 
       <div v-if="kalenderLoading" class="state" aria-busy="true">
@@ -378,12 +630,23 @@ onMounted(async () => {
           </li>
         </ul>
 
-        <section
-          v-if="ausgewaehlterTermin"
-          class="calendar-detail"
-          aria-labelledby="calendar-detail-heading"
-          aria-live="polite"
+        <div
+          v-if="ausgewaehlterTermin && terminDetailDialog"
+          class="dialog-hintergrund"
+          role="presentation"
+          @click.self="terminDetailSchliessen"
         >
+          <section
+            ref="terminDetailDialogElement"
+            class="dialog termin-detail-dialog calendar-detail"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calendar-detail-heading"
+            @keydown="terminDetailDialogTaste"
+          >
+          <button class="termin-detail-schliessen" type="button" aria-label="Termindetails schließen" @click="terminDetailSchliessen">
+            Schließen
+          </button>
           <div>
             <p>Termindetails</p>
             <h3 id="calendar-detail-heading">
@@ -421,10 +684,33 @@ onMounted(async () => {
               <dt>Assistenz</dt>
               <dd>{{ ausgewaehlterTermin.termin.assistenten.map(cleanText).join(", ") }}</dd>
             </div>
+            <template v-if="terminDetail">
+              <div><dt>Schulungstage</dt><dd>{{ terminDetail.schulungsTage }}</dd></div>
+              <div><dt>Zugangsart</dt><dd>{{ terminDetail.zugangsart || "Nicht angegeben" }}</dd></div>
+              <div><dt>Durchführungsart</dt><dd>{{ terminDetail.durchfuehrungsart || "Nicht angegeben" }}</dd></div>
+              <div v-if="terminDetail.kundenfirma"><dt>Kundenfirma</dt><dd>{{ terminDetail.kundenfirma }}</dd></div>
+              <div v-if="terminDetail.onlineZugang"><dt>Online-Zugang</dt><dd><a :href="terminDetail.onlineZugang">{{ terminDetail.onlineZugang }}</a></dd></div>
+              <div><dt>Buchungen</dt><dd>{{ terminDetail.anzahlBuchungen }}</dd></div>
+              <div v-if="terminDetail.abschlussart"><dt>Abschluss</dt><dd>{{ terminDetail.abschlussart === "automatisch" ? "Automatisch, ungeprüft" : "Manuell bestätigt" }}</dd></div>
+              <div v-if="terminDetail.absagegrund"><dt>Absagegrund</dt><dd>{{ terminDetail.absagegrund }}</dd></div>
+            </template>
           </dl>
+          <div v-if="terminDetail?.teilnehmer.length" class="teilnehmerliste">
+            <h4>Teilnehmer</h4>
+            <ul>
+              <li v-for="buchung in terminDetail.teilnehmer" :key="buchung.id">
+                <strong>{{ buchung.name || "Anonymisiert" }}</strong>
+                <span>{{ buchung.firma }}</span>
+                <span v-if="buchung.bemerkung">{{ buchung.bemerkung }}</span>
+              </li>
+            </ul>
+          </div>
+          <ul v-if="terminDetail?.warnungen?.length" class="termin-warnungen">
+            <li v-for="warnung in terminDetail.warnungen" :key="warnung">{{ warnung }}</li>
+          </ul>
           <div v-if="istTrainer || istAdministrator" class="calendar-detail-actions">
             <button
-              v-if="istTrainer && ausgewaehlterTermin.termin.enddatum >= heuteIso()"
+              v-if="istTrainer && terminDetail?.status === 'geplant' && ausgewaehlterTermin.termin.enddatum >= heuteIso()"
               class="filter-reset"
               type="button"
               :disabled="assistenzbewerbungen.has(ausgewaehlterTermin.termin.terminId)"
@@ -434,15 +720,100 @@ onMounted(async () => {
                 ? "Als Assistenz beworben" : "Als Assistenz bewerben" }}
             </button>
             <button
-              v-if="istAdministrator"
+              v-if="istAdministrator && terminDetail?.status === 'geplant'"
               class="primary-action"
               type="button"
-              @click="trainerSuchen"
+              @click="trainerSuchen(true)"
             >Verfügbare Trainer laden</button>
+            <button v-if="istAdministrator && terminDetail?.status === 'geplant'" type="button" @click="terminBearbeiten">Bearbeiten</button>
+            <button v-if="istAdministrator && terminDetail?.status === 'geplant' && terminDetail.trainerId" type="button" @click="trainerAbziehen">Trainer abziehen</button>
+            <button
+              v-if="terminDetail?.status === 'geplant' && terminDetail.trainerId && terminDetail.enddatum <= heuteIso()
+                && (istAdministrator || terminDetail.trainerId === aktuellesKonto?.id)"
+              type="button" @click="terminBestaetigen"
+            >Durchführung bestätigen</button>
+            <button v-if="istAdministrator && terminDetail?.status === 'geplant'" class="gefahr" type="button" @click="terminAbsagen">Absagen</button>
+            <button
+              v-if="istAdministrator && terminDetail && terminDetail.status !== 'abgeschlossen' && terminDetail.startdatum > heuteIso()"
+              class="gefahr" type="button" @click="terminLoeschen"
+            >Löschen</button>
           </div>
-        </section>
+          </section>
+        </div>
       </template>
     </section>
+
+    <div v-if="terminDialog" class="dialog-hintergrund" role="presentation" @click.self="terminDialog = false">
+      <section ref="terminDialogElement" class="dialog termin-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="termin-dialog-heading" @keydown="dialogTaste">
+        <h2 id="termin-dialog-heading">{{ bearbeiteterTermin ? "Termin bearbeiten" : "Neuer Termin" }}</h2>
+        <form class="schulungsformular" @submit.prevent="terminSpeichern">
+          <label>Schulung
+            <select v-model="terminForm.schulungId" :disabled="!!bearbeiteterTermin" required @change="enddatumVorschlagen">
+              <option value="" disabled>Schulung auswählen</option>
+              <option v-for="schulung in aktiveSchulungen" :key="schulung.id" :value="schulung.id">{{ schulung.titel }}</option>
+            </select>
+          </label>
+          <label>Startdatum
+            <input v-model="terminForm.startdatum" type="date" required @change="enddatumVorschlagen" />
+          </label>
+          <label>Enddatum
+            <input v-model="terminForm.enddatum" type="date" required @change="trainerFuerNeuanlageLaden" />
+          </label>
+          <label v-if="!bearbeiteterTermin">Trainer (optional)
+            <select v-model="terminForm.trainerId">
+              <option :value="null">Noch nicht zugewiesen</option>
+              <option v-for="person in terminTrainer" :key="person.id" :value="person.id"
+                :disabled="person.verfuegbar === false">
+                {{ person.name }}{{ person.grund ? ` - ${person.grund}` : "" }}
+              </option>
+            </select>
+          </label>
+          <div v-if="!bearbeiteterTermin && terminTrainer.length" class="trainer-planung">
+            <table v-for="person in terminTrainer" :key="person.id" class="trainer-calendar">
+              <caption>{{ person.name }} - {{ person.verfuegbar === false ? person.grund : "verfügbar" }}</caption>
+              <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
+              <tbody>
+                <tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
+                  <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
+                  <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
+                </tr>
+                <tr v-if="!person.kalender?.length"><td colspan="3">Keine Belegung im Planungsumfeld</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <label>Zugangsart
+            <select v-model="terminForm.zugangsart">
+              <option :value="null">Noch offen</option>
+              <option value="oeffentlich">Öffentlich</option>
+              <option value="exklusiv">Exklusiv</option>
+            </select>
+          </label>
+          <label>Durchführungsart
+            <select v-model="terminForm.durchfuehrungsart">
+              <option :value="null">Noch offen</option>
+              <option value="remote">Remote</option>
+              <option value="vor_ort">Vor Ort</option>
+              <option value="beim_kunden">Beim Kunden</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </label>
+          <label v-if="['vor_ort', 'beim_kunden', 'hybrid'].includes(terminForm.durchfuehrungsart || '')">Ort
+            <input v-model="terminForm.ort" type="text" required />
+          </label>
+          <label v-if="terminForm.zugangsart === 'exklusiv'">Kundenfirma
+            <input v-model="terminForm.kundenfirma" type="text" required />
+          </label>
+          <label v-if="['remote', 'hybrid'].includes(terminForm.durchfuehrungsart || '')">Online-Zugang
+            <input v-model="terminForm.onlineZugang" type="url" placeholder="https://…" />
+          </label>
+          <div class="formular-aktionen">
+            <button class="primary-action" type="submit">Speichern</button>
+            <button type="button" @click="terminDialog = false">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
 
     <p v-if="aktionsmeldung" class="success planer-rueckmeldung" role="status">{{ aktionsmeldung }}</p>
     <p v-if="aktionsfehler" class="form-error planer-rueckmeldung" role="alert">{{ aktionsfehler }}</p>
@@ -585,7 +956,7 @@ onMounted(async () => {
         </p>
       </div>
 
-      <form class="trainer-form" @submit.prevent="trainerSuchen">
+      <form class="trainer-form" @submit.prevent="trainerSuchen()">
         <div class="filter-field trainer-course-field">
           <label for="trainer-schulung">Schulung</label>
           <select id="trainer-schulung" v-model="trainerSchulungId" required>
@@ -618,12 +989,12 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-else-if="trainerError" class="state state-error" role="alert">
+      <div v-else-if="trainerError" class="state state-error" role="alert" tabindex="-1">
         <p>Die Trainersuche konnte nicht ausgeführt werden.</p>
         <small>{{ cleanText(trainerError) }}</small>
       </div>
 
-      <div v-else-if="trainerGesucht && trainer.length === 0" class="state">
+      <div v-else-if="trainerGesucht && trainer.length === 0" class="state" role="status" tabindex="-1">
         <p>Keine verfügbaren Trainer</p>
         <small>
           Für diese Schulung und diesen Zeitraum wurde keine passende Person
@@ -631,22 +1002,32 @@ onMounted(async () => {
         </small>
       </div>
 
-      <div v-else-if="trainer.length" class="trainer-results">
+      <div v-else-if="trainer.length" class="trainer-results" tabindex="-1">
         <p class="filter-result" aria-live="polite">
-          {{ trainer.length }} Trainer verfügbar
+          {{ trainer.length }} qualifizierte Trainer
         </p>
         <ul>
           <li v-for="person in trainer" :key="person.id" class="trainer-row">
             <div>
               <strong>{{ person.name }}</strong>
               <span>{{ person.id }}</span>
+              <span v-if="person.grund">{{ person.grund }}</span>
+              <table v-if="person.kalender?.length" class="trainer-calendar">
+                <caption>Kalender von {{ person.name }}</caption>
+                <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
+                <tbody><tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
+                  <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
+                  <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
+                </tr></tbody>
+              </table>
             </div>
             <div class="trainer-row-actions">
-              <a :href="`mailto:${person.email}`">{{ person.email }}</a>
+              <a v-if="person.email" :href="`mailto:${person.email}`">{{ person.email }}</a>
               <button
                 v-if="istAdministrator && ausgewaehlterTermin"
                 class="filter-reset"
                 type="button"
+                :disabled="person.verfuegbar === false"
                 @click="trainerEinsetzen(person)"
               >Diesem Termin zuweisen</button>
             </div>

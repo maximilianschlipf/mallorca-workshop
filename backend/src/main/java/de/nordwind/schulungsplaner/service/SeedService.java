@@ -18,7 +18,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class SeedService {
@@ -29,9 +34,11 @@ public class SeedService {
     private final SchulungszustandRepository zustaende;
     private final boolean demoSeed;
     private final boolean demoTrainerSeed;
+    private final Clock clock;
 
     public SeedService(JdbcTemplate jdbc, ObjectMapper json, PasswordEncoder passwoerter,
                        KatalogRepository katalog, SchulungszustandRepository zustaende,
+                       Clock clock,
                        @Value("${app.demo-seed:false}") boolean demoSeed,
                        @Value("${app.demo-trainer-seed:true}") boolean demoTrainerSeed) {
         this.jdbc = jdbc;
@@ -41,6 +48,7 @@ public class SeedService {
         this.zustaende = zustaende;
         this.demoSeed = demoSeed;
         this.demoTrainerSeed = demoTrainerSeed;
+        this.clock = clock;
     }
 
     @Transactional
@@ -68,9 +76,12 @@ public class SeedService {
         jdbc.update("UPDATE instanz SET eigentuemer_id = NULL WHERE id = 1");
         jdbc.update("DELETE FROM assistenzbewerbung");
         jdbc.update("DELETE FROM qualifikationsbewerbung");
+        jdbc.update("DELETE FROM teilnehmerbuchung");
+        jdbc.update("DELETE FROM benachrichtigung");
         jdbc.update("DELETE FROM termin_assistent");
         jdbc.update("DELETE FROM trainer_qualifikation");
         jdbc.update("DELETE FROM termin");
+        jdbc.update("DELETE FROM termin_nummer");
         jdbc.update("DELETE FROM abwesenheit");
         jdbc.update("DELETE FROM schulung_zustand");
         jdbc.update("DELETE FROM benutzerkonto_rolle");
@@ -111,15 +122,78 @@ public class SeedService {
         if (wurzel == null || wurzel.termine() == null) {
             return;
         }
+        LocalDate heute = LocalDate.now(clock);
+        Map<String, Integer> nummern = new HashMap<>();
+        int index = 0;
         for (TermineSeedRoot.TerminSeed termin : wurzel.termine()) {
+            LocalDate[] zeitraum = seedZeitraum(heute, index);
+            String status = index == 0 ? "abgeschlossen" : index == 3 ? "abgesagt" : "geplant";
+            String durchfuehrung = switch (index % 4) {
+                case 0 -> "remote";
+                case 1 -> "vor_ort";
+                case 2 -> "hybrid";
+                default -> "beim_kunden";
+            };
+            String zugang = index % 2 == 0 ? "oeffentlich" : "exklusiv";
+            String ort = "remote".equals(durchfuehrung) ? null : "Schulungsraum " + (index + 1);
+            String firma = "exklusiv".equals(zugang) ? "Demo GmbH" : null;
+            String online = Set.of("remote", "hybrid").contains(durchfuehrung)
+                    ? "https://academy.example/termin-" + (index + 1) : null;
+            if ("abgeschlossen".equals(status)) online = null;
+            int nummer = nummern.merge(termin.schulungId(), 1, Integer::sum);
+            String terminId = "%s-T%04d".formatted(termin.schulungId(), nummer);
             jdbc.update("""
                     INSERT INTO termin
-                    (termin_id, schulung_id, startdatum, enddatum, ort, format, status, trainer_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, termin.terminId(), termin.schulungId(), LocalDate.parse(termin.startdatum()),
-                    LocalDate.parse(termin.enddatum()), termin.ort(), termin.format(),
-                    termin.status(), mitTrainern ? termin.trainerId() : null);
+                    (termin_id, schulung_id, startdatum, enddatum, ort, format, status, trainer_id,
+                     zugangsart, durchfuehrungsart, kundenfirma, online_zugang,
+                     abschlussart, abgeschlossen_am, bestaetigt_von, abgesagt_am, abgesagt_von)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, terminId, termin.schulungId(), zeitraum[0], zeitraum[1], ort,
+                    durchfuehrung, status, mitTrainern && index != 2 ? termin.trainerId() : null,
+                    zugang, durchfuehrung, firma, online,
+                    "abgeschlossen".equals(status) ? (mitTrainern ? "manuell" : "automatisch") : null,
+                    "abgeschlossen".equals(status) ? zeitraum[1] : null,
+                    "abgeschlossen".equals(status) && mitTrainern ? termin.trainerId() : null,
+                    "abgesagt".equals(status) ? heute : null,
+                    "abgesagt".equals(status) && mitTrainern ? "TRN-001" : null);
+            if (index == 1 && mitTrainern) {
+                String assistent = "TRN-003".equals(termin.trainerId()) ? "TRN-001" : "TRN-003";
+                jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)", terminId, assistent);
+            }
+            jdbc.update("""
+                    INSERT INTO teilnehmerbuchung (termin_id, name, firma, bemerkung, teilnahmestatus)
+                    VALUES (?, ?, ?, ?, ?)
+                    """, terminId, "Teilnehmer " + (index + 1),
+                    firma == null ? "Beispiel AG" : firma, "Demo-Buchung",
+                    "abgeschlossen".equals(status) ? "teilgenommen" : "offen");
+            index++;
         }
+        nummern.forEach((id, nummer) -> jdbc.update(
+                "INSERT INTO termin_nummer (schulung_id, naechste_nummer) VALUES (?, ?)", id, nummer + 1));
+    }
+
+    private static LocalDate[] seedZeitraum(LocalDate heute, int index) {
+        if (index == 0) {
+            LocalDate ende = vorherigerWerktag(heute.minusDays(7));
+            return new LocalDate[]{vorherigerWerktag(ende.minusDays(1)), ende};
+        }
+        if (index == 1) {
+            LocalDate start = vorherigerWerktag(heute);
+            LocalDate ende = naechsterWerktag(heute);
+            return new LocalDate[]{start, ende};
+        }
+        LocalDate start = naechsterWerktag(heute.plusDays((long) (index - 1) * 7));
+        return new LocalDate[]{start, naechsterWerktag(start.plusDays(1))};
+    }
+
+    private static LocalDate vorherigerWerktag(LocalDate tag) {
+        while (tag.getDayOfWeek() == DayOfWeek.SATURDAY || tag.getDayOfWeek() == DayOfWeek.SUNDAY) tag = tag.minusDays(1);
+        return tag;
+    }
+
+    private static LocalDate naechsterWerktag(LocalDate tag) {
+        while (tag.getDayOfWeek() == DayOfWeek.SATURDAY || tag.getDayOfWeek() == DayOfWeek.SUNDAY) tag = tag.plusDays(1);
+        return tag;
     }
 
     private void qualifikationenImportieren(TrainerSeedRoot wurzel) {

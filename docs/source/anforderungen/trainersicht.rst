@@ -12,9 +12,9 @@ Dashboard
    :status: draft
    :priority: high
 
-   Ein Trainer hat ein Dashboard als Einstieg. Es führt seine Termine, die
-   offenen Übernahmeanfragen an ihn und seine offenen Qualifikationsangebote
-   zusammen -- also alles, was eine Handlung von ihm erwartet.
+   Ein Trainer hat ein Dashboard als Einstieg. Es führt seine Termine und
+   die offenen Übernahmeanfragen an ihn zusammen -- also alles, was eine
+   Handlung von ihm erwartet.
 
 .. req:: Überfällige eigene Termine stehen ganz oben
    :id: REQ_TRA_DASH_02
@@ -22,11 +22,12 @@ Dashboard
    :priority: high
    :links: REQ_TRA_DASH_01, REQ_TER_STAT_02
 
-   Eigene Termine, deren Enddatum vorüber ist, die aber noch nicht
-   abgeschlossen sind, stehen an erster Stelle -- vor den anstehenden.
+   Eigene Termine, deren Enddatum vorüber ist und die noch geplant sind,
+   stehen an erster Stelle -- vor den anstehenden. Abgesagte und
+   abgeschlossene Termine erscheinen dort nicht.
 
-   Ohne diese Anzeige könnte ein Trainer seinen Termin gar nicht
-   abschließen, weil er ihn nicht mehr fände. Jeder Termin liefe dann in den
+   Ohne diese Anzeige könnte ein Trainer die Durchführung seines Termins gar
+   nicht bestätigen, weil er ihn nicht mehr fände. Jeder Termin liefe dann in den
    selbsttätigen Abschluss nach :need:`REQ_TER_STAT_06`.
 
 .. req:: Offene Übernahmeanfragen im Dashboard
@@ -38,15 +39,6 @@ Dashboard
    Übernahmeanfragen anderer Trainer zu seinen Terminen erscheinen im
    Dashboard und werden dort entschieden.
 
-.. req:: Offene Qualifikationsangebote im Dashboard
-   :id: REQ_TRA_DASH_04
-   :status: draft
-   :priority: high
-   :links: REQ_TRA_DASH_01, REQ_QUA_ANG_01
-
-   Qualifikationsangebote aus einer proaktiven Zuweisung erscheinen im
-   Dashboard und werden dort angenommen oder abgelehnt.
-
 Terminübersicht
 ---------------
 
@@ -55,8 +47,8 @@ Terminübersicht
    :status: draft
    :priority: high
 
-   Ein Trainer sieht alle zukünftigen Termine, denen er als ausführender
-   Trainer zugewiesen ist.
+   Ein Trainer sieht alle zukünftigen geplanten Termine, denen er als
+   ausführender Trainer zugewiesen ist.
 
 .. req:: Eigene Assistenzeinsätze
    :id: REQ_TRA_UEBER_05
@@ -64,24 +56,25 @@ Terminübersicht
    :priority: high
    :links: REQ_TRA_UEBER_01, REQ_ASS_PLATZ_01
 
-   Ein Trainer sieht alle zukünftigen Termine, denen er als Assistent
-   zugewiesen ist. Sie binden ihn genauso wie eigene Termine.
+   Ein Trainer sieht alle zukünftigen geplanten Termine, denen er als
+   Assistent zugewiesen ist. Sie binden ihn genauso wie eigene Termine.
 
 .. req:: Übernehmbare Termine ohne Trainer
    :id: REQ_TRA_UEBER_02
    :status: draft
    :priority: high
 
-   Ein Trainer sieht alle zukünftigen Termine ohne Trainerzuweisung, deren
-   Schulung er aufgrund seiner Qualifikationen halten könnte.
+   Ein Trainer sieht alle zukünftigen geplanten Termine ohne
+   Trainerzuweisung, deren Schulung er aufgrund seiner Qualifikationen halten
+   könnte.
 
 .. req:: Termine mit anderem Trainer
    :id: REQ_TRA_UEBER_03
    :status: draft
 
-   Ein Trainer sieht alle zukünftigen Termine, die einem anderen Trainer
-   zugewiesen sind und deren Schulung er selbst halten könnte. Von dort aus
-   kann er dem zugewiesenen Trainer die Übernahme anbieten.
+   Ein Trainer sieht alle zukünftigen geplanten Termine, die einem anderen
+   Trainer zugewiesen sind und deren Schulung er selbst halten könnte. Von
+   dort aus kann er dem zugewiesenen Trainer die Übernahme anbieten.
 
 .. req:: Freie Assistenzplätze
    :id: REQ_TRA_UEBER_06
@@ -89,9 +82,9 @@ Terminübersicht
    :priority: high
    :links: REQ_ASS_BEW_01
 
-   Ein Trainer sieht die zukünftigen Termine mit freien Assistenzplätzen und
-   kann sich von dort aus bewerben. Das gilt für alle Schulungen, nicht nur
-   für solche, für die er noch nicht qualifiziert ist.
+   Ein Trainer sieht die zukünftigen geplanten Termine mit freien
+   Assistenzplätzen und kann sich von dort aus bewerben. Das gilt für alle
+   Schulungen, nicht nur für solche, für die er noch nicht qualifiziert ist.
 
 .. req:: Eigene Abwesenheiten in derselben Übersicht
    :id: REQ_TRA_UEBER_07
@@ -123,7 +116,9 @@ Benachrichtigungen
 
    Ein Trainer hat eine eigene Anzeige für seine Benachrichtigungen. Dort
    laufen alle Mitteilungen zusammen: Entscheidungen über Bewerbungen und
-   Vormerkungen, Absagen, Trainerwechsel und Qualifikationsentzug.
+   Vormerkungen, neue und beendete Trainerzuweisungen, Terminänderungen,
+   Absagen, selbsttätige Abschlüsse, Trainerwechsel und
+   Qualifikationsentzug.
 
 .. req:: Ungelesene Benachrichtigungen sind erkennbar
    :id: REQ_TRA_NACHR_02
@@ -140,9 +135,8 @@ Benachrichtigungen
    :links: REQ_TRA_NACHR_01, REQ_TRA_DASH_01
 
    In den Benachrichtigungen stehen Mitteilungen über Geschehenes. Was eine
-   Handlung des Trainers erwartet -- Übernahmeanfragen,
-   Qualifikationsangebote, überfällige Abschlüsse -- gehört ins Dashboard
-   und nicht dorthin.
+   Handlung des Trainers erwartet -- Übernahmeanfragen und ausstehende
+   Durchführungsbestätigungen -- gehört ins Dashboard und nicht dorthin.
 
 Offene eigene Vorgänge
 ----------------------

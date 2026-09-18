@@ -2,6 +2,7 @@ package de.nordwind.schulungsplaner.api;
 
 import de.nordwind.schulungsplaner.config.KontoPrincipal;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
+import de.nordwind.schulungsplaner.service.TerminService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,9 +26,11 @@ import java.util.List;
 @RequestMapping("/api")
 public class TrainereinsatzController {
     private final TrainereinsatzService einsaetze;
+    private final TerminService termine;
 
-    public TrainereinsatzController(TrainereinsatzService einsaetze) {
+    public TrainereinsatzController(TrainereinsatzService einsaetze, TerminService termine) {
         this.einsaetze = einsaetze;
+        this.termine = termine;
     }
 
     @PostMapping("/ich/qualifikationsbewerbungen/{schulungId}")
@@ -58,15 +63,23 @@ public class TrainereinsatzController {
     @PutMapping("/termine/{terminId}/trainer/{trainerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void trainerZuweisen(@AuthenticationPrincipal KontoPrincipal konto,
-                                @PathVariable String terminId, @PathVariable String trainerId) {
-        einsaetze.trainerZuweisen(konto.id(), terminId, trainerId);
+                                @PathVariable String terminId, @PathVariable String trainerId,
+                                @RequestParam(defaultValue = "false") boolean rollenwechselBestaetigt) {
+        termine.trainerZuweisen(konto.id(), terminId, trainerId, rollenwechselBestaetigt);
+    }
+
+    @DeleteMapping("/termine/{terminId}/trainer")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void trainerAbziehen(@AuthenticationPrincipal KontoPrincipal konto,
+                                @PathVariable String terminId) {
+        termine.trainerAbziehen(konto.id(), terminId);
     }
 
     @PutMapping("/termine/{terminId}/assistenten/{trainerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void assistentZuweisen(@AuthenticationPrincipal KontoPrincipal konto,
                                   @PathVariable String terminId, @PathVariable String trainerId) {
-        einsaetze.assistentZuweisen(konto.id(), terminId, trainerId);
+        termine.assistentZuweisen(konto.id(), terminId, trainerId);
     }
 
     public record NeueAbwesenheit(

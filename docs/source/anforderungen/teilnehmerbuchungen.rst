@@ -41,8 +41,18 @@ Erfassung
    :links: REQ_TLN_BUCH_02
 
    Die Firma wird an jeder Buchung geführt, auch bei exklusiven Terminen,
-   bei denen sie für alle Buchungen dieselbe ist. Die Wiederholung ist der
-   Preis dafür, dass eine Buchung für sich allein aussagekräftig bleibt.
+   bei denen sie für alle Buchungen der Kundenfirma des Termins entspricht.
+   Die Wiederholung ist der Preis dafür, dass eine Buchung für sich allein
+   aussagekräftig bleibt.
+
+   Hat ein exklusiver Termin bereits Buchungen, wird eine weitere Buchung
+   mit einer anderen Firma als seiner Kundenfirma abgewiesen. Bei einer neuen
+   Buchung ist die Firma mit der Kundenfirma vorbelegt. So lässt sich die
+   Ein-Firma-Regel nicht über die Teilnehmerpflege umgehen.
+
+   Für den Vergleich werden Leerzeichen am Anfang und Ende entfernt und
+   Groß- und Kleinschreibung ignoriert. Angezeigt wird die Schreibweise der
+   Kundenfirma am Termin.
 
 .. req:: Teilnehmerbuchungen verwalten
    :id: REQ_TLN_BUCH_03
@@ -59,7 +69,7 @@ Erfassung
    :links: REQ_TLN_BUCH_03
 
    Teilnehmerbuchungen werden von Administratoren gepflegt. Der zugewiesene
-   Trainer darf sie bis zum Abschluss seines Termins ebenfalls anpassen.
+   Trainer darf sie ebenfalls anpassen, solange der Termin geplant ist.
 
 .. req:: Trainer sieht die Teilnehmerliste
    :id: REQ_TLN_BUCH_07
@@ -70,6 +80,11 @@ Erfassung
    Der einem Termin zugewiesene Trainer sieht dessen Teilnehmerbuchungen mit
    allen Feldern. Ohne Namen, Firmen und Bemerkungen könnte er die Schulung
    nicht durchführen.
+
+   Zugewiesene Assistenten sehen diese Teilnehmerbuchungen nicht -- weder in
+   der Oberfläche noch über die Schnittstelle. Für ihre Rolle genügen die
+   organisatorischen Termindaten einschließlich Kundenfirma und
+   Online-Zugang; personenbezogene Teilnehmerdetails benötigen sie nicht.
 
 .. req:: Keine Prüfung auf doppelte Namen
    :id: REQ_TLN_BUCH_08
@@ -99,8 +114,9 @@ Tatsächliche Teilnahme
    :links: REQ_TLN_BUCH_02
 
    Zu jeder Teilnehmerbuchung wird festgehalten, ob der Teilnehmer
-   tatsächlich teilgenommen hat. Gebucht und nicht erschienen ist ein
-   üblicher Fall.
+   tatsächlich teilgenommen hat. Der Teilnahmestatus ist zunächst "offen"
+   und wird ausdrücklich auf "teilgenommen" oder "nicht teilgenommen"
+   gesetzt. Gebucht und nicht erschienen ist ein üblicher Fall.
 
 .. req:: Trainer pflegt die Teilnahme vor dem Abschluss
    :id: REQ_TLN_TEIL_02
@@ -109,18 +125,25 @@ Tatsächliche Teilnahme
    :links: REQ_TLN_TEIL_01, REQ_TER_STAT_02
 
    Ergeben sich während der Durchführung Änderungen, passt der zugewiesene
-   Trainer die Buchungen an, bevor er den Termin abschließt. Der Abschluss
-   ist die Erklärung, dass die Liste stimmt.
+   Trainer die Buchungen an, bevor er die Durchführung bestätigt. Die
+   manuelle Bestätigung wird abgewiesen, solange mindestens eine Buchung den
+   Teilnahmestatus "offen" trägt. Ein Termin ohne Buchungen kann bestätigt
+   werden.
 
-.. req:: Nach dem Abschluss keine Änderung mehr
+   Beim selbsttätigen Abschluss bleiben offene Teilnahmestatus erhalten. Der
+   Termin geht ohnehin nicht in Teilnehmerauswertungen ein.
+
+.. req:: Nach Abschluss oder Absage keine Änderung mehr
    :id: REQ_TLN_TEIL_03
    :status: draft
    :priority: high
    :links: REQ_TLN_TEIL_02, REQ_TER_STAT_01
 
-   Ist ein Termin abgeschlossen, können seine Teilnehmerbuchungen nicht mehr
-   geändert, ergänzt oder gelöscht werden -- auch nicht durch einen
-   Administrator.
+   Ist ein Termin abgeschlossen oder abgesagt, können seine
+   Teilnehmerbuchungen nicht mehr geändert, ergänzt oder gelöscht werden --
+   auch nicht durch einen Administrator. Bei einem abgesagten Termin bleiben
+   sie bis zum Ablauf der Aufbewahrungsfrist einsehbar, damit die
+   Teilnehmer außerhalb des Systems informiert werden können.
 
 .. req:: Erhalten bleibt die tatsächliche Teilnahme
    :id: REQ_TLN_TEIL_04
@@ -167,27 +190,30 @@ Abgleich mit den Teilnehmergrenzen
 Aufbewahrung
 ------------
 
-.. req:: Teilnehmerdetails werden nach drei Monaten entfernt
+.. req:: Teilnehmerdetails werden nach drei Kalendermonaten entfernt
    :id: REQ_TLN_AUFB_01
    :status: draft
    :priority: high
    :links: REQ_TLN_BUCH_02
 
-   Drei Monate nachdem ein Termin vorüber ist, werden die
+   Drei Kalendermonate nach dem Beginn der Aufbewahrungsfrist werden die
    personenbezogenen Angaben seiner Teilnehmerbuchungen entfernt: Name und
-   Bemerkung.
+   Bemerkung. Fehlt der entsprechende Tag im Zielmonat, gilt dessen letzter
+   Tag. Beginnt die Frist am 31. Januar, werden die Angaben daher am 30. April
+   entfernt.
 
 .. req:: Beginn der Frist
    :id: REQ_TLN_AUFB_04
    :status: draft
    :priority: high
-   :links: REQ_TLN_AUFB_01, REQ_TER_STAT_05
+   :links: REQ_TLN_AUFB_01, REQ_TER_STAT_05, REQ_TER_AEND_04
 
    Die Frist beginnt bei einem abgeschlossenen Termin mit seinem Abschluss,
-   bei einem abgesagten Termin mit dessen ursprünglichem Enddatum.
+   bei einem abgesagten Termin mit dessen Absagedatum.
 
-   Ein abgesagter Termin wird nie abgeschlossen; ohne diese Festlegung
-   blieben seine Teilnehmerdaten dauerhaft liegen.
+   Ein abgesagter Termin wird nie abgeschlossen. Das Absagedatum lässt genug
+   Zeit für die manuelle Abwicklung, ohne Daten bis Monate nach einem weit in
+   der Zukunft liegenden ursprünglichen Enddatum aufzubewahren.
 
 .. req:: Zahlen und Firma bleiben erhalten
    :id: REQ_TLN_AUFB_02
@@ -207,3 +233,10 @@ Aufbewahrung
    Das Entfernen der Teilnehmerdetails geschieht selbsttätig nach Ablauf der
    Frist. Es ist keine Handlung eines Administrators nötig, und es lässt
    sich nicht rückgängig machen.
+
+   War die lokale Anwendung am Stichtag nicht in Betrieb, holt sie das
+   Entfernen beim nächsten Start nach. Bleibt sie über den Stichtag hinweg
+   geöffnet, prüft sie die Fälligkeit einmal pro Kalendertag; spätestens vor
+   dem ersten fachlichen Zugriff des Tages sind die Angaben entfernt. Eine
+   sekundengenaue Ausführung um Mitternacht und eine zusätzliche technische
+   Verarbeitungshistorie sind nicht erforderlich.

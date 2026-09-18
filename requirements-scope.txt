@@ -2,3 +2,4 @@
 # Neue fachliche Bereiche müssen vor ihrer Umsetzung hier ergänzt werden.
 docs/source/anforderungen/benutzerkonten.rst | docs/source/anforderungen/benutzerkonten-umsetzung.rst
 docs/source/anforderungen/katalog.rst | docs/source/anforderungen/katalog-umsetzung.rst
+docs/source/anforderungen/terminplanung.rst | docs/source/anforderungen/terminplanung-umsetzung.rst
