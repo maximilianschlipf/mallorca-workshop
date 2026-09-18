@@ -181,10 +181,6 @@ p {
   outline-offset: 4px;
 }
 
-.catalog-section {
-  padding: clamp(64px, 6vw, 88px) max(24px, calc((100vw - 1280px) / 2));
-}
-
 .calendar-section {
   padding: clamp(64px, 6vw, 88px) max(24px, calc((100vw - 1280px) / 2));
   border-bottom: 1px solid var(--line);
@@ -403,34 +399,17 @@ p {
   gap: 12px;
 }
 
+.calendar-detail > .trainer-results,
+.calendar-detail > .state {
+  grid-column: 1 / -1;
+}
+
 .planer-rueckmeldung {
   margin: 24px max(24px, calc((100vw - 1280px) / 2));
 }
 
-.trainer-section {
-  padding: clamp(64px, 6vw, 88px) max(24px, calc((100vw - 1280px) / 2));
-  border-top: 1px solid var(--line);
-}
-
 .compact-heading {
   margin-bottom: clamp(40px, 6vw, 68px);
-}
-
-.trainer-form {
-  display: grid;
-  grid-template-columns:
-    minmax(260px, 1.5fr) repeat(2, minmax(170px, 0.75fr))
-    auto;
-  align-items: end;
-  gap: 16px;
-  margin-bottom: 36px;
-}
-
-.trainer-submit {
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
 }
 
 .trainer-results > ul {
@@ -621,78 +600,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   margin-left: 12px;
 }
 
-.catalog-grid {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-}
-
-.course-card {
-  min-height: 290px;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(24px, 3vw, 38px);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-raised);
-  box-shadow: 0 8px 24px rgba(23, 25, 66, 0.06);
-  transition:
-    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 240ms ease;
-}
-
-.course-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(0, 132, 202, 0.42);
-}
-
-.course-topline,
-.course-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  color: var(--muted);
-  font-size: 0.76rem;
-}
-
-.category {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.course-card h3 {
-  max-width: 20ch;
-  margin: 42px 0 16px;
-  font-size: clamp(1.45rem, 2.2vw, 2rem);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-}
-
-.course-card > p {
-  max-width: 54ch;
-  margin-bottom: 36px;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.course-footer {
-  flex-wrap: wrap;
-  margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
-
-.course-action {
-  height: 38px;
-  padding: 0 14px;
-  font-size: 0.74rem;
-}
-
 .state {
   padding: 48px;
   border: 1px solid var(--line);
@@ -714,30 +621,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 .state-error p {
   color: #8d2638;
-}
-
-.skeleton {
-  gap: 22px;
-  pointer-events: none;
-}
-
-.skeleton span {
-  height: 14px;
-  border-radius: 5px;
-  background: rgba(113, 119, 130, 0.14);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.skeleton span:nth-child(1) {
-  width: 32%;
-}
-.skeleton span:nth-child(2) {
-  width: 68%;
-  height: 34px;
-  margin-top: 32px;
-}
-.skeleton span:nth-child(3) {
-  width: 88%;
 }
 
 .sr-only {
@@ -1140,23 +1023,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   font-size: 0.78rem;
 }
 
-.footer-links {
-  display: flex;
-  gap: 28px;
-}
-
-.footer-links a {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.84rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.footer-links a:hover,
-.footer-links a:focus-visible {
-  color: #ffffff;
-}
-
 .footer-meta {
   width: 100%;
   margin: 0;
@@ -1197,10 +1063,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   .primary-action:hover {
     background: var(--accent-hover);
   }
-  .course-card {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  }
-
   .calendar-day {
     background: rgba(255, 255, 255, 0.025);
   }
@@ -1219,15 +1081,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @media (max-width: 860px) {
-  .trainer-form {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .trainer-course-field,
-  .trainer-submit {
-    grid-column: 1 / -1;
-  }
-
   .verwaltetes-konto {
     grid-template-columns: 1fr;
   }
@@ -1264,15 +1117,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     align-items: flex-start;
     flex-direction: column;
     gap: 28px;
-  }
-
-  .footer-links {
-    flex-wrap: wrap;
-    gap: 14px 24px;
-  }
-
-  .catalog-grid {
-    grid-template-columns: 1fr;
   }
 
   .calendar-toolbar {
@@ -1328,21 +1172,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     grid-template-columns: 1fr 1fr;
   }
 
-  .course-card {
-    min-height: 260px;
-  }
-
   .nav-links {
     gap: 14px;
-  }
-
-  .trainer-form {
-    grid-template-columns: 1fr;
-  }
-
-  .trainer-course-field,
-  .trainer-submit {
-    grid-column: auto;
   }
 
   .trainer-row {

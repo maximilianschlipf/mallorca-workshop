@@ -24,14 +24,25 @@ describe("Benutzerkonten", () => {
       await router.push(path);
       expect(router.currentRoute.value.path).toBe(path);
     }
-    for (const path of ["/", "/profil", "/benutzerkonten"]) {
+    for (const path of ["/", "/profil", "/katalog", "/benutzerkonten"]) {
       await router.push(path);
       expect(router.currentRoute.value.path).toBe("/anmelden");
     }
 
     vi.mocked(fetch).mockResolvedValue({ ok: true, status: 200, json: async () => trainer } as Response);
-    await router.push("/benutzerkonten");
-    expect(router.currentRoute.value.path).toBe("/");
+    await router.push("/katalog");
+    expect(router.currentRoute.value.path).toBe("/katalog");
+    // Der Katalog steht allen offen, seine Vorgaenge nur Administratoren.
+    for (const path of [
+      "/katalog/neu",
+      "/katalog/aufnahme",
+      "/kategorien",
+      "/katalog/SCH-001/bearbeiten",
+      "/benutzerkonten",
+    ]) {
+      await router.push(path);
+      expect(router.currentRoute.value.path).toBe("/");
+    }
   });
 
   it("sendet Registrierung als CSRF-geschützten JSON-Request", async () => {

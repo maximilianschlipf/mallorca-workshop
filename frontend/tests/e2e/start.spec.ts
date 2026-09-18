@@ -13,38 +13,6 @@ async function mutation(page: import("@playwright/test").Page, url: string, meth
   }, { url, method, body });
 }
 
-test("Katalog ist sichtbar und die Schnittstelle antwortet", async ({ page }) => {
-  const start = await startSeite(page).oeffnen();
-
-  expect((await page.request.get("/api/schulungen")).status()).toBe(200);
-  await expect(start.schulungskarten.first()).toBeVisible();
-});
-
-test("Suche schränkt den Katalog ein, Zurücksetzen stellt ihn wieder her", async ({
-  page,
-}) => {
-  const start = await startSeite(page).oeffnen();
-  const gesamt = await start.schulungskarten.count();
-
-  await start.sucheNach("Scrum");
-
-  await expect(start.trefferzahl).toBeVisible();
-  expect(await start.schulungskarten.count()).toBeLessThanOrEqual(gesamt);
-  await expect(start.titelDerErstenKarte()).toContainText(/scrum/i);
-
-  await start.setzeFilterZurueck();
-
-  await expect(start.schulungskarten).toHaveCount(gesamt);
-});
-
-test("Ohne Treffer erscheint eine eigene Meldung", async ({ page }) => {
-  const start = await startSeite(page).oeffnen();
-
-  await start.sucheNach("gibtesnicht123");
-
-  await expect(start.leermeldung).toBeVisible();
-});
-
 test("Der Kalender blättert durch die Monate und zeigt Termindetails", async ({
   page,
 }) => {
@@ -144,8 +112,10 @@ test("Terminübersicht führt responsiv von der Neuanlage zu Details und zuläss
   await page.getByRole("button", { name: "Abbrechen" }).click();
   await neuerTermin.first().click();
   await page.getByRole("button", { name: "Verfügbare Trainer laden" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.locator("#trainer .trainer-results, #trainer .state").first()).toBeVisible();
+  // Auf das Ergebnis warten, nicht auf den Platzhalter: Das Ladeskelett traegt
+  // dieselbe Klasse wie die Trefferliste, aber keinen Text.
+  await expect(start.termindetails).toContainText(/qualifizierten? Trainer/i);
+  await start.termindetailsSchliessen();
 
   const katalog = await page.request.get("/api/schulungen").then((antwort) => antwort.json());
   const terminId = katalog.find((eintrag: { id: string }) => eintrag.id === "SCH-003")

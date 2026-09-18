@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { fetchSchulung } from "../api";
+import { aktuellesKonto } from "../auth";
 import type { Schulung } from "../types";
 import LadeZustand from "../komponenten/LadeZustand.vue";
 import ZustandsSchild from "../komponenten/ZustandsSchild.vue";
 
 const props = defineProps<{ id: string }>();
+
+const istAdministrator = computed(() =>
+  aktuellesKonto.value?.rollen.includes("ADMINISTRATOR") ?? false,
+);
 
 const schulung = ref<Schulung | null>(null);
 const laedt = ref(true);
@@ -50,7 +55,10 @@ onMounted(laden);
         <ZustandsSchild v-else :zustand="schulung.zustand" />
 
         <div class="verwaltung-aktionen">
-          <RouterLink class="primary-action" :to="`/katalog/${schulung.id}/bearbeiten`"
+          <RouterLink
+            v-if="istAdministrator"
+            class="primary-action"
+            :to="`/katalog/${schulung.id}/bearbeiten`"
             >Bearbeiten</RouterLink
           >
           <RouterLink class="sekundaer-action" to="/katalog"

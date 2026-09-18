@@ -7,7 +7,6 @@ import de.nordwind.schulungsplaner.domain.Rolle;
 import de.nordwind.schulungsplaner.katalog.KatalogAnsichtService;
 import de.nordwind.schulungsplaner.service.KontoFehler;
 import de.nordwind.schulungsplaner.service.KontoService;
-import de.nordwind.schulungsplaner.service.TrainerQueryService;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +54,6 @@ class BenutzerkontoIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
-    @Autowired TrainerQueryService schulungen;
     @Autowired KatalogAnsichtService katalog;
     @Autowired TrainereinsatzService einsaetze;
 
@@ -386,9 +384,6 @@ class BenutzerkontoIntegrationTest {
         termin("ROLLEN", "2099-02-03", "geplant", null);
         einsaetze.aufQualifikationBewerben(ziel.id(), "SCH-002");
         einsaetze.aufAssistenzplatzBewerben(ziel.id(), "ROLLEN");
-        assertThat(schulungen.findeVerfuegbareTrainer(
-                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
-                .extracting("id").contains(ziel.id());
         konten.rolleEntziehen(chef.id(), ziel.id(), Rolle.TRAINER,
                 konten.laden(ziel.id()).aenderungsstand());
 
@@ -397,9 +392,6 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
-        assertThat(schulungen.findeVerfuegbareTrainer(
-                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
-                .extracting("id").doesNotContain(ziel.id());
         assertThatThrownBy(() -> einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id()))
                 .isInstanceOfSatisfying(KontoFehler.class,
                         f -> assertThat(f.code()).isEqualTo("TRAINER_ERFORDERLICH"));
@@ -411,12 +403,10 @@ class BenutzerkontoIntegrationTest {
                 konten.laden(ziel.id()).aenderungsstand());
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
-        assertThat(schulungen.findeVerfuegbareTrainer(
-                "SCH-001", LocalDate.of(2099, 2, 3), LocalDate.of(2099, 2, 3)))
-                .extracting("id").contains(ziel.id());
-        assertThat(schulungen.findeVerfuegbareTrainer(
-                "SCH-001", LocalDate.of(2099, 2, 1), LocalDate.of(2099, 2, 2)))
-                .extracting("id").doesNotContain(ziel.id());
+        termin("ROLLEN-ABWESEND", "2099-02-01", "geplant", null);
+        assertThatThrownBy(() -> einsaetze.trainerZuweisen(chef.id(), "ROLLEN-ABWESEND", ziel.id()))
+                .isInstanceOfSatisfying(KontoFehler.class,
+                        f -> assertThat(f.code()).isEqualTo("TRAINER_NICHT_VERFUEGBAR"));
         termin("ROLLEN-ASSISTENZ", "2099-02-04", "geplant", null);
         einsaetze.trainerZuweisen(chef.id(), "ROLLEN", ziel.id());
         einsaetze.assistentZuweisen(chef.id(), "ROLLEN-ASSISTENZ", ziel.id());

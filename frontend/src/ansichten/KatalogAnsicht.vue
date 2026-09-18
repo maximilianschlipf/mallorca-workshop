@@ -3,11 +3,13 @@ import { computed, onMounted, ref, watch } from "vue";
 import {
   ApiFehler,
   archiviereSchulung,
+  aufQualifikationBewerben,
   fetchKategorien,
   fetchSchulungen,
   loescheSchulung,
   reaktiviereSchulung,
 } from "../api";
+import { aktuellesKonto } from "../auth";
 import type { Schulung } from "../types";
 import LadeZustand from "../komponenten/LadeZustand.vue";
 import RueckfrageDialog from "../komponenten/RueckfrageDialog.vue";
@@ -18,6 +20,15 @@ const kategorien = ref<string[]>([]);
 const laedt = ref(true);
 const ladefehler = ref<string | null>(null);
 const meldung = ref<string | null>(null);
+
+const istAdministrator = computed(() =>
+  aktuellesKonto.value?.rollen.includes("ADMINISTRATOR") ?? false,
+);
+const istTrainer = computed(() =>
+  aktuellesKonto.value?.rollen.includes("TRAINER") ?? false,
+);
+const bewerbungen = ref(new Set<string>());
+const bewerbungsmeldung = ref<string | null>(null);
 
 const suche = ref("");
 const kategorie = ref("");
@@ -59,6 +70,22 @@ async function vorgang(tun: () => Promise<unknown>) {
   }
 }
 
+/**
+ * Bewirbt auf die Qualifikation. Archivierte Schulungen sind ausgenommen
+ * (REQ_KAT_SICHT_03); der Schalter ist dort erst gar nicht sichtbar.
+ */
+async function bewerben(schulungId: string) {
+  meldung.value = null;
+  bewerbungsmeldung.value = null;
+  try {
+    await aufQualifikationBewerben(schulungId);
+    bewerbungen.value.add(schulungId);
+    bewerbungsmeldung.value = "Die Bewerbung auf die Qualifikation wurde eingereicht.";
+  } catch (fehler) {
+    meldung.value = alsText(fehler);
+  }
+}
+
 function loeschenBestaetigt() {
   const schulung = zuLoeschen.value;
   zuLoeschen.value = null;
@@ -94,14 +121,18 @@ onMounted(async () => {
 <template>
   <section class="page-section">
     <div class="section-heading">
-      <h1>Katalog verwalten</h1>
-      <p>
+      <h1>{{ istAdministrator ? "Katalog verwalten" : "Schulungskatalog" }}</h1>
+      <p v-if="istAdministrator">
         Schulungen anlegen, beschreiben, archivieren und löschen. Änderungen
         werden im Repository als Commit gesichert.
       </p>
+      <p v-else>
+        Alle Schulungen mit Kategorie, Zustand und Anzahl der öffentlichen
+        Termine. Archivierte stehen hinter den aktiven.
+      </p>
     </div>
 
-    <div class="verwaltung-aktionen">
+    <div v-if="istAdministrator" class="verwaltung-aktionen">
       <RouterLink class="primary-action" to="/katalog/neu"
         >Schulung anlegen</RouterLink
       >
@@ -143,6 +174,10 @@ onMounted(async () => {
       </button>
     </form>
 
+    <p v-if="bewerbungsmeldung" class="success" role="status">
+      {{ bewerbungsmeldung }}
+    </p>
+
     <div v-if="meldung" class="state state-error" role="alert">
       <p>Der Vorgang wurde abgewiesen.</p>
       <small>{{ meldung }}</small>
@@ -154,8 +189,12 @@ onMounted(async () => {
         geladen ist, und gibt dem Test einen verlässlichen Anker.
       -->
       <div data-testid="katalogliste">
-      <p v-if="schulungen.length === 0" class="state">
+      <p v-if="schulungen.length === 0 && filterAktiv" class="state">
         Keine Schulung entspricht den gewählten Filtern.
+      </p>
+
+      <p v-else-if="schulungen.length === 0" class="state">
+        Der Katalog enthält noch keine Schulung.
       </p>
 
       <table v-else class="verwaltungstabelle">
@@ -186,26 +225,40 @@ onMounted(async () => {
             <td><ZustandsSchild :zustand="schulung.zustand" /></td>
             <td>{{ schulung.oeffentlicheTermine.length }}</td>
             <td class="zeilen-aktionen">
-              <RouterLink :to="`/katalog/${schulung.id}/bearbeiten`"
-                >Bearbeiten</RouterLink
-              >
               <button
-                v-if="schulung.zustand === 'AKTIV'"
+                v-if="istTrainer && schulung.zustand === 'AKTIV'"
                 type="button"
-                @click="vorgang(() => archiviereSchulung(schulung.id))"
+                :disabled="bewerbungen.has(schulung.id)"
+                @click="bewerben(schulung.id)"
               >
-                Archivieren
+                {{ bewerbungen.has(schulung.id) ? "Beworben" : "Auf Qualifikation bewerben" }}
               </button>
-              <button
-                v-else
-                type="button"
-                @click="vorgang(() => reaktiviereSchulung(schulung.id))"
-              >
-                Reaktivieren
-              </button>
-              <button type="button" class="gefahr" @click="zuLoeschen = schulung">
-                Löschen
-              </button>
+              <template v-if="istAdministrator">
+                <RouterLink :to="`/katalog/${schulung.id}/bearbeiten`"
+                  >Bearbeiten</RouterLink
+                >
+                <button
+                  v-if="schulung.zustand === 'AKTIV'"
+                  type="button"
+                  @click="vorgang(() => archiviereSchulung(schulung.id))"
+                >
+                  Archivieren
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  @click="vorgang(() => reaktiviereSchulung(schulung.id))"
+                >
+                  Reaktivieren
+                </button>
+                <button
+                  type="button"
+                  class="gefahr"
+                  @click="zuLoeschen = schulung"
+                >
+                  Löschen
+                </button>
+              </template>
             </td>
           </tr>
         </tbody>

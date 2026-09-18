@@ -1,10 +1,10 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
-import AnmeldenView from "./views/AnmeldenView.vue";
-import KontenView from "./views/KontenView.vue";
-import ProfilView from "./views/ProfilView.vue";
-import RegistrierenView from "./views/RegistrierenView.vue";
+import AnmeldenAnsicht from "./ansichten/AnmeldenAnsicht.vue";
+import KontenAnsicht from "./ansichten/KontenAnsicht.vue";
+import ProfilAnsicht from "./ansichten/ProfilAnsicht.vue";
+import RegistrierenAnsicht from "./ansichten/RegistrierenAnsicht.vue";
 import {
   anmelden, fetchKonten, nameAendern, passwortAendern, registrieren,
 } from "./api";
@@ -52,7 +52,7 @@ describe("Benutzerkonto-Ansichten", () => {
     const router = testRouter();
     await router.push("/registrieren");
     vi.mocked(registrieren).mockResolvedValue(trainer);
-    const registrierung = mount(RegistrierenView, { global: { plugins: [router] } });
+    const registrierung = mount(RegistrierenAnsicht, { global: { plugins: [router] } });
     await registrierung.find("#register-name").setValue("Trainer");
     await registrierung.find("#register-email").setValue(trainer.email);
     await registrierung.find("#register-passwort").setValue("geheim");
@@ -66,7 +66,7 @@ describe("Benutzerkonto-Ansichten", () => {
     registrierung.unmount();
 
     vi.mocked(anmelden).mockResolvedValue(trainer);
-    const anmeldung = mount(AnmeldenView, { global: { plugins: [router] } });
+    const anmeldung = mount(AnmeldenAnsicht, { global: { plugins: [router] } });
     await anmeldung.find("#login-email").setValue(trainer.email);
     await anmeldung.find("#login-passwort").setValue("geheim");
     await anmeldung.find("form").trigger("submit");
@@ -81,7 +81,7 @@ describe("Benutzerkonto-Ansichten", () => {
     setzeKonto(trainer);
     vi.mocked(nameAendern).mockResolvedValue({ ...trainer, name: "Neu", aenderungsstand: 1 });
     vi.mocked(passwortAendern).mockResolvedValue({ ...trainer, name: "Neu", aenderungsstand: 2 });
-    const profil = mount(ProfilView);
+    const profil = mount(ProfilAnsicht);
 
     await profil.find("#profile-name").setValue("Neu");
     await profil.findAll("form")[0].trigger("submit");
@@ -102,7 +102,7 @@ describe("Benutzerkonto-Ansichten", () => {
     await router.push("/");
 
     setzeKonto({ ...trainer, rollen: ["TRAINER", "ADMINISTRATOR"] });
-    const admin = mount(KontenView, { global: { plugins: [router] } });
+    const admin = mount(KontenAnsicht, { global: { plugins: [router] } });
     await flushPromises();
     expect(admin.text()).toContain("Trainerrolle entziehen");
     expect(admin.text()).toContain("Stilllegen");
@@ -113,7 +113,7 @@ describe("Benutzerkonto-Ansichten", () => {
     admin.unmount();
 
     setzeKonto({ ...trainer, rollen: ["TRAINER", "ADMINISTRATOR", "EIGENTUEMER"] });
-    const eigentuemer = mount(KontenView, { global: { plugins: [router] } });
+    const eigentuemer = mount(KontenAnsicht, { global: { plugins: [router] } });
     await flushPromises();
     expect(eigentuemer.text()).toContain("Administratorrolle entziehen");
     expect(eigentuemer.text()).toContain("Eigentümerrolle übergeben");

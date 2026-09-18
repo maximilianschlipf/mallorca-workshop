@@ -31,15 +31,6 @@ async function registrieren(
   await expect(page.getByText("Das Benutzerkonto wurde angelegt.")).toBeVisible();
 }
 
-async function registrierenUndAnmelden(
-  page: import("@playwright/test").Page,
-  name: string,
-  email: string,
-) {
-  await registrieren(page, name, email, "e2e-passwort");
-  await login(page, email, "e2e-passwort");
-}
-
 async function logout(page: import("@playwright/test").Page) {
   const antwort = page.waitForResponse(response => response.url().endsWith("/api/auth/abmelden"));
   await page.getByRole("button", { name: "Abmelden" }).click();
@@ -50,13 +41,18 @@ async function logout(page: import("@playwright/test").Page) {
 // verifies: TEST_USR_E2E_01, TEST_USR_LOGIN_01
 test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", async ({ page }) => {
   const trainerEmail = "e2e-trainer@example.de";
+  // Der Kalender oeffnet den Monat der Browseruhr; der geseedete geplante
+  // Termin liegt im September 2026 wie die feste Backenduhr.
+  await page.clock.setFixedTime(new Date("2026-09-17T12:00:00"));
   await eigentuemerAnmelden(page);
   await logout(page);
   await registrieren(page, "E2E Trainer", trainerEmail, "trainer-startpasswort");
 
   await login(page, trainerEmail, "trainer-startpasswort");
+  await page.getByRole("link", { name: "Katalog" }).click();
   await page.getByRole("button", { name: "Auf Qualifikation bewerben" }).first().click();
   await expect(page.getByText("Die Bewerbung auf die Qualifikation wurde eingereicht.")).toBeVisible();
+  await page.getByRole("link", { name: "Planer" }).click();
   await page.getByRole("button", { name: /Kubernetes Grundlagen/ }).first().click();
   await page.getByRole("button", { name: "Als Assistenz bewerben" }).click();
   await expect(page.getByText("Die Bewerbung auf den Assistenzplatz wurde eingereicht.")).toBeVisible();
@@ -99,7 +95,7 @@ test("öffentliche und geschützte Ansichten trennen anonyme Zugriffe", async ({
   await page.goto("/registrieren");
   await expect(page.getByRole("heading", { name: "Registrieren" })).toBeVisible();
 
-  for (const path of ["/", "/profil", "/benutzerkonten"]) {
+  for (const path of ["/", "/profil", "/katalog", "/benutzerkonten"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/anmelden/);
     await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
@@ -125,75 +121,4 @@ test("verwirft die Sitzung beim Schließen des Browsers", async ({ browser, base
   await neueSeite.goto("/");
   await expect(neueSeite).toHaveURL(/\/anmelden/);
   await neuerBrowser.close();
-});
-
-test("catalog is visible and API returns 200", async ({ page }) => {
-  await registrierenUndAnmelden(page, "E2E Katalog", "e2e-katalog@example.de");
-  const apiResponse = await page.request.get("/api/schulungen");
-  expect(apiResponse.status()).toBe(200);
-  await expect(
-    page.getByRole("heading", { name: "Schulungskatalog" }),
-  ).toBeVisible();
-  await expect(page.locator(".card").first()).toBeVisible();
-});
-
-test("search filters the catalog and reset restores it", async ({ page }) => {
-  await registrierenUndAnmelden(page, "E2E Suche", "e2e-suche@example.de");
-  await page.goto("/");
-  await expect(page.locator(".card").first()).toBeVisible();
-
-  const total = await page.locator(".course-card").count();
-
-  await page.getByLabel("Titel suchen").fill("Scrum");
-  await expect(page.getByText(/Schulung(en)? gefunden/)).toBeVisible();
-  const filtered = await page.locator(".course-card").count();
-  expect(filtered).toBeLessThanOrEqual(total);
-  await expect(page.locator(".course-card h3").first()).toContainText(/scrum/i);
-
-  await page.getByRole("button", { name: "Filter zurücksetzen" }).click();
-  await expect(page.locator(".course-card")).toHaveCount(total);
-});
-
-test("shows empty state when no training matches", async ({ page }) => {
-  await registrierenUndAnmelden(page, "E2E Leer", "e2e-leer@example.de");
-  await page.goto("/");
-  await expect(page.locator(".card").first()).toBeVisible();
-
-  await page.getByLabel("Titel suchen").fill("gibtesnicht123");
-  await expect(
-    page.getByText("Keine Schulungen entsprechen den gewählten Filtern"),
-  ).toBeVisible();
-});
-
-test("calendar navigates by month and shows training details", async ({ page }) => {
-  await registrierenUndAnmelden(page, "E2E Kalender", "e2e-kalender@example.de");
-  await page.clock.setFixedTime(new Date("2026-09-17T12:00:00"));
-  await page.goto("/");
-
-  await expect(
-    page.getByRole("heading", { name: "September 2026" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: /Scrum Master/ }).first().click();
-  await expect(page.locator(".calendar-detail")).toContainText(
-    "Scrum Master",
-  );
-  await expect(page.locator(".calendar-detail")).toContainText(/remote/i);
-
-  await page.getByRole("button", { name: "Termindetails schließen" }).click();
-  await page.getByRole("button", { name: "Weiter" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Oktober 2026" }),
-  ).toBeVisible();
-  await expect(page.locator(".calendar-event").first()).toBeVisible();
-});
-
-test("calendar uses the chronological list on mobile", async ({ page }) => {
-  await registrierenUndAnmelden(page, "E2E Mobil", "e2e-mobil@example.de");
-  await page.clock.setFixedTime(new Date("2026-09-17T12:00:00"));
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-
-  await expect(page.locator(".calendar-desktop")).toBeHidden();
-  await expect(page.locator(".calendar-mobile")).toBeVisible();
-  await expect(page.locator(".calendar-mobile time").first()).toBeVisible();
 });

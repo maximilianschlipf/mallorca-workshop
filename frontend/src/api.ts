@@ -129,14 +129,6 @@ export async function nimmDateienAuf(dateien: File[], ersetzen: boolean): Promis
   return api(`/api/schulungen/aufnahme?ersetzen=${ersetzen}`, { method: "POST", body });
 }
 
-export function fetchVerfuegbareTrainer(
-  schulungId: string,
-  von: string,
-  bis: string,
-): Promise<Trainer[]> {
-  return api(`/api/trainer/verfuegbar?${new URLSearchParams({ schulungId, von, bis })}`);
-}
-
 export const registrieren = (daten: { name: string; email: string; passwort: string }) =>
   api<Benutzerkonto>("/api/auth/registrieren", { method: "POST", body: JSON.stringify(daten) });
 export const anmelden = (email: string, passwort: string) =>

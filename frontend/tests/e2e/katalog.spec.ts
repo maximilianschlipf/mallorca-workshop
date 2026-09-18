@@ -10,7 +10,14 @@ import { schulungsSeite } from "./seiten/SchulungsSeite";
  */
 const kennung = (name: string) => `E2E-${name}`;
 
-test.describe("Katalog verwalten", () => {
+test.describe("Katalog", () => {
+  test("die Schnittstelle antwortet und die Liste erscheint", async ({ page }) => {
+    const katalog = await katalogSeite(page).oeffnen();
+
+    expect((await page.request.get("/api/schulungen")).status()).toBe(200);
+    await expect(katalog.zeilen.first()).toBeVisible();
+  });
+
   test("zeigt die Schulungen des Katalogs mit Zustand", async ({ page }) => {
     const katalog = await katalogSeite(page).oeffnen();
 
@@ -36,6 +43,15 @@ test.describe("Katalog verwalten", () => {
     await katalog.setzeFilterZurueck();
 
     await expect(katalog.zeilen).toHaveCount(gesamt);
+  });
+
+  test("ohne Treffer erscheint eine eigene Meldung", async ({ page }) => {
+    const katalog = await katalogSeite(page).oeffnen();
+
+    await katalog.sucheNach("gibtesnicht123");
+
+    await expect(katalog.leermeldung).toBeVisible();
+    await expect(katalog.zeilen).toHaveCount(0);
   });
 
   test("eine Schulung anlegen, ansehen und bearbeiten", async ({ page }) => {

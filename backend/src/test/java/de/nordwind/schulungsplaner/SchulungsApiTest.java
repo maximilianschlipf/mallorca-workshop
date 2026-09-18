@@ -62,28 +62,6 @@ class SchulungsApiTest {
                 .isSorted().doesNotHaveDuplicates();
     }
 
-    @Test
-    void findetNurQualifizierteVerfuegbareTrainer() throws Exception {
-        JsonNode frei = getJson(
-                "/api/trainer/verfuegbar?schulungId=SCH-001&von=2026-07-01&bis=2026-07-02");
-        JsonNode abwesend = getJson(
-                "/api/trainer/verfuegbar?schulungId=SCH-001&von=2026-08-03&bis=2026-08-03");
-
-        assertThat(frei.valueStream().map(t -> t.get("name").stringValue()).toList())
-                .containsExactly("Elena Fischer", "Julia Hoffmann");
-        assertThat(abwesend.valueStream().map(t -> t.get("name").stringValue()).toList())
-                .containsExactly("Elena Fischer");
-    }
-
-    @Test
-    void weistUngueltigenZeitraumAb() throws Exception {
-        mvc.perform(get("/api/trainer/verfuegbar")
-                        .param("schulungId", "SCH-001")
-                        .param("von", "2026-08-04")
-                        .param("bis", "2026-08-03"))
-                .andExpect(status().isBadRequest());
-    }
-
     // verifies: TEST_KAT_SICHT_01
     @Test
     void trainerDarfDenKatalogNichtVeraendern() throws Exception {

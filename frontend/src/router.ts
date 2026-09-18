@@ -4,12 +4,12 @@ import { ladeKonto } from "./auth";
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: () => import("./views/KatalogView.vue"), meta: { auth: true } },
-    { path: "/anmelden", component: () => import("./views/AnmeldenView.vue"), meta: { gast: true } },
-    { path: "/registrieren", component: () => import("./views/RegistrierenView.vue"), meta: { gast: true } },
-    { path: "/profil", component: () => import("./views/ProfilView.vue"), meta: { auth: true } },
-    { path: "/benutzerkonten", component: () => import("./views/KontenView.vue"), meta: { auth: true, admin: true } },
-    { path: "/katalog", component: () => import("./ansichten/KatalogAnsicht.vue"), meta: { auth: true, admin: true } },
+    { path: "/", component: () => import("./ansichten/PlanerAnsicht.vue"), meta: { auth: true } },
+    { path: "/anmelden", component: () => import("./ansichten/AnmeldenAnsicht.vue"), meta: { gast: true } },
+    { path: "/registrieren", component: () => import("./ansichten/RegistrierenAnsicht.vue"), meta: { gast: true } },
+    { path: "/profil", component: () => import("./ansichten/ProfilAnsicht.vue"), meta: { auth: true } },
+    { path: "/benutzerkonten", component: () => import("./ansichten/KontenAnsicht.vue"), meta: { auth: true, admin: true } },
+    { path: "/katalog", component: () => import("./ansichten/KatalogAnsicht.vue"), meta: { auth: true } },
     { path: "/katalog/neu", component: () => import("./ansichten/SchulungsformularAnsicht.vue"), meta: { auth: true, admin: true } },
     { path: "/katalog/aufnahme", component: () => import("./ansichten/AufnahmeAnsicht.vue"), meta: { auth: true, admin: true } },
     { path: "/kategorien", component: () => import("./ansichten/KategorienAnsicht.vue"), meta: { auth: true, admin: true } },

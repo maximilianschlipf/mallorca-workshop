@@ -1,20 +1,19 @@
 import type { Locator, Page } from "@playwright/test";
 import { Seite } from "./Seite";
 
-/** Die Katalogverwaltung: Liste aller Schulungen mit ihren Vorgaengen. */
 export class KatalogSeite extends Seite {
   protected get pfad(): string {
     return "/katalog";
   }
 
   protected get kennzeichen(): Locator {
-    // Die Liste, nicht die Überschrift: Die Überschrift steht schon da,
-    // während die Schulungen noch geladen werden.
     return this.page.getByTestId("katalogliste");
   }
 
   get zeilen(): Locator {
-    return this.page.getByRole("row").filter({ has: this.page.getByRole("cell") });
+    return this.page
+      .getByRole("row")
+      .filter({ has: this.page.getByRole("cell") });
   }
 
   zeile(id: string): Locator {
@@ -23,6 +22,12 @@ export class KatalogSeite extends Seite {
 
   get kennungen(): Locator {
     return this.page.locator("[data-kennung]");
+  }
+
+  get leermeldung(): Locator {
+    return this.page.getByText(
+      "Keine Schulung entspricht den gewählten Filtern",
+    );
   }
 
   zustand(id: string): Locator {

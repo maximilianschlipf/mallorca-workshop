@@ -3,15 +3,12 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import {
   aendereTermin,
   aufAssistenzplatzBewerben,
-  aufQualifikationBewerben,
   bestaetigeTermin,
-  fetchKategorien,
   fetchSchulungen,
   fetchTermin,
   fetchTerminDashboard,
   fetchTrainerOptionen,
   fetchTrainerOptionenFuerPlanung,
-  fetchVerfuegbareTrainer,
   legeTerminAn,
   loescheTermin,
   sageTerminAb,
@@ -28,10 +25,6 @@ interface KalenderTermin {
   termin: Termin;
 }
 
-const schulungen = ref<Schulung[]>([]);
-const kategorien = ref<string[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
 const kalenderSchulungen = ref<Schulung[]>([]);
 const kalenderLoading = ref(true);
 const kalenderError = ref<string | null>(null);
@@ -53,25 +46,15 @@ const terminForm = ref<TerminEingabe>({
 });
 const aktionsmeldung = ref("");
 const aktionsfehler = ref("");
-const qualifikationsbewerbungen = ref(new Set<string>());
 const assistenzbewerbungen = ref(new Set<string>());
 const istTrainer = computed(() => aktuellesKonto.value?.rollen.includes("TRAINER"));
 const istAdministrator = computed(() => aktuellesKonto.value?.rollen.includes("ADMINISTRATOR"));
-
-const suche = ref("");
-const kategorie = ref("");
 
 const trainer = ref<Trainer[]>([]);
 const trainerLoading = ref(false);
 const trainerError = ref<string | null>(null);
 const trainerGesucht = ref(false);
-const trainerSchulungId = ref("");
-const trainerVon = ref("");
-const trainerBis = ref("");
-
-const filterAktiv = computed(
-  () => suche.value.trim() !== "" || kategorie.value !== "",
-);
+let trainerAnfrage = 0;
 
 const cleanText = (text: string | null | undefined) => (text ?? "Nicht angegeben").replace(/[—–]/g, "-");
 
@@ -103,7 +86,7 @@ const kalenderTermine = computed<KalenderTermin[]>(() =>
     .sort((a, b) => a.termin.startdatum.localeCompare(b.termin.startdatum)),
 );
 
-const aktiveSchulungen = computed(() => schulungen.value.filter((s) => s.zustand !== "ARCHIVIERT"));
+const aktiveSchulungen = computed(() => kalenderSchulungen.value.filter((s) => s.zustand !== "ARCHIVIERT"));
 
 const heuteIso = () => datumZuIso(new Date());
 
@@ -202,14 +185,14 @@ function statusText(termin: Termin) {
 }
 
 async function terminAuswaehlen(eintrag: KalenderTermin) {
+  trainerAnfrage++;
   ausgewaehlterTermin.value = eintrag;
   terminDetail.value = null;
   terminDetailDialog.value = true;
-  trainerSchulungId.value = eintrag.schulungId;
-  trainerVon.value = eintrag.termin.startdatum;
-  trainerBis.value = eintrag.termin.enddatum;
   trainer.value = [];
   trainerGesucht.value = false;
+  trainerLoading.value = false;
+  trainerError.value = null;
   const angefragterTermin = eintrag.termin.terminId;
   try {
     const detail = await fetchTermin(eintrag.termin.terminId);
@@ -281,7 +264,7 @@ async function terminSpeichern() {
     }
     terminDialog.value = false;
     terminDetail.value = gespeichert;
-    await ladeSchulungen(true);
+    await ladeKalender();
     kalenderMonat.value = new Date(Number(gespeichert.startdatum.slice(0, 4)), Number(gespeichert.startdatum.slice(5, 7)) - 1, 1);
     const schulung = kalenderSchulungen.value.find((s) => s.id === gespeichert.schulungId);
     const termin = schulung?.oeffentlicheTermine.find((t) => t.terminId === gespeichert.terminId);
@@ -330,9 +313,14 @@ watch(terminDetailDialog, async (offen) => {
     await nextTick();
     terminDetailDialogElement.value?.querySelector<HTMLElement>("button:not([disabled])")?.focus();
   } else {
+    trainerAnfrage++;
+    trainer.value = [];
+    trainerGesucht.value = false;
+    trainerLoading.value = false;
+    trainerError.value = null;
     fokusVorTermindetail?.focus();
   }
-});
+}, { flush: "sync" });
 
 function terminDetailSchliessen() {
   terminDetailDialog.value = false;
@@ -365,18 +353,18 @@ function modalTaste(event: KeyboardEvent, element: HTMLElement | null, schliesse
 
 async function terminBestaetigen() {
   if (!terminDetail.value || !window.confirm("Durchführung endgültig bestätigen?")) return;
-  await aktion(async () => { aktualisiereTermin(await bestaetigeTermin(terminDetail.value!.terminId)); await ladeSchulungen(true); }, "Durchführung bestätigt.");
+  await aktion(async () => { aktualisiereTermin(await bestaetigeTermin(terminDetail.value!.terminId)); await ladeKalender(); }, "Durchführung bestätigt.");
 }
 
 async function terminAbsagen() {
   if (!terminDetail.value || !window.confirm(`${warntext(terminDetail.value)} absagen?`)) return;
   const grund = window.prompt("Optionaler Absagegrund") || null;
-  await aktion(async () => { aktualisiereTermin(await sageTerminAb(terminDetail.value!.terminId, grund)); await ladeSchulungen(true); }, "Termin abgesagt.");
+  await aktion(async () => { aktualisiereTermin(await sageTerminAb(terminDetail.value!.terminId, grund)); await ladeKalender(); }, "Termin abgesagt.");
 }
 
 async function terminLoeschen() {
   if (!terminDetail.value || !window.confirm(`${warntext(terminDetail.value)} löschen?`)) return;
-  await aktion(async () => { await loescheTermin(terminDetail.value!.terminId); terminDetailSchliessen(); terminDetail.value = null; ausgewaehlterTermin.value = null; await ladeSchulungen(true); }, "Termin gelöscht.");
+  await aktion(async () => { await loescheTermin(terminDetail.value!.terminId); terminDetailSchliessen(); terminDetail.value = null; ausgewaehlterTermin.value = null; await ladeKalender(); }, "Termin gelöscht.");
 }
 
 function warntext(termin: TerminDetail) {
@@ -386,7 +374,7 @@ function warntext(termin: TerminDetail) {
 
 async function trainerAbziehen() {
   if (!terminDetail.value) return;
-  await aktion(async () => { await zieheTrainerAb(terminDetail.value!.terminId); aktualisiereTermin(await fetchTermin(terminDetail.value!.terminId)); await ladeSchulungen(true); }, "Trainerzuweisung aufgehoben.");
+  await aktion(async () => { await zieheTrainerAb(terminDetail.value!.terminId); aktualisiereTermin(await fetchTermin(terminDetail.value!.terminId)); await ladeKalender(); }, "Trainerzuweisung aufgehoben.");
 }
 
 function aktualisiereTermin(detail: TerminDetail) {
@@ -407,13 +395,6 @@ async function aktion(ausfuehren: () => Promise<void>, erfolg: string) {
   }
 }
 
-async function qualifikationBewerben(schulungId: string) {
-  await aktion(async () => {
-    await aufQualifikationBewerben(schulungId);
-    qualifikationsbewerbungen.value.add(schulungId);
-  }, "Die Bewerbung auf die Qualifikation wurde eingereicht.");
-}
-
 async function assistenzBewerben(terminId: string) {
   await aktion(async () => {
     await aufAssistenzplatzBewerben(terminId);
@@ -432,33 +413,20 @@ async function trainerEinsetzen(person: Trainer) {
       await trainerZuweisen(terminId, person.id, true);
     }
     aktualisiereTermin(await fetchTermin(terminId));
-    await ladeSchulungen(true);
+    await ladeKalender();
   }, `${person.name} wurde dem Termin als Trainer zugewiesen.`);
 }
 
-async function ladeSchulungen(kalenderInitialisieren = false) {
-  loading.value = true;
-  error.value = null;
-  if (kalenderInitialisieren) {
-    kalenderLoading.value = true;
-    kalenderError.value = null;
-  }
+async function ladeKalender() {
+  kalenderLoading.value = true;
+  kalenderError.value = null;
   try {
-    const [ergebnis, ungefilterterKalender] = await Promise.all([
-      fetchSchulungen({ suche: suche.value, kategorie: kategorie.value }),
-      kalenderInitialisieren && filterAktiv.value ? fetchSchulungen() : Promise.resolve(null),
-    ]);
-    schulungen.value = ergebnis;
-    if (kalenderInitialisieren) {
-      kalenderSchulungen.value = ungefilterterKalender ?? ergebnis;
-      await ladeDashboard();
-    }
+    kalenderSchulungen.value = await fetchSchulungen();
+    await ladeDashboard();
   } catch (err) {
-    error.value = err instanceof Error ? err.message : "Unbekannter Fehler";
-    if (kalenderInitialisieren) kalenderError.value = error.value;
+    kalenderError.value = err instanceof Error ? err.message : "Unbekannter Fehler";
   } finally {
-    loading.value = false;
-    if (kalenderInitialisieren) kalenderLoading.value = false;
+    kalenderLoading.value = false;
   }
 }
 
@@ -472,54 +440,32 @@ async function ladeDashboard() {
   }
 }
 
-function filterZuruecksetzen() {
-  suche.value = "";
-  kategorie.value = "";
-}
-
-async function trainerSuchen(fuerTermin = false) {
+async function trainerSuchen() {
+  const terminId = terminDetail.value?.terminId;
+  if (!terminId) return;
+  const anfrage = ++trainerAnfrage;
   trainerGesucht.value = true;
   trainer.value = [];
   trainerError.value = null;
 
-  if (trainerVon.value > trainerBis.value) {
-    trainerError.value =
-      "Das Anfangsdatum darf nicht nach dem Enddatum liegen.";
-    return;
-  }
-
   trainerLoading.value = true;
   try {
-    trainer.value = fuerTermin && terminDetail.value
-      ? await fetchTrainerOptionen(terminDetail.value.terminId)
-      : await fetchVerfuegbareTrainer(trainerSchulungId.value, trainerVon.value, trainerBis.value);
+    const ergebnis = await fetchTrainerOptionen(terminId);
+    if (trainerAnfrage === anfrage) trainer.value = ergebnis;
   } catch (err) {
-    trainerError.value =
-      err instanceof Error ? err.message : "Unbekannter Fehler";
+    if (trainerAnfrage === anfrage) {
+      trainerError.value = err instanceof Error ? err.message : "Unbekannter Fehler";
+    }
   } finally {
-    trainerLoading.value = false;
-    if (fuerTermin) {
-      terminDetailSchliessen();
+    if (trainerAnfrage === anfrage) {
+      trainerLoading.value = false;
       await nextTick();
-      document.querySelector<HTMLElement>("#trainer .trainer-results, #trainer .state")?.focus();
+      terminDetailDialogElement.value?.querySelector<HTMLElement>(".trainer-results, .state")?.focus();
     }
   }
 }
 
-let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-watch([suche, kategorie], () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(ladeSchulungen, 250);
-});
-
-onMounted(async () => {
-  try {
-    kategorien.value = await fetchKategorien();
-  } catch {
-    kategorien.value = [];
-  }
-  await ladeSchulungen(true);
-});
+onMounted(ladeKalender);
 </script>
 
 <template>
@@ -723,7 +669,7 @@ onMounted(async () => {
               v-if="istAdministrator && terminDetail?.status === 'geplant'"
               class="primary-action"
               type="button"
-              @click="trainerSuchen(true)"
+              @click="trainerSuchen"
             >Verfügbare Trainer laden</button>
             <button v-if="istAdministrator && terminDetail?.status === 'geplant'" type="button" @click="terminBearbeiten">Bearbeiten</button>
             <button v-if="istAdministrator && terminDetail?.status === 'geplant' && terminDetail.trainerId" type="button" @click="trainerAbziehen">Trainer abziehen</button>
@@ -737,6 +683,49 @@ onMounted(async () => {
               v-if="istAdministrator && terminDetail && terminDetail.status !== 'abgeschlossen' && terminDetail.startdatum > heuteIso()"
               class="gefahr" type="button" @click="terminLoeschen"
             >Löschen</button>
+          </div>
+          <div v-if="trainerLoading" class="trainer-results" aria-busy="true">
+            <div v-for="index in 2" :key="index" class="trainer-row skeleton-row">
+              <span></span><span></span>
+            </div>
+          </div>
+          <div v-else-if="trainerError" class="state state-error" role="alert" tabindex="-1">
+            <p>Die Trainerliste konnte nicht geladen werden.</p>
+            <small>{{ cleanText(trainerError) }}</small>
+          </div>
+          <div v-else-if="trainerGesucht && trainer.length === 0" class="state" role="status" tabindex="-1">
+            <p>Keine qualifizierten Trainer</p>
+          </div>
+          <div v-else-if="trainer.length" class="trainer-results" tabindex="-1">
+            <p class="filter-result" aria-live="polite">
+              {{ trainer.length }} qualifizierte Trainer
+            </p>
+            <ul>
+              <li v-for="person in trainer" :key="person.id" class="trainer-row">
+                <div>
+                  <strong>{{ person.name }}</strong>
+                  <span>{{ person.id }}</span>
+                  <span v-if="person.grund">{{ person.grund }}</span>
+                  <table v-if="person.kalender?.length" class="trainer-calendar">
+                    <caption>Kalender von {{ person.name }}</caption>
+                    <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
+                    <tbody><tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
+                      <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
+                      <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
+                    </tr></tbody>
+                  </table>
+                </div>
+                <div class="trainer-row-actions">
+                  <a v-if="person.email" :href="`mailto:${person.email}`">{{ person.email }}</a>
+                  <button
+                    class="filter-reset"
+                    type="button"
+                    :disabled="person.verfuegbar === false"
+                    @click="trainerEinsetzen(person)"
+                  >Diesem Termin zuweisen</button>
+                </div>
+              </li>
+            </ul>
           </div>
           </section>
         </div>
@@ -818,224 +807,6 @@ onMounted(async () => {
     <p v-if="aktionsmeldung" class="success planer-rueckmeldung" role="status">{{ aktionsmeldung }}</p>
     <p v-if="aktionsfehler" class="form-error planer-rueckmeldung" role="alert">{{ aktionsfehler }}</p>
 
-    <section
-      id="katalog"
-      class="catalog-section"
-      aria-labelledby="catalog-heading"
-    >
-      <div class="section-heading">
-        <h2 id="catalog-heading">Schulungskatalog</h2>
-        <p>
-          Von Cloud-Infrastruktur bis Teamkommunikation. Finden Sie das passende
-          Format für Ihr Team.
-        </p>
-      </div>
-
-      <form class="filter-bar" role="search" @submit.prevent>
-        <div class="filter-field">
-          <label for="filter-suche">Titel suchen</label>
-          <input
-            id="filter-suche"
-            v-model="suche"
-            type="search"
-            autocomplete="off"
-            placeholder="z. B. Scrum, Azure, Kommunikation"
-          />
-        </div>
-        <div class="filter-field">
-          <label for="filter-kategorie">Kategorie</label>
-          <select id="filter-kategorie" v-model="kategorie">
-            <option value="">Alle Kategorien</option>
-            <option v-for="kat in kategorien" :key="kat" :value="kat">
-              {{ cleanText(kat) }}
-            </option>
-          </select>
-        </div>
-        <button
-          type="button"
-          class="filter-reset"
-          :disabled="!filterAktiv"
-          @click="filterZuruecksetzen"
-        >
-          Filter zurücksetzen
-        </button>
-      </form>
-
-      <div
-        v-if="loading"
-        class="catalog-grid"
-        aria-label="Schulungen werden geladen"
-        aria-busy="true"
-      >
-        <div
-          v-for="index in 4"
-          :key="index"
-          class="course-card skeleton"
-          aria-hidden="true"
-        >
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <div v-else-if="error" class="state state-error" role="alert">
-        <p>Der Katalog konnte nicht geladen werden.</p>
-        <small>{{ cleanText(error) }}</small>
-      </div>
-
-      <div v-else-if="schulungen.length === 0 && filterAktiv" class="state">
-        <p>Keine Schulungen entsprechen den gewählten Filtern.</p>
-        <small
-          >Passen Sie Suchbegriff oder Kategorie an oder setzen Sie die Filter
-          zurück.</small
-        >
-        <button type="button" class="filter-reset" @click="filterZuruecksetzen">
-          Filter zurücksetzen
-        </button>
-      </div>
-
-      <div v-else-if="schulungen.length === 0" class="state">
-        <p>Aktuell sind keine Schulungen veröffentlicht.</p>
-        <small>Neue Termine erscheinen hier, sobald sie verfügbar sind.</small>
-      </div>
-
-      <template v-else>
-        <p class="filter-result" aria-live="polite">
-          {{ schulungen.length }}
-          {{ schulungen.length === 1 ? "Schulung" : "Schulungen" }} gefunden
-        </p>
-        <ul class="catalog-grid">
-          <li
-            v-for="schulung in schulungen"
-            :key="schulung.id"
-            class="card course-card"
-          >
-            <div class="course-topline">
-              <span class="category">{{ cleanText(schulung.kategorie) }}</span>
-              <span
-                >{{ schulung.dauerInTagen }}
-                {{ schulung.dauerInTagen === 1 ? "Tag" : "Tage" }}</span
-              >
-            </div>
-            <h3>{{ cleanText(schulung.titel) }}</h3>
-            <p>{{ cleanText(schulung.kurzbeschreibung) }}</p>
-            <div class="course-footer">
-              <span>
-                {{ schulung.oeffentlicheTermine.length }}
-                {{
-                  schulung.oeffentlicheTermine.length === 1
-                    ? "öffentlicher Termin"
-                    : "öffentliche Termine"
-                }}
-              </span>
-              <button
-                v-if="istTrainer"
-                class="filter-reset course-action"
-                type="button"
-                :disabled="qualifikationsbewerbungen.has(schulung.id)"
-                @click="qualifikationBewerben(schulung.id)"
-              >
-                {{ qualifikationsbewerbungen.has(schulung.id)
-                  ? "Beworben" : "Auf Qualifikation bewerben" }}
-              </button>
-            </div>
-          </li>
-        </ul>
-      </template>
-    </section>
-
-    <section
-      id="trainer"
-      class="trainer-section"
-      aria-labelledby="trainer-heading"
-    >
-      <div class="section-heading compact-heading">
-        <h2 id="trainer-heading">Verfügbare Trainer finden</h2>
-        <p>
-          Wählen Sie Schulung und Zeitraum. Angezeigt werden passende Trainer
-          ohne überschneidende Abwesenheit.
-        </p>
-      </div>
-
-      <form class="trainer-form" @submit.prevent="trainerSuchen()">
-        <div class="filter-field trainer-course-field">
-          <label for="trainer-schulung">Schulung</label>
-          <select id="trainer-schulung" v-model="trainerSchulungId" required>
-            <option value="" disabled>Schulung auswählen</option>
-            <option
-              v-for="schulung in schulungen"
-              :key="schulung.id"
-              :value="schulung.id"
-            >
-              {{ cleanText(schulung.titel) }} ({{ schulung.id }})
-            </option>
-          </select>
-        </div>
-        <div class="filter-field">
-          <label for="trainer-von">Anfangsdatum</label>
-          <input id="trainer-von" v-model="trainerVon" type="date" required />
-        </div>
-        <div class="filter-field">
-          <label for="trainer-bis">Enddatum</label>
-          <input id="trainer-bis" v-model="trainerBis" type="date" required />
-        </div>
-        <button class="primary-action trainer-submit" type="submit">
-          Trainer anzeigen
-        </button>
-      </form>
-
-      <div v-if="trainerLoading" class="trainer-results" aria-busy="true">
-        <div v-for="index in 2" :key="index" class="trainer-row skeleton-row">
-          <span></span><span></span>
-        </div>
-      </div>
-
-      <div v-else-if="trainerError" class="state state-error" role="alert" tabindex="-1">
-        <p>Die Trainersuche konnte nicht ausgeführt werden.</p>
-        <small>{{ cleanText(trainerError) }}</small>
-      </div>
-
-      <div v-else-if="trainerGesucht && trainer.length === 0" class="state" role="status" tabindex="-1">
-        <p>Keine verfügbaren Trainer</p>
-        <small>
-          Für diese Schulung und diesen Zeitraum wurde keine passende Person
-          gefunden. Wählen Sie einen anderen Zeitraum.
-        </small>
-      </div>
-
-      <div v-else-if="trainer.length" class="trainer-results" tabindex="-1">
-        <p class="filter-result" aria-live="polite">
-          {{ trainer.length }} qualifizierte Trainer
-        </p>
-        <ul>
-          <li v-for="person in trainer" :key="person.id" class="trainer-row">
-            <div>
-              <strong>{{ person.name }}</strong>
-              <span>{{ person.id }}</span>
-              <span v-if="person.grund">{{ person.grund }}</span>
-              <table v-if="person.kalender?.length" class="trainer-calendar">
-                <caption>Kalender von {{ person.name }}</caption>
-                <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
-                <tbody><tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
-                  <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
-                  <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
-                </tr></tbody>
-              </table>
-            </div>
-            <div class="trainer-row-actions">
-              <a v-if="person.email" :href="`mailto:${person.email}`">{{ person.email }}</a>
-              <button
-                v-if="istAdministrator && ausgewaehlterTermin"
-                class="filter-reset"
-                type="button"
-                :disabled="person.verfuegbar === false"
-                @click="trainerEinsetzen(person)"
-              >Diesem Termin zuweisen</button>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </section>
-
     <footer class="footer">
       <div class="footer-main">
         <a
@@ -1050,11 +821,6 @@ onMounted(async () => {
             </span>
           </span>
         </a>
-        <nav class="footer-links" aria-label="Fußnavigation">
-          <a href="#kalender">Kalender</a>
-          <a href="#katalog">Katalog</a>
-          <a href="#trainer">Trainer finden</a>
-        </nav>
       </div>
       <p class="footer-meta">Ein Produkt von SimplyTest</p>
     </footer>
