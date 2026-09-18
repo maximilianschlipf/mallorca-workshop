@@ -17,6 +17,8 @@
   --success-surface: #eaf8f0;
   --danger-text: #8e1f1b;
   --danger-surface: #fff0ef;
+  --warning-text: #7a5300;
+  --warning-surface: #fff6e0;
   --shadow: rgba(23, 25, 66, 0.08);
   --radius: 10px;
 }
@@ -755,8 +757,16 @@ p {
   place-items: center;
   padding: clamp(40px, 7vw, 72px) 24px;
   background:
-    radial-gradient(circle at 12% 18%, rgba(234, 104, 57, 0.07), transparent 24rem),
-    radial-gradient(circle at 88% 82%, rgba(28, 133, 195, 0.08), transparent 26rem);
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(234, 104, 57, 0.07),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 88% 82%,
+      rgba(28, 133, 195, 0.08),
+      transparent 26rem
+    );
 }
 
 .eyebrow {
@@ -1166,6 +1176,8 @@ p {
     --success-surface: rgba(51, 150, 96, 0.16);
     --danger-text: #ff9bad;
     --danger-surface: rgba(165, 56, 72, 0.18);
+    --warning-text: #e8c06a;
+    --warning-surface: rgba(181, 137, 0, 0.18);
     --shadow: rgba(6, 8, 28, 0.3);
   }
 
@@ -1285,7 +1297,7 @@ p {
     display: grid;
     gap: 6px;
     padding: 18px;
-    border-radius: 12px;
+    border-radius: var(--radius);
     text-align: left;
   }
 
@@ -1385,55 +1397,77 @@ p {
 }
 
 /* --- Verwaltung ------------------------------------------------------- */
+/* Diese Schicht folgt denselben Token, Radien und Höhen wie der Rest der
+   Anwendung: 6px bedienbar, 10px tragend, Farben ausschließlich aus
+   Custom Properties, damit der Dunkelmodus geschlossen bleibt. */
 
 .page-section {
-  width: min(1120px, 100% - 3rem);
+  width: min(1120px, 100% - 48px);
   margin: 0 auto;
-  padding: 3rem 0;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  padding: clamp(40px, 5vw, 56px) 0;
 }
 
 .verwaltung-aktionen {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .sekundaer-action {
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
-  padding: 0.6rem 1.1rem;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-weight: 600;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
   text-decoration: none;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.sekundaer-action:hover,
+.sekundaer-action:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sekundaer-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
+}
+
+.sekundaer-action:active {
+  transform: scale(0.98);
 }
 
 .verwaltungstabelle {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1.5rem;
+  margin-top: 24px;
 }
 
 .verwaltungstabelle th,
 .verwaltungstabelle td {
-  padding: 0.75rem 0.6rem;
+  padding: 12px 10px;
   text-align: left;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 
 .verwaltungstabelle th {
-  font-size: 0.85rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1441,43 +1475,96 @@ p {
 .zeilen-aktionen {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .zeilen-aktionen button,
-.zeilen-aktionen a {
-  padding: 0.35rem 0.7rem;
+.zeilen-aktionen a,
+.dialog-aktionen button,
+.termin-detail-schliessen {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 6px;
   background: transparent;
+  color: var(--text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 650;
   cursor: pointer;
+  white-space: nowrap;
   text-decoration: none;
-  color: inherit;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
 }
 
-.gefahr {
-  border-color: color-mix(in srgb, #ff6b5e 55%, transparent) !important;
-  color: #ff8d83;
+.zeilen-aktionen button:hover,
+.zeilen-aktionen a:hover,
+.dialog-aktionen button:hover,
+.termin-detail-schliessen:hover,
+.zeilen-aktionen button:focus-visible,
+.zeilen-aktionen a:focus-visible,
+.dialog-aktionen button:focus-visible,
+.termin-detail-schliessen:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.zeilen-aktionen button:focus-visible,
+.zeilen-aktionen a:focus-visible,
+.dialog-aktionen button:focus-visible,
+.termin-detail-schliessen:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
+}
+
+.zeilen-aktionen button:active,
+.dialog-aktionen button:active,
+.termin-detail-schliessen:active {
+  transform: scale(0.98);
+}
+
+/* Die destruktive Variante steht nach den Grundregeln und trägt dieselbe
+   Spezifität wie sie -- deshalb braucht sie kein !important. */
+.gefahr,
+.zeilen-aktionen .gefahr,
+.dialog-aktionen .gefahr {
+  border-color: color-mix(in srgb, var(--danger-text) 38%, transparent);
+  color: var(--danger-text);
+}
+
+.gefahr:hover,
+.gefahr:focus-visible,
+.zeilen-aktionen .gefahr:hover,
+.zeilen-aktionen .gefahr:focus-visible,
+.dialog-aktionen .gefahr:hover,
+.dialog-aktionen .gefahr:focus-visible {
+  border-color: var(--danger-text);
+  background: var(--danger-surface);
+  color: var(--danger-text);
 }
 
 .zustand {
   display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  padding: 3px 10px;
+  border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
+  margin-bottom: 1.5rem;
 }
 
 .zustand-aktiv {
-  background: #e3f3e8;
-  color: #17502c;
+  background: var(--success-surface);
+  color: var(--success-text);
 }
 
 .zustand-archiviert {
-  background: #ece9e4;
-  color: #5a5248;
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+  color: var(--muted);
 }
 
 .kennung {
@@ -1488,25 +1575,27 @@ p {
 .angaben {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: 16px;
+  margin: 24px 0;
 }
 
 .angaben dt {
-  font-size: 0.85rem;
-  opacity: 0.7;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .angaben dd {
-  margin: 0.2rem 0 0;
+  margin: 6px 0 0;
   font-weight: 600;
 }
 
 .schulungsformular {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  gap: 20px;
+  margin-top: 24px;
 }
 
 .schulungsformular .breit {
@@ -1514,120 +1603,140 @@ p {
 }
 
 .schulungsformular textarea,
-.kategorienliste input[type="text"] {
+.kategorienliste input[type="text"],
+.termin-dialog select,
+.termin-dialog input {
   width: 100%;
   min-width: 0;
-  font: inherit;
-  padding: 0.6rem 16px;
+  padding: 12px 16px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface-raised);
   color: var(--text);
+  font: inherit;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.schulungsformular textarea {
+  min-height: 120px;
   resize: vertical;
+}
+
+.schulungsformular textarea:focus-visible,
+.kategorienliste input[type="text"]:focus-visible,
+.termin-dialog select:focus-visible,
+.termin-dialog input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
 }
 
 .kategorienliste input[type="text"] {
   flex: 0 1 16rem;
+  height: 46px;
+  padding: 0 16px;
   resize: none;
+}
+
+.termin-dialog select,
+.termin-dialog input {
+  height: 46px;
+  margin-top: 6px;
+  padding: 0 16px;
 }
 
 .formular-aktionen {
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
   align-items: center;
+  gap: 12px;
 }
 
 .feldfehler {
-  margin: 0.35rem 0 0;
-  color: #ff8d83;
-  font-size: 0.85rem;
+  margin: 6px 0 0;
+  color: var(--danger-text);
+  font-size: 0.82rem;
 }
 
 .state-warnung {
-  border-left: 4px solid #b58900;
+  border-color: color-mix(in srgb, var(--warning-text) 45%, transparent);
+}
+
+.state-warnung p {
+  color: var(--warning-text);
 }
 
 .dialog-hintergrund {
   position: fixed;
   inset: 0;
+  z-index: 50;
   display: grid;
   place-items: center;
-  background: rgb(0 0 0 / 0.45);
-  z-index: 50;
-  padding: 1.5rem;
+  padding: 24px;
+  background: rgba(23, 25, 66, 0.45);
 }
 
 .dialog {
   max-width: 34rem;
-  padding: 1.75rem;
   /* "card" ist im Projekt nur ein Merkmal für Tests und trägt keine Gestaltung.
      Der Dialog braucht seinen Grund deshalb selbst -- sonst steht sein Text
      über dem, was er verdecken soll. */
-  background: var(--surface-raised);
-  color: var(--text);
+  padding: clamp(24px, 4vw, 38px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: 0 24px 60px var(--shadow);
 }
 
 .dialog h3 {
   margin-top: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
 }
 
 .dialog.termin-detail-dialog {
   width: min(58rem, 100%);
   max-width: 58rem;
-  max-height: calc(100dvh - 3rem);
+  max-height: calc(100dvh - 48px);
   overflow: auto;
 }
 
 .termin-detail-schliessen {
   grid-column: 1 / -1;
   justify-self: end;
-  padding: 0.45rem 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
 }
 
 .dialog-aktionen {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
+  gap: 12px;
+  margin-top: 24px;
 }
 
-.dialog-aktionen button {
-  padding: 0.55rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.kategorienliste {
+.kategorienliste,
+.aufnahmebericht {
   list-style: none;
-  padding: 0;
-  margin: 1.5rem 0;
   display: grid;
-  gap: 0.6rem;
+  gap: 8px;
+  margin: 24px 0;
+  padding: 0;
 }
 
-.kategorienliste li {
+.kategorienliste li,
+.aufnahmebericht li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 12px;
+  padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
 }
 
 .kategorienliste li > span:first-child {
@@ -1635,64 +1744,156 @@ p {
   font-weight: 600;
 }
 
-.aufnahmebericht {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.aufnahmebericht li {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
-}
-
 .dashboard-section {
-  padding: 2rem max(1.25rem, calc((100vw - 1180px) / 2));
+  padding: 32px max(24px, calc((100vw - 1280px) / 2));
+  border-bottom: 1px solid var(--line);
   background: var(--surface-raised);
 }
 
 .dashboard-list {
   list-style: none;
-  padding: 0;
   display: grid;
-  gap: 0.65rem;
+  gap: 8px;
+  padding: 0;
 }
 
 .dashboard-list li {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.8rem 1rem;
-  border-left: 4px solid var(--line);
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
+/* Dringlichkeit kommt aus Tonwert und Haarlinie, nicht aus einer dicken
+   Seitenkante -- so bleibt die Liste bei vielen Einträgen ruhig. */
 .dashboard-list li.dringend,
 .termin-warnungen {
-  border-left-color: #b58900;
-  color: var(--text);
+  border-color: color-mix(in srgb, var(--warning-text) 42%, transparent);
+  background: var(--warning-surface);
+  color: var(--warning-text);
+}
+
+.termin-warnungen {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--warning-text) 42%, transparent);
+  border-radius: var(--radius);
+  font-size: 0.86rem;
 }
 
 .termin-dialog {
   width: min(52rem, 100%);
-  max-height: calc(100vh - 3rem);
+  max-height: calc(100dvh - 48px);
   overflow: auto;
 }
 
-.termin-dialog select,
-.termin-dialog input {
-  width: 100%;
-  margin-top: 0.35rem;
-  padding: 0.6rem;
+/* Teilnehmerliste und Trainerplanung standen bisher ohne jede Regel und
+   fielen auf die Browservorgaben zurück. */
+.teilnehmerliste {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.teilnehmerliste h4 {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.teilnehmerliste ul {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.teilnehmerliste li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--surface-raised);
+}
+
+.teilnehmerliste li strong {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.teilnehmerliste li span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.trainer-planung {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.trainer-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+
+.trainer-calendar caption {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
   color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-align: left;
+}
+
+.trainer-calendar th,
+.trainer-calendar td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 0.82rem;
+  vertical-align: top;
+}
+
+.trainer-calendar th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trainer-calendar tr:last-child th,
+.trainer-calendar tr:last-child td {
+  border-bottom: 0;
 }
 
 @media (max-width: 600px) {
-  .dialog-hintergrund { padding: 0; }
+  .dialog-hintergrund {
+    padding: 0;
+  }
+
   .termin-dialog,
-  .dialog.termin-detail-dialog { width: 100%; min-height: 100dvh; max-height: 100dvh; border-radius: 0; }
+  .dialog.termin-detail-dialog {
+    width: 100%;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
 }
+
