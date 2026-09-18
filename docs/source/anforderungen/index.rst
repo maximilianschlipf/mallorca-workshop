@@ -31,6 +31,7 @@ Kürzel     Bereich
    qualifikationen
    trainersicht
    abwesenheiten
+   abwesenheiten-umsetzung
    katalog
    katalog-umsetzung
    terminplanung
