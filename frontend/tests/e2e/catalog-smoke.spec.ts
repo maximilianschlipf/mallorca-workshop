@@ -60,6 +60,7 @@ test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", as
   await page.getByRole("button", { name: /Kubernetes Grundlagen/ }).first().click();
   await page.getByRole("button", { name: "Als Assistenz bewerben" }).click();
   await expect(page.getByText("Die Bewerbung auf den Assistenzplatz wurde eingereicht.")).toBeVisible();
+  await page.getByRole("button", { name: "Termindetails schließen" }).click();
   await page.getByRole("link", { name: "Profil" }).click();
   await page.getByLabel("Name").fill("E2E Trainer Neu");
   await page.getByRole("button", { name: "Name speichern" }).click();
@@ -178,6 +179,7 @@ test("calendar navigates by month and shows training details", async ({ page }) 
   );
   await expect(page.locator(".calendar-detail")).toContainText(/remote/i);
 
+  await page.getByRole("button", { name: "Termindetails schließen" }).click();
   await page.getByRole("button", { name: "Weiter" }).click();
   await expect(
     page.getByRole("heading", { name: "Oktober 2026" }),

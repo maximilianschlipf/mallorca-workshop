@@ -760,9 +760,10 @@ Terminübersicht und Dashboard
    Die Monatsansicht zeigt geplante, abgeschlossene und abgesagte Termine
    unterscheidbar. Ein Termin von Freitag bis Dienstag erscheint am Freitag,
    Montag und Dienstag, nicht am Wochenende; seine Details nennen drei
-   Schulungstage. Nach Auswahl eines Termins erscheinen seine Details und
-   nur die für ihn zulässigen Aktionen. Der Einstieg "Neuer Termin" öffnet
-   ein modales Formular über dem Kalender. Abbrechen lässt den Kalender
+   Schulungstage. Nach Auswahl eines Termins erscheinen seine Details in
+   einem modalen Dialog über dem Kalender und nur die für ihn zulässigen
+   Aktionen. Der Einstieg "Neuer Termin" öffnet ein modales Formular über
+   dem Kalender. Abbrechen lässt den Kalender
    unverändert; nach erfolgreicher Neuanlage zeigt er den neuen Termin und
    dessen Details. In schmaler Darstellung erscheinen dieselben Termine nach
    Datum sortiert als Liste und das Formular füllt bei Bedarf den Bildschirm.

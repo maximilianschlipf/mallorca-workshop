@@ -802,9 +802,10 @@ Terminverwaltung der Administratoren
    :priority: high
    :links: REQ_TER_SICHT_01
 
-   Die Auswahl eines Termins öffnet seine Details. Dort stehen abhängig von
-   Zustand und Datum die zulässigen Aktionen zum Bearbeiten, Zuweisen,
-   Abziehen, Austauschen, Bestätigen, Absagen und Löschen bereit.
+   Die Auswahl eines Termins öffnet seine Details in einem modalen Dialog
+   über dem Kalender. Dort stehen abhängig von Zustand und Datum die
+   zulässigen Aktionen zum Bearbeiten, Zuweisen, Abziehen, Austauschen,
+   Bestätigen, Absagen und Löschen bereit.
 
 .. req:: Neuer Termin ist aus der Übersicht erreichbar
    :id: REQ_TER_SICHT_03

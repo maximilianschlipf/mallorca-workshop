@@ -57,7 +57,10 @@ test("Der Kalender blättert durch die Monate und zeigt Termindetails", async ({
 
   await expect(start.termindetails).toContainText("Scrum Master");
   await expect(start.termindetails).toContainText(/remote/i);
+  await expect(start.termindetails).toHaveAttribute("aria-modal", "true");
 
+  await start.termindetailsSchliessen();
+  await expect(start.termin(/Scrum Master/)).toBeFocused();
   await start.naechsterMonat();
 
   await expect(start.monatsueberschrift("Oktober 2026")).toBeVisible();
@@ -80,11 +83,21 @@ test("Terminübersicht führt responsiv von der Neuanlage zu Details und zuläss
   const start = await startSeite(page).oeffnen();
   await expect(page.locator(".calendar-event.status-geplant").first()).toBeVisible();
   await expect(page.locator(".calendar-event.status-abgeschlossen").first()).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileTermine = start.kalenderAlsListe.locator("li");
+  expect(await mobileTermine.count()).toBeGreaterThan(1);
+  const mobileStartdaten = await mobileTermine.locator("time").evaluateAll((elemente) =>
+    elemente.map((element) => element.getAttribute("datetime")),
+  );
+  expect(mobileStartdaten).toEqual([...mobileStartdaten].sort());
+  expect((await mobileTermine.allTextContents()).join(" ")).toMatch(/Abgeschlossen.*Geplant/);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator(".calendar-event.status-abgeschlossen").first().click();
   await expect(page.getByRole("button", { name: "Bearbeiten" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Absagen" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Löschen" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Durchführung bestätigen" })).toHaveCount(0);
+  await start.termindetailsSchliessen();
   await start.naechsterMonat();
   await expect(page.locator(".calendar-event.status-abgesagt").first()).toBeVisible();
   await page.locator(".calendar-event.status-abgesagt").first().click();
@@ -93,14 +106,19 @@ test("Terminübersicht führt responsiv von der Neuanlage zu Details und zuläss
   await expect(page.getByRole("button", { name: "Durchführung bestätigen" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
 
+  await start.termindetailsSchliessen();
   await page.clock.setFixedTime(new Date("2030-01-31T12:00:00"));
   await page.getByRole("button", { name: "Heute" }).click();
 
+  const kalenderVorAbbruch = await page.locator(".calendar-desktop").textContent();
   await page.getByRole("button", { name: "Neuer Termin" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("dialog").getByLabel("Schulung")).toHaveValue("");
   await expect(page.getByRole("dialog").getByLabel("Startdatum")).toHaveValue("");
   await page.getByRole("button", { name: "Abbrechen" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.locator(".calendar-desktop")).toHaveText(kalenderVorAbbruch!);
+  await page.locator(".calendar-day:not(:has(.calendar-event))").first().click();
   await expect(page.getByRole("dialog")).toBeHidden();
 
   await page.getByRole("button", { name: "Neuer Termin" }).click();
@@ -110,15 +128,40 @@ test("Terminübersicht führt responsiv von der Neuanlage zu Details und zuläss
   await expect(dialog.getByLabel("Enddatum")).toHaveValue("2030-02-05");
   await dialog.getByRole("button", { name: "Speichern" }).click();
 
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("dialog", { name: "Java Spring Boot" })).toBeVisible();
+  const neuerTermin = page.locator(".calendar-event", { hasText: "Java Spring Boot" });
   await expect(start.termindetails).toContainText("3");
   await expect(start.termindetails).toContainText("Geplant");
   await expect(page.getByRole("button", { name: "Bearbeiten" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Absagen" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Löschen" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Durchführung bestätigen" })).toHaveCount(0);
+  await expect(start.termindetails.getByText("Schulungstage").locator("..")).toContainText("3");
+  await expect(start.termindetails.getByText("Zeitraum").locator("..")).toContainText("01.02.2030 - 05.02.2030");
 
-  const neuerTermin = page.locator(".calendar-event", { hasText: "Java Spring Boot" });
+  await page.getByRole("button", { name: "Bearbeiten" }).click();
+  await expect(page.getByRole("dialog", { name: "Termin bearbeiten" })).toBeVisible();
+  await page.getByRole("button", { name: "Abbrechen" }).click();
+  await neuerTermin.first().click();
+  await page.getByRole("button", { name: "Verfügbare Trainer laden" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.locator("#trainer .trainer-results, #trainer .state").first()).toBeVisible();
+
+  const katalog = await page.request.get("/api/schulungen").then((antwort) => antwort.json());
+  const terminId = katalog.find((eintrag: { id: string }) => eintrag.id === "SCH-003")
+    .oeffentlicheTermine.find((termin: { startdatum: string }) => termin.startdatum === "2030-02-01").terminId;
+  const trainer = await mutation(page, "/api/auth/registrieren", "POST", {
+    name: "E2E Kalendertrainer", email: "e2e-kalendertrainer@example.de", passwort: "e2e-passwort",
+  });
+  expect((await mutation(page, `/api/e2e/qualifikationen/${trainer.body.id}/SCH-003`, "PUT")).status).toBe(204);
+  expect((await mutation(page, `/api/termine/${terminId}/trainer/${trainer.body.id}`, "PUT")).status).toBe(204);
+  await page.clock.setFixedTime(new Date("2030-02-06T12:00:00"));
+  await neuerTermin.first().click();
+  await expect(page.getByRole("button", { name: "Trainer abziehen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Verfügbare Trainer laden" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Durchführung bestätigen" })).toBeVisible();
+  await start.termindetailsSchliessen();
+
   await expect(neuerTermin).toHaveCount(3);
   await expect(page.locator('.calendar-day:has(time[datetime="2030-02-02"]) .calendar-event', { hasText: "Java Spring Boot" })).toHaveCount(0);
   await expect(page.locator('.calendar-day:has(time[datetime="2030-02-03"]) .calendar-event', { hasText: "Java Spring Boot" })).toHaveCount(0);
@@ -129,6 +172,7 @@ test("Terminübersicht führt responsiv von der Neuanlage zu Details und zuläss
   await page.getByRole("button", { name: "Neuer Termin" }).click();
   const dialogBox = await page.getByRole("dialog").boundingBox();
   expect(dialogBox?.width).toBeGreaterThanOrEqual(389);
+  expect(dialogBox?.height).toBeGreaterThanOrEqual(843);
 });
 
 // verifies: TEST_TER_FORM_13

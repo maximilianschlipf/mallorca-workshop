@@ -43,6 +43,8 @@ const terminDetail = ref<TerminDetail | null>(null);
 const dashboard = ref<DashboardTermin[]>([]);
 const terminDialog = ref(false);
 const terminDialogElement = ref<HTMLElement | null>(null);
+const terminDetailDialog = ref(false);
+const terminDetailDialogElement = ref<HTMLElement | null>(null);
 const terminTrainer = ref<Trainer[]>([]);
 const bearbeiteterTermin = ref<string | null>(null);
 const terminForm = ref<TerminEingabe>({
@@ -202,6 +204,7 @@ function statusText(termin: Termin) {
 async function terminAuswaehlen(eintrag: KalenderTermin) {
   ausgewaehlterTermin.value = eintrag;
   terminDetail.value = null;
+  terminDetailDialog.value = true;
   trainerSchulungId.value = eintrag.schulungId;
   trainerVon.value = eintrag.termin.startdatum;
   trainerBis.value = eintrag.termin.enddatum;
@@ -219,6 +222,7 @@ async function terminAuswaehlen(eintrag: KalenderTermin) {
 }
 
 function neuerTermin() {
+  terminDetailDialog.value = false;
   bearbeiteterTermin.value = null;
   terminForm.value = { schulungId: "", startdatum: "", enddatum: "", zugangsart: null,
     durchfuehrungsart: null, ort: null, kundenfirma: null, onlineZugang: null, trainerId: null };
@@ -233,6 +237,7 @@ function terminBearbeiten() {
   terminForm.value = { schulungId: t.schulungId, startdatum: t.startdatum, enddatum: t.enddatum,
     zugangsart: t.zugangsart ?? null, durchfuehrungsart: t.durchfuehrungsart ?? null,
     ort: t.ort || null, kundenfirma: t.kundenfirma ?? null, onlineZugang: t.onlineZugang ?? null };
+  terminDetailDialog.value = false;
   terminDialog.value = true;
 }
 
@@ -281,6 +286,7 @@ async function terminSpeichern() {
     const schulung = kalenderSchulungen.value.find((s) => s.id === gespeichert.schulungId);
     const termin = schulung?.oeffentlicheTermine.find((t) => t.terminId === gespeichert.terminId);
     if (schulung && termin) ausgewaehlterTermin.value = { schulungId: schulung.id, schulungTitel: schulung.titel, termin };
+    terminDetailDialog.value = true;
   }, bearbeiteterTermin.value ? "Termin geändert." : "Termin angelegt.");
 }
 
@@ -314,13 +320,36 @@ watch(terminDialog, async (offen) => {
 });
 
 function dialogTaste(event: KeyboardEvent) {
+  modalTaste(event, terminDialogElement.value, () => { terminDialog.value = false; });
+}
+
+let fokusVorTermindetail: HTMLElement | null = null;
+watch(terminDetailDialog, async (offen) => {
+  if (offen) {
+    fokusVorTermindetail = document.activeElement as HTMLElement;
+    await nextTick();
+    terminDetailDialogElement.value?.querySelector<HTMLElement>("button:not([disabled])")?.focus();
+  } else {
+    fokusVorTermindetail?.focus();
+  }
+});
+
+function terminDetailSchliessen() {
+  terminDetailDialog.value = false;
+}
+
+function terminDetailDialogTaste(event: KeyboardEvent) {
+  modalTaste(event, terminDetailDialogElement.value, terminDetailSchliessen);
+}
+
+function modalTaste(event: KeyboardEvent, element: HTMLElement | null, schliessen: () => void) {
   if (event.key === "Escape") {
-    terminDialog.value = false;
+    schliessen();
     return;
   }
-  if (event.key !== "Tab" || !terminDialogElement.value) return;
-  const elemente = [...terminDialogElement.value.querySelectorAll<HTMLElement>(
-    'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"]',
+  if (event.key !== "Tab" || !element) return;
+  const elemente = [...element.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex="0"]',
   )];
   if (!elemente.length) return;
   const erstes = elemente[0];
@@ -347,7 +376,7 @@ async function terminAbsagen() {
 
 async function terminLoeschen() {
   if (!terminDetail.value || !window.confirm(`${warntext(terminDetail.value)} löschen?`)) return;
-  await aktion(async () => { await loescheTermin(terminDetail.value!.terminId); terminDetail.value = null; ausgewaehlterTermin.value = null; await ladeSchulungen(true); }, "Termin gelöscht.");
+  await aktion(async () => { await loescheTermin(terminDetail.value!.terminId); terminDetailSchliessen(); terminDetail.value = null; ausgewaehlterTermin.value = null; await ladeSchulungen(true); }, "Termin gelöscht.");
 }
 
 function warntext(termin: TerminDetail) {
@@ -469,6 +498,11 @@ async function trainerSuchen(fuerTermin = false) {
       err instanceof Error ? err.message : "Unbekannter Fehler";
   } finally {
     trainerLoading.value = false;
+    if (fuerTermin) {
+      terminDetailSchliessen();
+      await nextTick();
+      document.querySelector<HTMLElement>("#trainer .trainer-results, #trainer .state")?.focus();
+    }
   }
 }
 
@@ -596,12 +630,23 @@ onMounted(async () => {
           </li>
         </ul>
 
-        <section
-          v-if="ausgewaehlterTermin"
-          class="calendar-detail"
-          aria-labelledby="calendar-detail-heading"
-          aria-live="polite"
+        <div
+          v-if="ausgewaehlterTermin && terminDetailDialog"
+          class="dialog-hintergrund"
+          role="presentation"
+          @click.self="terminDetailSchliessen"
         >
+          <section
+            ref="terminDetailDialogElement"
+            class="dialog termin-detail-dialog calendar-detail"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calendar-detail-heading"
+            @keydown="terminDetailDialogTaste"
+          >
+          <button class="termin-detail-schliessen" type="button" aria-label="Termindetails schließen" @click="terminDetailSchliessen">
+            Schließen
+          </button>
           <div>
             <p>Termindetails</p>
             <h3 id="calendar-detail-heading">
@@ -693,7 +738,8 @@ onMounted(async () => {
               class="gefahr" type="button" @click="terminLoeschen"
             >Löschen</button>
           </div>
-        </section>
+          </section>
+        </div>
       </template>
     </section>
 
@@ -943,12 +989,12 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-else-if="trainerError" class="state state-error" role="alert">
+      <div v-else-if="trainerError" class="state state-error" role="alert" tabindex="-1">
         <p>Die Trainersuche konnte nicht ausgeführt werden.</p>
         <small>{{ cleanText(trainerError) }}</small>
       </div>
 
-      <div v-else-if="trainerGesucht && trainer.length === 0" class="state">
+      <div v-else-if="trainerGesucht && trainer.length === 0" class="state" role="status" tabindex="-1">
         <p>Keine verfügbaren Trainer</p>
         <small>
           Für diese Schulung und diesen Zeitraum wurde keine passende Person
@@ -956,7 +1002,7 @@ onMounted(async () => {
         </small>
       </div>
 
-      <div v-else-if="trainer.length" class="trainer-results">
+      <div v-else-if="trainer.length" class="trainer-results" tabindex="-1">
         <p class="filter-result" aria-live="polite">
           {{ trainer.length }} qualifizierte Trainer
         </p>

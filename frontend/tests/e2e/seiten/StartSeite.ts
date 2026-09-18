@@ -76,6 +76,10 @@ export class StartSeite extends Seite {
   async terminWaehlen(titel: string | RegExp): Promise<void> {
     await this.termin(titel).click();
   }
+
+  async termindetailsSchliessen(): Promise<void> {
+    await this.schalter("Termindetails schließen").click();
+  }
 }
 
 export function startSeite(page: Page): StartSeite {

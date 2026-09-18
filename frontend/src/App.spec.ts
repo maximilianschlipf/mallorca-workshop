@@ -264,12 +264,17 @@ describe("App smoke", () => {
       "Abgesagt",
     );
 
-    await wrapper.find(".calendar-event.status-geplant").trigger("click");
+    const kalenderTermin = wrapper.find(".calendar-event.status-geplant");
+    await kalenderTermin.trigger("click");
+    expect(wrapper.get('[role="dialog"].calendar-detail').attributes("aria-modal")).toBe("true");
     expect(wrapper.find(".calendar-detail").text()).toContain(
       "28.08.2026 - 01.09.2026",
     );
     expect(wrapper.find(".calendar-detail").text()).toContain("Köln");
     expect(wrapper.find(".calendar-detail").text()).toContain("Geplant");
+    await wrapper.get('button[aria-label="Termindetails schließen"]').trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".calendar-detail").exists()).toBe(false);
   });
 
   it("ignores a late detail response for a previously selected appointment", async () => {
@@ -485,6 +490,8 @@ describe("App smoke", () => {
     await wrapper.get(".calendar-detail-actions .primary-action").trigger("click");
     await flushPromises();
     await wrapper.vm.$nextTick();
+    expect(wrapper.find(".calendar-detail").exists()).toBe(false);
+    expect(wrapper.get(".trainer-row-actions button").text()).toBe("Diesem Termin zuweisen");
     expect(aufrufe).toContain("/api/termine/SCH-001-ZUKUNFT/traineroptionen");
     await wrapper.get(".trainer-row-actions button").trigger("click");
     await flushPromises();
