@@ -1788,6 +1788,7 @@ p {
 
 .termin-dialog {
   width: min(52rem, 100%);
+  max-width: 52rem;
   max-height: calc(100dvh - 48px);
   overflow: auto;
 }
@@ -1897,3 +1898,321 @@ p {
   }
 }
 
+/* --- Nachgezogene Bereiche -------------------------------------------- */
+/* Stellen, die bisher auf Browservorgaben zurückfielen: Bedienelemente ohne
+   eigene Klasse, Felder, die keine Textfelder sind, Hinweistexte und der
+   Fließinhalt der Detailseiten. */
+
+/* Bedienelemente ohne eigene Klasse tragen die sekundäre Form. Die primäre
+   Aktion und die Gefahrvariante behalten ihre eigene. */
+.formular-aktionen button:not(.primary-action),
+.calendar-detail-actions button:not(.primary-action),
+.kategorienliste button,
+.verwaltung-aktionen button:not(.primary-action) {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.formular-aktionen button:not(.primary-action):hover,
+.formular-aktionen button:not(.primary-action):focus-visible,
+.calendar-detail-actions button:not(.primary-action):hover,
+.calendar-detail-actions button:not(.primary-action):focus-visible,
+.kategorienliste button:not(.gefahr):hover,
+.kategorienliste button:not(.gefahr):focus-visible,
+.verwaltung-aktionen button:not(.primary-action):hover,
+.verwaltung-aktionen button:not(.primary-action):focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.formular-aktionen button:focus-visible,
+.calendar-detail-actions button:focus-visible,
+.kategorienliste button:focus-visible,
+.verwaltung-aktionen button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
+}
+
+.formular-aktionen button:active,
+.calendar-detail-actions button:active,
+.kategorienliste button:active,
+.verwaltung-aktionen button:active {
+  transform: scale(0.98);
+}
+
+/* Die Gefahrvariante steht nach den Grundregeln, damit sie ohne !important
+   gewinnt. */
+.kategorienliste .gefahr,
+.verwaltung-aktionen .gefahr,
+.calendar-detail-actions .gefahr {
+  border-color: color-mix(in srgb, var(--danger-text) 38%, transparent);
+  color: var(--danger-text);
+}
+
+.kategorienliste .gefahr:hover,
+.kategorienliste .gefahr:focus-visible,
+.verwaltung-aktionen .gefahr:hover,
+.verwaltung-aktionen .gefahr:focus-visible,
+.calendar-detail-actions .gefahr:hover,
+.calendar-detail-actions .gefahr:focus-visible {
+  border-color: var(--danger-text);
+  background: var(--danger-surface);
+  color: var(--danger-text);
+}
+
+/* Felder, die keine Textfelder sind, haben bisher die Maße des Textfelds
+   geerbt -- eine Checkbox wurde dadurch 46px hoch und seitenbreit. */
+.filter-field input[type="checkbox"],
+.form-field input[type="checkbox"] {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-field label:has(input[type="checkbox"]),
+.form-field label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.filter-field input[type="file"] {
+  height: auto;
+  padding: 7px;
+  cursor: pointer;
+}
+
+.filter-field input[type="file"]::file-selector-button {
+  min-height: 30px;
+  margin-right: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.filter-field input[type="file"]:hover::file-selector-button {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Hinweistexte unter einem Feld. */
+.filter-field small,
+.form-field small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.filter-field small a,
+.form-field small a {
+  color: var(--accent);
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+
+.filter-field small a:hover,
+.filter-field small a:focus-visible {
+  color: var(--accent-hover);
+}
+
+/* Der Termindialog beschriftet seine Felder über ein umschließendes <label>
+   statt über ein eigenes Feld-Element. Die Beschriftung bekommt die
+   Label-Typografie, das Bedienelement darin die des Fließtextes zurück. */
+.termin-dialog .schulungsformular > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.termin-dialog .schulungsformular > label select,
+.termin-dialog .schulungsformular > label input {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.termin-dialog select:disabled,
+.termin-dialog input:disabled {
+  background: color-mix(in srgb, var(--surface-raised) 72%, var(--surface));
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.dialog h2 {
+  margin-top: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+/* Fließinhalt der Detailseiten: Zwischenüberschriften und einfache Listen
+   standen bisher auf Browservorgaben. */
+.page-section h2 {
+  margin: clamp(32px, 4vw, 44px) 0 16px;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.page-section > p[role="status"] {
+  margin-bottom: 20px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.page-section > ul:not([class]) {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.page-section > ul:not([class]) li {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  line-height: 1.5;
+}
+
+.page-section > .sekundaer-action {
+  margin-top: clamp(32px, 4vw, 44px);
+}
+
+/* Aufnahmebericht: Dateiname, Ergebnis, Verweis und die Fehler je Datei. */
+.aufnahmebericht li {
+  align-items: baseline;
+  gap: 8px;
+}
+
+.aufnahmebericht li > strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+.aufnahmebericht li > span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.aufnahmebericht li > a {
+  color: var(--accent);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+
+.aufnahmebericht li > a:hover,
+.aufnahmebericht li > a:focus-visible {
+  color: var(--accent-hover);
+}
+
+.aufnahmebericht li ul {
+  flex: 1 1 100%;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger-text) 32%, transparent);
+  border-radius: 6px;
+  background: var(--danger-surface);
+  color: var(--danger-text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* Eigene Dateiauswahl: Der Knopf trägt die sekundäre Form, daneben steht der
+   Stand der Auswahl in eigener Sprache. */
+.dateiwahl {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 46px;
+  padding: 0 6px 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.filter-field:focus-within .dateiwahl {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 132, 202, 0.16);
+}
+
+.dateiwahl-knopf {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.dateiwahl-knopf:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dateiwahl-stand {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

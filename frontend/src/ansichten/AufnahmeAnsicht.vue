@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { ApiFehler, nimmDateienAuf } from "../api";
 import type { Aufnahmebericht, Aufnahmeergebnis } from "../types";
 
@@ -10,6 +10,19 @@ const meldung = ref<string | null>(null);
 const bericht = ref<Aufnahmebericht | null>(null);
 
 const bereit = computed(() => dateien.value.length > 0 && !laeuft.value);
+
+const dateiEingabe = useTemplateRef<HTMLInputElement>("dateiEingabe");
+
+/**
+ * Der Stand der Auswahl in eigener Sprache. Das native Feld beschriftet sich
+ * selbst in der Browsersprache -- auf einer deutschen Oberfläche stünde dort
+ * "No file chosen".
+ */
+const dateistand = computed(() => {
+  if (dateien.value.length === 0) return "Keine Datei gewählt";
+  if (dateien.value.length === 1) return dateien.value[0].name;
+  return `${dateien.value.length} Dateien gewählt`;
+});
 
 const ERGEBNISTEXT: Record<Aufnahmeergebnis, string> = {
   AUFGENOMMEN: "Aufgenommen",
@@ -55,13 +68,31 @@ async function aufnehmen() {
     <form class="filter-bar" @submit.prevent="aufnehmen">
       <div class="filter-field">
         <label for="aufnahme-dateien">JSON-Dateien</label>
+        <!--
+          Das native Feld bleibt der Bedienung und den Hilfsmitteln erhalten,
+          tritt aber hinter eine eigene Schaltfläche zurück: Seine Beschriftung
+          kommt aus dem Browser und ließe sich sonst nicht übersetzen.
+        -->
         <input
           id="aufnahme-dateien"
+          ref="dateiEingabe"
+          class="sr-only"
           type="file"
+          tabindex="-1"
           accept="application/json,.json"
           multiple
           @change="dateienGewaehlt"
         />
+        <div class="dateiwahl">
+          <button
+            type="button"
+            class="dateiwahl-knopf"
+            @click="dateiEingabe?.click()"
+          >
+            Dateien wählen
+          </button>
+          <span class="dateiwahl-stand">{{ dateistand }}</span>
+        </div>
       </div>
       <div class="filter-field">
         <label for="aufnahme-ersetzen">
