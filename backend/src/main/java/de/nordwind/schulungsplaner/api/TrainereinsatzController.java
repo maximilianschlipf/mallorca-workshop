@@ -60,12 +60,6 @@ public class TrainereinsatzController {
         einsaetze.eigeneQualifikationAblegen(konto.id(), schulungId);
     }
 
-    @GetMapping("/ich/benachrichtigungen")
-    public List<TrainereinsatzService.Benachrichtigung> meineBenachrichtigungen(
-            @AuthenticationPrincipal KontoPrincipal konto) {
-        return einsaetze.meineBenachrichtigungen(konto.id());
-    }
-
     @GetMapping("/schulungen/{schulungId}/qualifikationen")
     public List<TrainereinsatzService.Qualifikationszeile> qualifikationenDerSchulung(
             @AuthenticationPrincipal KontoPrincipal konto, @PathVariable String schulungId) {

@@ -24,17 +24,19 @@ public class TrainereinsatzService {
     private final SchulungszustandRepository zustaende;
     private final Clock clock;
     private final TerminService termine;
+    private final BenachrichtigungService benachrichtigungen;
 
     public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten,
                                  KatalogRepository katalog,
                                  SchulungszustandRepository zustaende, Clock clock,
-                                 TerminService termine) {
+                                 TerminService termine, BenachrichtigungService benachrichtigungen) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
         this.zustaende = zustaende;
         this.clock = clock;
         this.termine = termine;
+        this.benachrichtigungen = benachrichtigungen;
     }
 
     @Transactional
@@ -73,6 +75,14 @@ public class TrainereinsatzService {
             return;
         }
         Bewerbung bewerbung = bestehend.getFirst();
+        if ("ZURUECKGEZOGEN".equals(bewerbung.status())) {
+            jdbc.update("""
+                    UPDATE qualifikationsbewerbung
+                    SET status='OFFEN', erstellt_am=?, entschieden_am=NULL, begruendung=NULL
+                    WHERE id=?
+                    """, LocalDateTime.now(clock), bewerbung.id());
+            return;
+        }
         if ("ABGELEHNT".equals(bewerbung.status()) && bewerbung.entschiedenAm() != null
                 && !bewerbung.entschiedenAm().plusDays(1).isAfter(LocalDateTime.now(clock))) {
             jdbc.update("""
@@ -94,9 +104,10 @@ public class TrainereinsatzService {
     public void bewerbungZurueckziehen(String kontoId, String schulungId) {
         pruefeAktivenTrainer(kontoId);
         if (jdbc.update("""
-                DELETE FROM qualifikationsbewerbung
+                UPDATE qualifikationsbewerbung
+                SET status='ZURUECKGEZOGEN', entschieden_am=?
                 WHERE benutzerkonto_id=? AND schulung_id=? AND status='OFFEN'
-                """, kontoId, schulungId) == 0) {
+                """, LocalDateTime.now(clock), kontoId, schulungId) == 0) {
             throw fehler(HttpStatus.CONFLICT, "KEINE_OFFENE_BEWERBUNG",
                     "Es besteht keine offene Bewerbung für diese Schulung.");
         }
@@ -119,7 +130,7 @@ public class TrainereinsatzService {
                 LEFT JOIN qualifikationsbewerbung b ON b.schulung_id=z.schulung_id
                     AND b.benutzerkonto_id=?
                 WHERE q.benutzerkonto_id IS NOT NULL OR (b.id IS NOT NULL AND
-                    (b.status<>'ABGELEHNT' OR b.entschieden_am>?))
+                    (b.status='OFFEN' OR (b.status='ABGELEHNT' AND b.entschieden_am>?)))
                 ORDER BY z.schulung_id
                 """, (rs, row) -> new EigenerQualifikationsstand(
                         rs.getString("schulung_id"),
@@ -128,15 +139,6 @@ public class TrainereinsatzService {
                         rs.getString("status"), rs.getString("begruendung"),
                         rs.getInt("kuenftige_termine")),
                 kontoId, LocalDate.now(clock), kontoId, kontoId, LocalDateTime.now(clock).minusDays(1));
-    }
-
-    @Transactional(readOnly = true)
-    public List<Benachrichtigung> meineBenachrichtigungen(String kontoId) {
-        return jdbc.query("""
-                SELECT id, anlass, erstellt_am FROM benachrichtigung
-                WHERE empfaenger_id=? ORDER BY erstellt_am DESC, id DESC
-                """, (rs, row) -> new Benachrichtigung(rs.getLong("id"), rs.getString("anlass"),
-                        rs.getTimestamp("erstellt_am").toLocalDateTime()), kontoId);
     }
 
     @Transactional(readOnly = true)
@@ -172,8 +174,10 @@ public class TrainereinsatzService {
                 UPDATE qualifikationsbewerbung
                 SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL WHERE id=?
                 """, LocalDateTime.now(clock), bewerbungId);
-        benachrichtigen(bewerbung.kontoId(),
-                "Ihre Qualifikationsbewerbung für " + bewerbung.schulungId() + " wurde genehmigt.");
+        benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
+                "QUALIFIKATION_GENEHMIGT",
+                "Ihre Qualifikationsbewerbung für " + bewerbung.schulungId() + " wurde genehmigt.",
+                "SCHULUNG", bewerbung.schulungId());
     }
 
     @Transactional
@@ -189,8 +193,10 @@ public class TrainereinsatzService {
                 UPDATE qualifikationsbewerbung
                 SET status='ABGELEHNT', entschieden_am=?, begruendung=? WHERE id=?
                 """, LocalDateTime.now(clock), grund, bewerbungId);
-        benachrichtigen(bewerbung.kontoId(), "Ihre Qualifikationsbewerbung für "
-                + bewerbung.schulungId() + " wurde abgelehnt: " + grund);
+        benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
+                "QUALIFIKATION_ABGELEHNT", "Ihre Qualifikationsbewerbung für "
+                + bewerbung.schulungId() + " wurde abgelehnt: " + grund,
+                "SCHULUNG", bewerbung.schulungId());
     }
 
     @Transactional
@@ -210,26 +216,27 @@ public class TrainereinsatzService {
                 SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL
                 WHERE benutzerkonto_id=? AND schulung_id=?
                 """, LocalDateTime.now(clock), trainerId, schulungId);
-        benachrichtigen(trainerId, "Sie wurden direkt für " + schulungId + " qualifiziert.");
+        benachrichtigungen.persoenlich(trainerId, administratorId,
+                "QUALIFIKATION_DIREKT", "Sie wurden direkt für " + schulungId + " qualifiziert.",
+                "SCHULUNG", schulungId);
     }
 
     @Transactional
     public void qualifikationEntziehen(String administratorId, String schulungId, String trainerId) {
         pruefeAdministrator(administratorId);
         qualifikationEntfernen(trainerId, schulungId);
-        benachrichtigen(trainerId, "Ihre Qualifikation für " + schulungId + " wurde entzogen.");
+        benachrichtigungen.persoenlich(trainerId, administratorId,
+                "QUALIFIKATION_ENTZOGEN", "Ihre Qualifikation für " + schulungId + " wurde entzogen.",
+                "SCHULUNG", schulungId);
     }
 
     @Transactional
     public void eigeneQualifikationAblegen(String kontoId, String schulungId) {
         pruefeAktivenTrainer(kontoId);
         qualifikationEntfernen(kontoId, schulungId);
-        jdbc.update("""
-                INSERT INTO benachrichtigung (empfaenger_id, anlass)
-                SELECT DISTINCT r.benutzerkonto_id, ? FROM benutzerkonto_rolle r
-                JOIN benutzerkonto k ON k.id=r.benutzerkonto_id
-                WHERE r.rolle='ADMINISTRATOR' AND k.aktiv=TRUE
-                """, konten.laden(kontoId).name() + " hat die Qualifikation für " + schulungId + " abgelegt.");
+        benachrichtigungen.adminbereich("QUALIFIKATION_ABGELEGT",
+                konten.laden(kontoId).name() + " hat die Qualifikation für " + schulungId + " abgelegt.",
+                "SCHULUNG", schulungId);
     }
 
     @Transactional
@@ -372,11 +379,6 @@ public class TrainereinsatzService {
                 """, kontoId, schulungId);
     }
 
-    private void benachrichtigen(String kontoId, String anlass) {
-        jdbc.update("INSERT INTO benachrichtigung (empfaenger_id, anlass) VALUES (?, ?)",
-                kontoId, anlass);
-    }
-
     private TerminDaten terminLaden(String terminId, boolean sperren) {
         List<TerminDaten> termine = jdbc.query("""
                 SELECT schulung_id, enddatum, status FROM termin WHERE termin_id = ?%s
@@ -416,8 +418,6 @@ public class TrainereinsatzService {
                                               int kuenftigeTermine) {}
     public record Qualifikationszeile(String trainerId, String trainerName,
                                       Long bewerbungId, String status) {}
-    public record Benachrichtigung(long id, String anlass, LocalDateTime erstelltAm) {}
-
     public record TrainerTermin(
             String terminId, String schulungId, String schulungstitel,
             LocalDate startdatum, LocalDate enddatum, String ort,

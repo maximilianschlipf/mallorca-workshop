@@ -5,6 +5,7 @@ import de.nordwind.schulungsplaner.katalog.ablage.KatalogCommitter;
 import de.nordwind.schulungsplaner.katalog.ablage.KatalogRepository;
 import de.nordwind.schulungsplaner.katalog.ablage.KategorienRepository;
 import de.nordwind.schulungsplaner.katalog.zustand.SchulungszustandRepository;
+import de.nordwind.schulungsplaner.service.BenachrichtigungService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class KatalogPflegeService {
     private final KatalogAnsichtService ansicht;
     private final JdbcTemplate jdbcTemplate;
     private final Clock uhr;
+    private final BenachrichtigungService benachrichtigungen;
 
     /**
      * Die Frist aus REQ_KAT_LOE_02, ab der eine archivierte Schulung
@@ -46,7 +48,8 @@ public class KatalogPflegeService {
                                 KatalogCommitter committer,
                                 KatalogAnsichtService ansicht,
                                 JdbcTemplate jdbcTemplate,
-                                Clock uhr) {
+                                Clock uhr,
+                                BenachrichtigungService benachrichtigungen) {
         this.katalog = katalog;
         this.kategorien = kategorien;
         this.zustaende = zustaende;
@@ -54,6 +57,7 @@ public class KatalogPflegeService {
         this.ansicht = ansicht;
         this.jdbcTemplate = jdbcTemplate;
         this.uhr = uhr;
+        this.benachrichtigungen = benachrichtigungen;
     }
 
     /** Eine neu angelegte Schulung ist aktiv (REQ_KAT_PFLEG_01). */
@@ -140,10 +144,9 @@ public class KatalogPflegeService {
                 UPDATE qualifikationsbewerbung SET status = 'ABGELEHNT'
                 WHERE schulung_id = ? AND status = 'OFFEN'
                 """, id.wert());
-        bewerber.forEach(kontoId -> jdbcTemplate.update("""
-                INSERT INTO benachrichtigung (empfaenger_id, anlass)
-                VALUES (?, ?)
-                """, kontoId, "Qualifikationsbewerbung für " + id + " abgelehnt"));
+        bewerber.forEach(kontoId -> benachrichtigungen.persoenlich(kontoId, null,
+                "QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN",
+                "Qualifikationsbewerbung für " + id + " abgelehnt", "SCHULUNG", id.wert()));
         return Katalogantwort.ohneWarnung(ansicht.findeSchulung(id).orElseThrow());
     }
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from "vue";
 import {
-  abwesenheitEintragen, eigeneQualifikationAblegen, fetchBenachrichtigungen,
-  fetchEigeneQualifikationen, nameAendern, passwortAendern,
+  abwesenheitEintragen, eigeneQualifikationAblegen, fetchEigeneQualifikationen,
+  nameAendern, passwortAendern,
 } from "../api";
 import { aktuellesKonto, setzeKonto } from "../auth";
-import type { Benachrichtigung, EigenerQualifikationsstand, Rolle } from "../types";
+import type { EigenerQualifikationsstand, Rolle } from "../types";
 import RueckfrageDialog from "../komponenten/RueckfrageDialog.vue";
 
 const name = ref("");
@@ -17,7 +17,6 @@ const abwesendVon = ref("");
 const abwesendBis = ref("");
 const abwesenheitsgrund = ref("");
 const qualifikationen = ref<EigenerQualifikationsstand[]>([]);
-const benachrichtigungen = ref<Benachrichtigung[]>([]);
 const abzulegendeQualifikation = ref<EigenerQualifikationsstand | null>(null);
 const rollenNamen: Record<Rolle, string> = {
   TRAINER: "Trainer",
@@ -62,11 +61,7 @@ async function speichereAbwesenheit() {
 
 async function profilLaden() {
   if (aktuellesKonto.value?.rollen.includes("TRAINER")) {
-    [qualifikationen.value, benachrichtigungen.value] = await Promise.all([
-      fetchEigeneQualifikationen(), fetchBenachrichtigungen(),
-    ]);
-  } else {
-    benachrichtigungen.value = await fetchBenachrichtigungen();
+    qualifikationen.value = await fetchEigeneQualifikationen();
   }
 }
 
@@ -122,13 +117,6 @@ onMounted(() => profilLaden().catch((error) => {
           </li>
         </ul>
         <p v-else>Noch keine Qualifikationen oder Bewerbungen.</p>
-      </section>
-      <section class="konto-karte">
-        <header class="konto-kartenkopf"><h2>Benachrichtigungen</h2></header>
-        <ul v-if="benachrichtigungen.length">
-          <li v-for="eintrag in benachrichtigungen" :key="eintrag.id">{{ eintrag.anlass }}</li>
-        </ul>
-        <p v-else>Keine Benachrichtigungen.</p>
       </section>
       <form class="konto-karte" @submit.prevent="speichereName">
         <header class="konto-kartenkopf">

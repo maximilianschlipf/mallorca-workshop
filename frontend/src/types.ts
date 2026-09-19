@@ -162,6 +162,35 @@ export interface Qualifikationszeile {
 
 export interface Benachrichtigung {
   id: number;
+  anlasstyp: string;
   anlass: string;
+  bezugArt: "TERMIN" | "SCHULUNG" | "VORGANG" | null;
+  bezugId: string | null;
   erstelltAm: string;
+  gelesen: boolean;
+  bezugVorhanden: boolean;
+}
+
+export interface DashboardVorgang {
+  id: number;
+  art: string;
+  antragsteller: string;
+  bezug: string;
+  bezugId: string;
+  erstelltAm: string;
+  status: string;
+  entschiedenAm: string | null;
+  begruendung: string | null;
+  richtung: "AN_MICH" | "VON_MIR";
+  entscheidbar: boolean;
+  zurueckziehbar: boolean;
+}
+
+export interface Dashboard {
+  vorgaenge: DashboardVorgang[];
+  pflichten: DashboardTermin[];
+  dringlichkeiten: DashboardTermin[];
+  eigeneVorgaenge: DashboardVorgang[];
+  erledigteVorgaenge: DashboardVorgang[];
+  erledigteEigeneVorgaenge: DashboardVorgang[];
 }

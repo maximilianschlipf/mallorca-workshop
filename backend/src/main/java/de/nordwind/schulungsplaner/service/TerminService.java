@@ -36,14 +36,17 @@ public class TerminService {
     private final KatalogRepository katalog;
     private final SchulungszustandRepository zustaende;
     private final Clock clock;
+    private final BenachrichtigungService benachrichtigungen;
 
     public TerminService(JdbcTemplate jdbc, KontoService konten, KatalogRepository katalog,
-                         SchulungszustandRepository zustaende, Clock clock) {
+                         SchulungszustandRepository zustaende, Clock clock,
+                         BenachrichtigungService benachrichtigungen) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
         this.zustaende = zustaende;
         this.clock = clock;
+        this.benachrichtigungen = benachrichtigungen;
     }
 
     @Transactional
@@ -116,7 +119,8 @@ public class TerminService {
             jdbc.update("UPDATE teilnehmerbuchung SET firma=? WHERE termin_id=?",
                     felder.kundenfirma(), terminId);
         }
-        nachrichten.forEach(text -> benachrichtigeBeteiligte(terminId, text));
+        nachrichten.forEach(text -> benachrichtigeBeteiligte(terminId, administratorId,
+                "TERMIN_GEAENDERT", text));
         return details(administratorId, terminId);
     }
 
@@ -141,10 +145,12 @@ public class TerminService {
                 terminId, trainerId);
         jdbc.update("UPDATE termin SET trainer_id=?, trainer_name_snapshot=NULL, version=version+1 WHERE termin_id=?",
                 trainerId, terminId);
-        if (bisher != null && !bisher.equals(trainerId)) benachrichtige(bisher, "Ihre Trainerzuweisung für " + terminId + " wurde beendet.");
-        benachrichtige(trainerId, istAssistent
+        if (bisher != null && !bisher.equals(trainerId)) benachrichtige(bisher, administratorId,
+                "TRAINERZUWEISUNG_BEENDET", "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
+        benachrichtige(trainerId, administratorId,
+                istAssistent ? "ROLLENWECHSEL" : "TRAINERZUWEISUNG_GESETZT", istAssistent
                 ? "Sie sind für " + terminId + " nun ausführender Trainer statt Assistent."
-                : "Sie wurden " + terminId + " als Trainer zugewiesen.");
+                : "Sie wurden " + terminId + " als Trainer zugewiesen.", terminId);
     }
 
     @Transactional
@@ -154,8 +160,8 @@ public class TerminService {
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
         jdbc.update("UPDATE termin SET trainer_id=NULL, version=version+1 WHERE termin_id=?", terminId);
-        if (termin.trainerId() != null) benachrichtige(termin.trainerId(),
-                "Ihre Trainerzuweisung für " + terminId + " wurde beendet.");
+        if (termin.trainerId() != null) benachrichtige(termin.trainerId(), administratorId,
+                "TRAINERZUWEISUNG_BEENDET", "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
     }
 
     @Transactional
@@ -182,7 +188,8 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "BEREITS_ZUGEWIESEN",
                     "Das Benutzerkonto ist diesem Termin bereits zugewiesen.");
         }
-        benachrichtige(trainerId, "Sie wurden " + terminId + " als Assistent zugewiesen.");
+        benachrichtige(trainerId, administratorId, "ASSISTENZZUWEISUNG_GESETZT",
+                "Sie wurden " + terminId + " als Assistent zugewiesen.", terminId);
     }
 
     @Transactional
@@ -232,8 +239,9 @@ public class TerminService {
                 UPDATE termin SET status='abgesagt', abgesagt_am=?, abgesagt_von=?,
                     absagegrund=?, online_zugang=NULL, version=version+1 WHERE termin_id=?
                 """, LocalDate.now(clock), administratorId, sauber, terminId);
-        benachrichtigeBeteiligte(terminId, "Der Termin " + terminId + " wurde abgesagt."
-                + (sauber == null ? "" : " Grund: " + sauber));
+        benachrichtigeBeteiligte(terminId, administratorId, "TERMIN_ABGESAGT",
+                "Der Termin " + terminId + " wurde abgesagt."
+                        + (sauber == null ? "" : " Grund: " + sauber));
         return details(administratorId, terminId);
     }
 
@@ -246,7 +254,8 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "TERMIN_NICHT_LOESCHBAR",
                     "Der Termin kann ab seinem Startdatum oder nach Abschluss nicht gelöscht werden.");
         }
-        benachrichtigeBeteiligte(terminId, "Der Termin " + terminId + " wurde gelöscht.");
+        benachrichtigeBeteiligte(terminId, administratorId, "TERMIN_GELOESCHT",
+                "Der Termin " + terminId + " wurde gelöscht.");
         jdbc.update("DELETE FROM termin WHERE termin_id=?", terminId);
     }
 
@@ -458,8 +467,10 @@ public class TerminService {
                     """, stichtag, termin.terminId());
             if (termin.trainerId() != null
                     && !konten.laden(termin.trainerId()).rollen().contains(Rolle.ADMINISTRATOR)) {
-                benachrichtige(termin.trainerId(), "Der Termin " + termin.terminId()
-                        + " wurde automatisch abgeschlossen und zählt nicht in Teilnehmerauswertungen.");
+                benachrichtige(termin.trainerId(), null, "TERMIN_AUTOMATISCH_ABGESCHLOSSEN",
+                        "Der Termin " + termin.terminId()
+                                + " wurde automatisch abgeschlossen und zählt nicht in Teilnehmerauswertungen.",
+                        termin.terminId());
             }
         }
         jdbc.update("""
@@ -671,15 +682,17 @@ public class TerminService {
         return result;
     }
 
-    private void benachrichtigeBeteiligte(String terminId, String text) {
+    private void benachrichtigeBeteiligte(String terminId, String ausloeserId,
+                                           String anlasstyp, String text) {
         TerminZeile termin = lade(terminId, false);
         Set<String> ids = new LinkedHashSet<>(beteiligteAssistentenIds(terminId));
         if (termin.trainerId() != null) ids.add(termin.trainerId());
-        ids.forEach(id -> benachrichtige(id, text));
+        ids.forEach(id -> benachrichtige(id, ausloeserId, anlasstyp, text, terminId));
     }
 
-    private void benachrichtige(String kontoId, String text) {
-        jdbc.update("INSERT INTO benachrichtigung (empfaenger_id, anlass) VALUES (?, ?)", kontoId, text);
+    private void benachrichtige(String kontoId, String ausloeserId, String anlasstyp,
+                                String text, String terminId) {
+        benachrichtigungen.persoenlich(kontoId, ausloeserId, anlasstyp, text, "TERMIN", terminId);
     }
 
     private List<String> aenderungsnachrichten(TerminZeile alt, LocalDate start, LocalDate ende,

@@ -140,7 +140,7 @@ test("Ablegen erreicht den Adminbereich als Benachrichtigung", async ({
     .getByRole("button", { name: "Qualifikation ablegen" }).click();
   await expect(trainer.page.getByText("Die Qualifikation wurde abgelegt.")).toBeVisible();
 
-  await page.goto("/profil");
+  await page.goto("/benachrichtigungen");
   await expect(page.getByText(
     "E2E Ablegen Nachricht hat die Qualifikation für SCH-005 abgelegt.",
   )).toBeVisible();
@@ -170,11 +170,11 @@ test("Genehmigung und Ablehnung erreichen die Trainer als Benachrichtigung", asy
   await ablehnung.getByRole("button", { name: "Bewerbung ablehnen" }).click();
   await expect(page.getByText("Die Bewerbung wurde abgelehnt.")).toBeVisible();
 
-  await genehmigt.page.goto("/profil");
+  await genehmigt.page.goto("/benachrichtigungen");
   await expect(genehmigt.page.getByText(
     "Ihre Qualifikationsbewerbung für SCH-001 wurde genehmigt.",
   )).toBeVisible();
-  await abgelehnt.page.goto("/profil");
+  await abgelehnt.page.goto("/benachrichtigungen");
   await expect(abgelehnt.page.getByText(
     "Ihre Qualifikationsbewerbung für SCH-002 wurde abgelehnt: Nachweis fehlt",
   )).toBeVisible();
@@ -192,7 +192,7 @@ test("Direktvergabe erreicht den Trainer als Benachrichtigung", async ({
   await page.goto("/katalog/SCH-003");
   await page.getByRole("button", { name: "E2E Direkt Entzug direkt qualifizieren" }).click();
   await expect(page.getByText("Die Qualifikation wurde erteilt.")).toBeVisible();
-  await trainer.page.goto("/profil");
+  await trainer.page.goto("/benachrichtigungen");
   await expect(trainer.page.getByText("Sie wurden direkt für SCH-003 qualifiziert.")).toBeVisible();
   await trainer.context.close();
 });
@@ -212,7 +212,7 @@ test("Entzug erreicht den Trainer als Benachrichtigung", async ({
   await expect(entzug).toContainText("Künftige Zuweisungen");
   await entzug.getByRole("button", { name: "Qualifikation entziehen" }).click();
   await expect(page.getByText("Die Qualifikation wurde entzogen.")).toBeVisible();
-  await trainer.page.goto("/profil");
+  await trainer.page.goto("/benachrichtigungen");
   await expect(trainer.page.getByText("Ihre Qualifikation für SCH-003 wurde entzogen.")).toBeVisible();
   await trainer.context.close();
 });

@@ -7,7 +7,7 @@ import ProfilAnsicht from "./ansichten/ProfilAnsicht.vue";
 import RegistrierenAnsicht from "./ansichten/RegistrierenAnsicht.vue";
 import {
   anmelden, eigeneQualifikationAblegen, fetchEigeneQualifikationen,
-  fetchBenachrichtigungen, fetchKonten, nameAendern, passwortAendern, registrieren,
+  fetchKonten, nameAendern, passwortAendern, registrieren,
 } from "./api";
 import { aktuellesKonto, setzeKonto } from "./auth";
 import type { Benutzerkonto } from "./types";
@@ -26,7 +26,6 @@ vi.mock("./api", () => ({
   abwesenheitEintragen: vi.fn(),
   eigeneQualifikationAblegen: vi.fn(),
   fetchEigeneQualifikationen: vi.fn().mockResolvedValue([]),
-  fetchBenachrichtigungen: vi.fn().mockResolvedValue([]),
 }));
 
 const trainer: Benutzerkonto = {
@@ -51,19 +50,6 @@ describe("Benutzerkonto-Ansichten", () => {
     vi.clearAllMocks();
     aktuellesKonto.value = null;
     vi.mocked(fetchEigeneQualifikationen).mockResolvedValue([]);
-    vi.mocked(fetchBenachrichtigungen).mockResolvedValue([]);
-  });
-
-  it("zeigt Benachrichtigungen auch reinen Administratoren", async () => {
-    setzeKonto({ ...trainer, rollen: ["ADMINISTRATOR"] });
-    vi.mocked(fetchBenachrichtigungen).mockResolvedValue([{
-      id: 1, anlass: "Trainer hat eine Qualifikation abgelegt.", erstelltAm: "2026-09-19T10:00:00",
-    }]);
-    const profil = mount(ProfilAnsicht);
-    await flushPromises();
-
-    expect(profil.text()).toContain("Trainer hat eine Qualifikation abgelegt.");
-    expect(fetchEigeneQualifikationen).not.toHaveBeenCalled();
   });
 
   // verifies: TEST_QUA_ABLEGEN_01

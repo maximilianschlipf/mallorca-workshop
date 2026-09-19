@@ -14,6 +14,7 @@ import type {
   TerminDetail,
   TerminEingabe,
   DashboardTermin,
+  Dashboard,
   VerwaisterTermin,
 } from "./types";
 
@@ -183,6 +184,11 @@ export const eigeneQualifikationAblegen = (schulungId: string) =>
   api<void>(`/api/ich/qualifikationen/${schulungId}`, { method: "DELETE" });
 export const fetchBenachrichtigungen = () =>
   api<Benachrichtigung[]>("/api/ich/benachrichtigungen");
+export const fetchUngeleseneBenachrichtigungen = () =>
+  api<{ anzahl: number }>("/api/ich/benachrichtigungen/ungelesen");
+export const markiereAlleBenachrichtigungenGelesen = () =>
+  api<void>("/api/ich/benachrichtigungen/gelesen", { method: "POST" });
+export const fetchDashboard = () => api<Dashboard>("/api/dashboard");
 export const fetchQualifikationenDerSchulung = (schulungId: string) =>
   api<Qualifikationszeile[]>(`/api/schulungen/${schulungId}/qualifikationen`);
 export const qualifikationDirektErteilen = (schulungId: string, trainerId: string) =>

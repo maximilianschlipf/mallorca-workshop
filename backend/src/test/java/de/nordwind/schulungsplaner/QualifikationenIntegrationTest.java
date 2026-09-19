@@ -3,6 +3,8 @@ package de.nordwind.schulungsplaner;
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.service.KontoFehler;
 import de.nordwind.schulungsplaner.service.KontoService;
+import de.nordwind.schulungsplaner.service.BenachrichtigungService;
+import de.nordwind.schulungsplaner.service.DashboardService;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,8 @@ class QualifikationenIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired VeraenderbareUhr uhr;
     @Autowired MockMvc mvc;
+    @Autowired BenachrichtigungService benachrichtigungen;
+    @Autowired DashboardService dashboard;
 
     Benutzerkonto admin;
     Benutzerkonto trainer;
@@ -365,6 +369,40 @@ class QualifikationenIntegrationTest {
         assertThat(letzteNachricht(trainer.id())).contains("direkt", "qualifiziert", "SCH-001");
     }
 
+    @Test
+    void anzeigenMarkiertPersoenlicheUndGemeinsameAdminMitteilungenAlsGelesen() {
+        benachrichtigungen.persoenlich(trainer.id(), admin.id(), "QUALIFIKATION_GENEHMIGT",
+                "Persönlich", "SCHULUNG", "SCH-001");
+        benachrichtigungen.adminbereich("QUALIFIKATION_ABGELEGT",
+                "Gemeinsam", "SCHULUNG", "SCH-001");
+        Benutzerkonto zweiterAdmin = konten.registrieren("Zweiter Admin", "admin2@example.de", "pw");
+        konten.rolleErteilen(admin.id(), zweiterAdmin.id(), de.nordwind.schulungsplaner.domain.Rolle.ADMINISTRATOR,
+                zweiterAdmin.aenderungsstand());
+
+        assertThat(benachrichtigungen.ungelesen(trainer.id())).isEqualTo(1);
+        assertThat(benachrichtigungen.ungelesen(admin.id())).isEqualTo(1);
+        assertThat(benachrichtigungen.anzeigen(admin.id())).singleElement()
+                .extracting(BenachrichtigungService.Benachrichtigung::anlass).isEqualTo("Gemeinsam");
+        assertThat(benachrichtigungen.ungelesen(admin.id())).isZero();
+        assertThat(benachrichtigungen.ungelesen(zweiterAdmin.id())).isZero();
+        assertThat(benachrichtigungen.ungelesen(trainer.id())).isEqualTo(1);
+    }
+
+    @Test
+    void dashboardTrenntAnMichVonVonMirUndBewahrtErledigtes() {
+        long id = bewerben();
+        assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).singleElement()
+                .extracting(DashboardService.Vorgang::id).isEqualTo(id);
+        assertThat(dashboard.anzeigen(trainer.id()).eigeneVorgaenge()).singleElement()
+                .extracting(DashboardService.Vorgang::id).isEqualTo(id);
+
+        einsaetze.bewerbungGenehmigen(admin.id(), id);
+
+        assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).isEmpty();
+        assertThat(dashboard.anzeigen(admin.id()).erledigteVorgaenge()).singleElement()
+                .extracting(DashboardService.Vorgang::status).isEqualTo("GENEHMIGT");
+    }
+
     private long bewerben() {
         einsaetze.aufQualifikationBewerben(trainer.id(), "SCH-001");
         return jdbc.queryForObject("SELECT id FROM qualifikationsbewerbung WHERE benutzerkonto_id=?",
@@ -390,8 +428,12 @@ class QualifikationenIntegrationTest {
     }
 
     private String letzteNachricht(String kontoId) {
-        return jdbc.queryForObject("SELECT anlass FROM benachrichtigung WHERE empfaenger_id=? ORDER BY id DESC LIMIT 1",
-                String.class, kontoId);
+        return jdbc.queryForObject("""
+                SELECT anlass FROM benachrichtigung
+                WHERE empfaenger_id=? OR (empfaenger_rolle='ADMINISTRATOR' AND EXISTS (
+                    SELECT 1 FROM benutzerkonto_rolle WHERE benutzerkonto_id=? AND rolle='ADMINISTRATOR'))
+                ORDER BY id DESC LIMIT 1
+                """, String.class, kontoId, kontoId);
     }
 
     private void termin(String id, LocalDate datum, String status, String trainerId) {
