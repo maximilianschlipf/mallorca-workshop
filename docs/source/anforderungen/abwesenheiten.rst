@@ -158,7 +158,7 @@ Ablauf bei Zuweisungskonflikt
    :id: REQ_ABW_KONFL_02
    :status: approved
    :priority: high
-   :links: REQ_ABW_PRUEF_01
+   :links: REQ_ABW_PRUEF_01, REQ_DSH_VORG_01
 
    Liegt ein Zuweisungskonflikt vor, wird die Abwesenheit als Antrag erfasst
    und muss von einem Administrator entschieden werden -- es sei denn, der
@@ -215,11 +215,11 @@ Was an der Genehmigungspflicht hängt:
 .. req:: Ablehnung lässt die Zuweisung bestehen
    :id: REQ_ABW_KONFL_05
    :status: approved
-   :links: REQ_ABW_KONFL_02
+   :links: REQ_ABW_KONFL_02, REQ_NAC_ANL_01
 
    Lehnt ein Administrator den Antrag ab, wird die Abwesenheit nicht aktiv
-   und die Trainerzuweisung bleibt unverändert bestehen. Der Trainer wird
-   über die Ablehnung benachrichtigt.
+   und die Trainerzuweisung bleibt unverändert bestehen. Der Trainer erhält
+   eine Mitteilung über die Ablehnung.
 
 .. req:: Administrator entscheidet auch über eigene Anträge
    :id: REQ_ABW_KONFL_07
@@ -236,7 +236,7 @@ Unentschiedene Anträge
    :id: REQ_ABW_AUTO_01
    :status: approved
    :priority: high
-   :links: REQ_ABW_KONFL_03
+   :links: REQ_ABW_KONFL_03, REQ_DSH_VORG_09
 
    Ist ein Abwesenheitsantrag eine Woche vor Beginn des beantragten
    Zeitraums noch nicht entschieden, gilt er als genehmigt. Die Abwesenheit
@@ -251,10 +251,10 @@ Unentschiedene Anträge
    :id: REQ_ABW_AUTO_02
    :status: approved
    :priority: high
-   :links: REQ_ABW_AUTO_01
+   :links: REQ_ABW_AUTO_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
-   Wird ein Antrag durch Fristablauf genehmigt, werden der Trainer und die
-   Administratoren benachrichtigt. Die frei gewordenen Termine erscheinen
+   Wird ein Antrag durch Fristablauf genehmigt, erhalten der Trainer und der
+   Adminbereich eine Mitteilung. Die frei gewordenen Termine erscheinen
    danach unter den Terminen ohne Trainer.
 
 Ablauf bei Verfügbarkeitskonflikt

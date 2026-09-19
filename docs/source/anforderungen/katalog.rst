@@ -421,11 +421,11 @@ Archivieren
    :id: REQ_KAT_ARCH_05
    :status: approved
    :priority: high
-   :links: REQ_KAT_ARCH_01, REQ_QUA_BEW_02
+   :links: REQ_KAT_ARCH_01, REQ_QUA_BEW_02, REQ_NAC_ANL_01, REQ_DSH_VORG_09
 
    Beim Archivieren einer Schulung werden alle offenen Freigabeanfragen zu
-   dieser Schulung abgelehnt. Die betroffenen Trainer werden wie bei jeder
-   Ablehnung benachrichtigt.
+   dieser Schulung abgelehnt. Die betroffenen Trainer erhalten wie bei jeder
+   Ablehnung eine Mitteilung.
 
 .. req:: Schulung reaktivieren
    :id: REQ_KAT_ARCH_04

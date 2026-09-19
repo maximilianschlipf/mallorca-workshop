@@ -53,7 +53,7 @@ Was an der Vormerkung hängt:
    :id: REQ_VOR_BEST_01
    :status: draft
    :priority: high
-   :links: REQ_VOR_SICHT_01
+   :links: REQ_VOR_SICHT_01, REQ_DSH_VORG_01
 
    Ein Administrator kann eine Vormerkung bestätigen. Damit wird der
    vorgemerkte Trainer dem Termin zugewiesen und der Termin gilt als
@@ -62,15 +62,15 @@ Was an der Vormerkung hängt:
 .. req:: Benachrichtigung über die Bestätigung
    :id: REQ_VOR_BEST_02
    :status: draft
-   :links: REQ_VOR_BEST_01
+   :links: REQ_VOR_BEST_01, REQ_NAC_ANL_01
 
-   Der Trainer wird darüber benachrichtigt, dass seine Vormerkung bestätigt
-   und er dem Termin zugewiesen wurde.
+   Der Trainer erhält eine Mitteilung darüber, dass seine Vormerkung
+   bestätigt und er dem Termin zugewiesen wurde.
 
 .. req:: Vormerkung ablehnen
    :id: REQ_VOR_ABL_01
    :status: draft
-   :links: REQ_VOR_SICHT_01
+   :links: REQ_VOR_SICHT_01, REQ_DSH_VORG_01
 
    Ein Administrator kann eine Vormerkung ablehnen, ohne einen Trainer
    zuzuweisen.
@@ -79,7 +79,7 @@ Was an der Vormerkung hängt:
    :id: REQ_VOR_ABL_02
    :status: draft
    :priority: high
-   :links: REQ_VOR_ABG_01
+   :links: REQ_VOR_ABG_01, REQ_DSH_VORG_09
 
    Sobald einem Termin ein Trainer zugewiesen ist, gelten alle übrigen
    offenen Vormerkungen zu diesem Termin als abgelehnt. Das gilt unabhängig
@@ -89,19 +89,19 @@ Was an der Vormerkung hängt:
 .. req:: Benachrichtigung über die Ablehnung
    :id: REQ_VOR_ABL_03
    :status: draft
-   :links: REQ_VOR_ABL_01, REQ_VOR_ABL_02
+   :links: REQ_VOR_ABL_01, REQ_VOR_ABL_02, REQ_NAC_ANL_01
 
-   Der Trainer wird über die Ablehnung seiner Vormerkung benachrichtigt --
-   unabhängig davon, ob sie direkt abgelehnt wurde oder durch die Zuweisung
-   eines anderen Trainers entfallen ist.
+   Der Trainer erhält eine Mitteilung über die Ablehnung seiner Vormerkung
+   -- unabhängig davon, ob sie direkt abgelehnt wurde oder durch die
+   Zuweisung eines anderen Trainers entfallen ist.
 
 .. req:: Ablehnung mit Begründung
    :id: REQ_VOR_ABL_04
    :status: draft
-   :links: REQ_VOR_ABL_01
+   :links: REQ_VOR_ABL_01, REQ_NAC_ANL_01, REQ_DSH_VORG_05
 
    Lehnt ein Administrator eine Vormerkung ab, gibt er dazu eine Begründung
-   an. Sie erreicht den Trainer mit der Benachrichtigung. Für eine Ablehnung
+   an. Sie erreicht den Trainer mit der Mitteilung. Für eine Ablehnung
    nach :need:`REQ_VOR_ABL_02` entfällt die Begründung -- dort ist der Grund
    die Zuweisung selbst.
 

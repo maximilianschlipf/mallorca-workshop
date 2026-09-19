@@ -127,7 +127,7 @@ Veränderliche Daten in der Datenbank
    :id: REQ_DAT_NACHR_01
    :status: draft
    :priority: high
-   :links: REQ_DAT_DB_02
+   :links: REQ_DAT_DB_02, REQ_NAC_DAT_01
 
    Eine Benachrichtigung wird als Datensatz gehalten, mit Empfänger, Anlass,
    Zeitpunkt und einem Kennzeichen, ob sie gelesen wurde. Ein eigenes

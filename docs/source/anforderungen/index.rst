@@ -13,6 +13,8 @@ Kürzel     Bereich
 ``USR``    Benutzerkonten und Anmeldung
 ``QUA``    Qualifikationen
 ``TRA``    Trainersicht
+``DSH``    Dashboard
+``NAC``    Benachrichtigungen
 ``ABW``    Abwesenheiten
 ``KAT``    Schulungskatalog
 ``TER``    Terminplanung
@@ -31,6 +33,10 @@ Kürzel     Bereich
    qualifikationen
    qualifikationen-umsetzung
    trainersicht
+   dashboard
+   dashboard-umsetzung
+   benachrichtigungen
+   benachrichtigungen-umsetzung
    abwesenheiten
    abwesenheiten-umsetzung
    katalog

@@ -83,6 +83,20 @@ Trainersicht
    :filter: id.split("_")[1] == "TRA"
    :direction: LR
 
+Dashboard
+~~~~~~~~~
+
+.. needflow::
+   :filter: id.split("_")[1] == "DSH"
+   :direction: LR
+
+Benachrichtigungen
+~~~~~~~~~~~~~~~~~~
+
+.. needflow::
+   :filter: id.split("_")[1] == "NAC"
+   :direction: LR
+
 Abwesenheiten
 ~~~~~~~~~~~~~
 

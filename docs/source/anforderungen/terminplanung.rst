@@ -391,7 +391,7 @@ Zustände eines Termins
    :id: REQ_TER_STAT_06
    :status: approved
    :priority: high
-   :links: REQ_TER_STAT_01
+   :links: REQ_TER_STAT_01, REQ_NAC_ANL_01
 
    Ein Termin, der zwei Kalendermonate nach seinem Enddatum noch geplant ist,
    wird selbsttätig abgeschlossen. Fehlt der entsprechende Tag im Zielmonat,
@@ -430,10 +430,10 @@ Zustände eines Termins
    teilgenommen hat -- die eingefrorenen Zahlen sind ungeprüft, und das muss
    sichtbar sein.
 
-   Der zugewiesene Trainer wird benachrichtigt, dass der Termin selbsttätig
-   abgeschlossen wurde und nicht in Teilnehmerauswertungen eingeht.
-   Administratoren erkennen dies in den Termindetails, erhalten aber keine
-   zusätzliche Benachrichtigung.
+   Der zugewiesene Trainer erhält eine Mitteilung, dass der Termin
+   selbsttätig abgeschlossen wurde und nicht in Teilnehmerauswertungen
+   eingeht. Administratoren erkennen dies in den Termindetails, erhalten aber
+   keine Mitteilung.
 
    Der selbsttätige Abschluss ist endgültig. Der Termin kann später nicht
    manuell bestätigt werden, und seine Teilnehmerdaten bleiben
@@ -500,16 +500,16 @@ Zustände eines Termins
    :id: REQ_TER_AEND_12
    :status: approved
    :priority: high
-   :links: REQ_TER_AEND_01, REQ_TER_AEND_03, REQ_TRA_NACHR_01
+   :links: REQ_TER_AEND_01, REQ_TER_AEND_03, REQ_NAC_ANL_01
 
    Ändert ein Administrator Zeitraum, Ort, Durchführungsart, Kundenfirma oder
-   Online-Zugang eines Termins, werden der zugewiesene Trainer und alle
-   zugewiesenen Assistenten benachrichtigt. Die Nachricht nennt jeweils den
+   Online-Zugang eines Termins, erhalten der zugewiesene Trainer und alle
+   zugewiesenen Assistenten je geändertem Feld eine Mitteilung. Sie nennt den
    alten und den neuen Wert. Beim Online-Zugang enthält sie ausschließlich
    die neue URL, damit veraltete Einwahldaten nicht weiterverwendet werden.
 
    Eine reine Änderung der Zugangsart ohne Änderung einer Kundenfirma erzeugt
-   keine Benachrichtigung.
+   keine Mitteilung.
 
 .. req:: Zugeordnete Schulung ist unveränderlich
    :id: REQ_TER_AEND_11
@@ -580,14 +580,14 @@ Zustände eines Termins
 .. req:: Absage und Löschen werden mitgeteilt
    :id: REQ_TER_AEND_05
    :status: approved
-   :links: REQ_TER_AEND_04
+   :links: REQ_TER_AEND_04, REQ_NAC_ANL_01
 
-   Ist dem abgesagten Termin ein Trainer zugewiesen, wird er über die Absage
-   benachrichtigt. Dasselbe gilt für zugewiesene Assistenten. Wurde ein
-   Absagegrund angegeben, enthält die Benachrichtigung diesen Grund.
+   Ist dem abgesagten Termin ein Trainer zugewiesen, erhält er eine
+   Mitteilung über die Absage. Dasselbe gilt für zugewiesene Assistenten.
+   Wurde ein Absagegrund angegeben, enthält die Mitteilung diesen Grund.
 
-   Wird ein noch nicht gestarteter Termin gelöscht, werden sein zugewiesener
-   Trainer und seine Assistenten ebenfalls benachrichtigt. Einen Löschgrund
+   Wird ein noch nicht gestarteter Termin gelöscht, erhalten sein zugewiesener
+   Trainer und seine Assistenten ebenfalls eine Mitteilung. Einen Löschgrund
    gibt es nicht; ein fachlich relevanter Ausfall wird stattdessen abgesagt.
 
 .. req:: Termin löschen
@@ -632,9 +632,9 @@ Zustände eines Termins
    :id: REQ_TER_AEND_08
    :status: approved
    :priority: high
-   :links: REQ_TER_AEND_07, REQ_TLN_BUCH_02
+   :links: REQ_TER_AEND_07, REQ_TLN_BUCH_02, REQ_NAC_ANL_05
 
-   Über eine Absage werden Trainer und Assistenten benachrichtigt,
+   Über eine Absage erhalten Trainer und Assistenten eine Mitteilung,
    gebuchte Teilnehmer nicht: Eine Teilnehmerbuchung führt Name, Firma und
    Bemerkung, aber keine Anschrift. Die Warnung vor der Absage nennt deshalb
    die betroffenen Buchungen, damit der Administrator die Teilnehmer
@@ -685,11 +685,11 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
    :id: REQ_TER_ZUW_04
    :status: approved
    :priority: high
-   :links: REQ_TER_ANL_02
+   :links: REQ_TER_ANL_02, REQ_NAC_ANL_01
 
    Ein Administrator kann die Trainerzuweisung eines Termins aufheben. Der
-   Termin gilt danach als nicht zugewiesen. Der bisherige Trainer wird
-   benachrichtigt.
+   Termin gilt danach als nicht zugewiesen. Der bisherige Trainer erhält
+   eine Mitteilung.
 
 .. req:: Trainer austauschen
    :id: REQ_TER_ZUW_05
@@ -704,20 +704,21 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
    :id: REQ_TER_ZUW_07
    :status: approved
    :priority: high
-   :links: REQ_TER_ZUW_04, REQ_TER_ZUW_05, REQ_TRA_NACHR_01
+   :links: REQ_TER_ZUW_04, REQ_TER_ZUW_05, REQ_NAC_ANL_01
 
-   Ein Trainer wird benachrichtigt, sobald ein Administrator ihn einem Termin
-   zuweist. Das gilt auch für eine Zuweisung direkt beim Anlegen des Termins.
+   Ein Trainer erhält eine Mitteilung, sobald ein Administrator ihn einem
+   Termin zuweist. Das gilt auch für eine Zuweisung direkt beim Anlegen des
+   Termins.
 
-   Beim Austausch werden der bisherige Trainer über das Ende seiner
-   Zuweisung und der neue Trainer über seine Zuweisung benachrichtigt. Beim
-   bloßen Abziehen wird nur der bisherige Trainer benachrichtigt.
+   Beim Austausch erhalten der bisherige Trainer eine Mitteilung über das
+   Ende seiner Zuweisung und der neue Trainer eine über seine Zuweisung. Beim
+   bloßen Abziehen erhält nur der bisherige Trainer eine Mitteilung.
 
 .. req:: Trainer und Assistent sind am selben Termin verschieden
    :id: REQ_TER_ZUW_08
    :status: approved
    :priority: high
-   :links: REQ_ASS_PLATZ_01, REQ_TER_ZUW_07
+   :links: REQ_ASS_PLATZ_01, REQ_TER_ZUW_07, REQ_NAC_ANL_01
 
    Eine Person kann an demselben Termin nicht zugleich ausführender Trainer
    und Assistent sein. Wird ein bereits zugewiesener Assistent als
@@ -726,8 +727,8 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
    Trainerzuweisung in einem Vorgang gesetzt; der Assistenzplatz wird frei.
 
    Ein bereits ausführender Trainer kann nicht zusätzlich als Assistent
-   zugewiesen werden. Die betroffene Person wird über den Rollenwechsel
-   benachrichtigt.
+   zugewiesen werden. Die betroffene Person erhält eine Mitteilung über den
+   Rollenwechsel.
 
 .. req:: Keine Zuweisung an abgeschlossenen oder abgesagten Terminen
    :id: REQ_TER_ZUW_06
@@ -741,7 +742,7 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
    Solange ein Termin noch geplant ist, darf ein Administrator auch nach
    dessen Enddatum einen qualifizierten Trainer nachtragen. Damit kann die
    tatsächliche Durchführung anschließend bestätigt werden. Die üblichen
-   Verfügbarkeitsprüfungen und die Benachrichtigung über die Zuweisung gelten
+   Verfügbarkeitsprüfungen und die Mitteilung über die Zuweisung gelten
    auch in diesem Fall.
 
 Entscheidungshilfe bei der Planung

@@ -18,7 +18,7 @@ statt; das System hält nur das Ergebnis fest.
 .. req:: Anfrage im Dashboard des zugewiesenen Trainers
    :id: REQ_UEB_ANFR_02
    :status: draft
-   :links: REQ_UEB_ANFR_01
+   :links: REQ_UEB_ANFR_01, REQ_DSH_VORG_01
 
    Der zugewiesene Trainer sieht offene Übernahmeanfragen in seinem
    Dashboard und entscheidet dort über sie. Die Darstellung entspricht der
@@ -53,21 +53,21 @@ Was der Trainerwechsel nach sich zieht:
 .. req:: Benachrichtigung des anfragenden Trainers
    :id: REQ_UEB_ENTS_03
    :status: draft
-   :links: REQ_UEB_ENTS_01, REQ_UEB_ENTS_02
+   :links: REQ_UEB_ENTS_01, REQ_UEB_ENTS_02, REQ_NAC_ANL_01
 
-   Der anfragende Trainer wird über die Entscheidung zu seiner
-   Übernahmeanfrage benachrichtigt.
+   Der anfragende Trainer erhält eine Mitteilung über die Entscheidung zu
+   seiner Übernahmeanfrage.
 
 .. req:: Administratoren über den Trainerwechsel informieren
    :id: REQ_UEB_ENTS_05
    :status: draft
    :priority: high
-   :links: REQ_UEB_ENTS_01
+   :links: REQ_UEB_ENTS_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
    Wechselt durch eine angenommene Übernahmeanfrage der zugewiesene Trainer
-   eines Termins, werden die Administratoren darüber informiert. Aus der
-   Information geht hervor, welcher Termin betroffen ist und welcher Trainer
-   den bisherigen ersetzt.
+   eines Termins, erhält der Adminbereich eine Mitteilung. Aus ihr geht
+   hervor, welcher Termin betroffen ist und welcher Trainer den bisherigen
+   ersetzt.
 
 .. req:: Keine Übernahme bei Abwesenheit oder Doppelbuchung
    :id: REQ_UEB_ENTS_04
@@ -116,11 +116,11 @@ Was der Trainerwechsel nach sich zieht:
    :id: REQ_UEB_ENTS_06
    :status: draft
    :priority: high
-   :links: REQ_UEB_ENTS_01
+   :links: REQ_UEB_ENTS_01, REQ_NAC_ANL_01, REQ_DSH_VORG_09
 
    Wird eine Übernahmeanfrage angenommen, gelten alle übrigen offenen
-   Anfragen zu diesem Termin als abgelehnt. Die betroffenen Trainer werden
-   benachrichtigt.
+   Anfragen zu diesem Termin als abgelehnt. Die betroffenen Trainer
+   erhalten eine Mitteilung.
 
 .. req:: Administratoren greifen nicht ein
    :id: REQ_UEB_ENTS_07

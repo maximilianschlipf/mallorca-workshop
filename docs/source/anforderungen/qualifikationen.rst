@@ -73,7 +73,7 @@ Entscheidung
    :id: REQ_QUA_BEW_02
    :status: approved
    :priority: high
-   :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01
+   :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01, REQ_DSH_VORG_01
 
    Ein Administrator genehmigt oder lehnt eine Freigabeanfrage ab. Bei
    Genehmigung entsteht eine Qualifikation des Trainers für diese Schulung,
@@ -91,10 +91,10 @@ Entscheidung
 .. req:: Benachrichtigung über die Entscheidung
    :id: REQ_QUA_BEW_03
    :status: approved
-   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_08
+   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_08, REQ_NAC_ANL_01
 
-   Der Trainer wird über die Entscheidung zu seiner Freigabeanfrage
-   benachrichtigt. Bei einer Ablehnung erhält er die Begründung mit.
+   Der Trainer erhält eine Mitteilung über die Entscheidung zu seiner
+   Freigabeanfrage. Bei einer Ablehnung enthält sie die Begründung.
 
 .. req:: Sperrfrist nach einer Ablehnung
    :id: REQ_QUA_BEW_09
@@ -141,9 +141,10 @@ Entzug
 .. req:: Benachrichtigung über den Entzug
    :id: REQ_QUA_ENTZ_03
    :status: approved
-   :links: REQ_QUA_ENTZ_01
+   :links: REQ_QUA_ENTZ_01, REQ_NAC_ANL_01
 
-   Der Trainer wird über den Entzug einer Qualifikation benachrichtigt.
+   Der Trainer erhält eine Mitteilung über den Entzug einer
+   Qualifikation.
 
 .. req:: Bewerbung nach einem Entzug
    :id: REQ_QUA_ENTZ_04
@@ -188,10 +189,10 @@ Selbst-Ablegen
 .. req:: Benachrichtigung des Adminbereichs über das Ablegen
    :id: REQ_QUA_ABLEGEN_04
    :status: approved
-   :links: REQ_QUA_ABLEGEN_01
+   :links: REQ_QUA_ABLEGEN_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
-   Administratoren werden benachrichtigt, wenn ein Trainer eine
-   Qualifikation ablegt.
+   Der Adminbereich erhält eine Mitteilung, wenn ein Trainer eine
+   Qualifikation ablegt. Sie nennt den Trainer und die Schulung.
 
 Direktvergabe
 --------------
@@ -235,7 +236,7 @@ Direktvergabe
 .. req:: Benachrichtigung über die Direktvergabe
    :id: REQ_QUA_DIREKT_03
    :status: approved
-   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_03
+   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_03, REQ_NAC_ANL_01
 
-   Der Trainer wird über die Direktvergabe benachrichtigt, wie bei der
+   Der Trainer erhält eine Mitteilung über die Direktvergabe, wie bei der
    Genehmigung einer Bewerbung.

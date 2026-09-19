@@ -7,37 +7,43 @@ könnte ich übernehmen, und worauf warte ich noch.
 Dashboard
 ---------
 
+Das Dashboard ist rollenübergreifend beschrieben und steht deshalb in einem
+eigenen Bereich: :ref:`Dashboard <dashboard>`. Die folgenden Anforderungen
+werden davon abgelöst. Sie behalten ihren Status, bis der neue Bereich
+freigegeben ist -- ``REQ_TRA_DASH_02`` trägt mit ``STORY_TER_DASH_02`` und
+``TEST_TER_DASH_05`` bereits freigegebene Nachweise, die sonst ins Leere
+zeigen würden.
+
 .. req:: Dashboard als Einstieg
    :id: REQ_TRA_DASH_01
    :status: draft
-   :priority: high
 
    Ein Trainer hat ein Dashboard als Einstieg. Es führt seine Termine und
    die offenen Übernahmeanfragen an ihn zusammen -- also alles, was eine
    Handlung von ihm erwartet.
 
+   Abgelöst durch :need:`REQ_DSH_GRUND_01`, das dasselbe für alle Rollen
+   festlegt.
+
 .. req:: Überfällige eigene Termine stehen ganz oben
    :id: REQ_TRA_DASH_02
    :status: draft
-   :priority: high
-   :links: REQ_TRA_DASH_01, REQ_TER_STAT_02
 
    Eigene Termine, deren Enddatum vorüber ist und die noch geplant sind,
    stehen an erster Stelle -- vor den anstehenden. Abgesagte und
    abgeschlossene Termine erscheinen dort nicht.
 
-   Ohne diese Anzeige könnte ein Trainer die Durchführung seines Termins gar
-   nicht bestätigen, weil er ihn nicht mehr fände. Jeder Termin liefe dann in den
-   selbsttätigen Abschluss nach :need:`REQ_TER_STAT_06`.
+   Abgelöst durch :need:`REQ_DSH_PFLI_01`.
 
 .. req:: Offene Übernahmeanfragen im Dashboard
    :id: REQ_TRA_DASH_03
    :status: draft
-   :priority: high
-   :links: REQ_TRA_DASH_01, REQ_UEB_ANFR_02
 
    Übernahmeanfragen anderer Trainer zu seinen Terminen erscheinen im
    Dashboard und werden dort entschieden.
+
+   Abgelöst durch :need:`REQ_DSH_VORG_01`, das die Übernahmeanfrage als eine
+   von fünf Vorgangsarten führt.
 
 Terminübersicht
 ---------------
@@ -108,56 +114,63 @@ Terminübersicht
 Benachrichtigungen
 ------------------
 
+Benachrichtigungen sind rollenübergreifend beschrieben und stehen deshalb in
+einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
+
 .. req:: Eigene Anzeige für Benachrichtigungen
    :id: REQ_TRA_NACHR_01
    :status: draft
-   :priority: high
-   :links: REQ_DAT_NACHR_01
 
    Ein Trainer hat eine eigene Anzeige für seine Benachrichtigungen. Dort
-   laufen alle Mitteilungen zusammen: Entscheidungen über Bewerbungen und
-   Vormerkungen, neue und beendete Trainerzuweisungen, Terminänderungen,
-   Absagen, selbsttätige Abschlüsse, Trainerwechsel und
-   Qualifikationsentzug.
+   laufen alle Mitteilungen zusammen.
+
+   Abgelöst durch :need:`REQ_NAC_GRUND_01`. Welche Anlässe eine Mitteilung
+   erzeugen, steht abschließend in :need:`REQ_NAC_ANL_01`.
 
 .. req:: Ungelesene Benachrichtigungen sind erkennbar
    :id: REQ_TRA_NACHR_02
    :status: draft
-   :priority: high
-   :links: REQ_TRA_NACHR_01
 
    Ungelesene Benachrichtigungen sind als solche erkennbar, ohne die Anzeige
    zu öffnen.
 
+   Abgelöst durch :need:`REQ_NAC_ANZ_01`.
+
 .. req:: Benachrichtigungen sind keine Aufgaben
    :id: REQ_TRA_NACHR_03
    :status: draft
-   :links: REQ_TRA_NACHR_01, REQ_TRA_DASH_01
 
    In den Benachrichtigungen stehen Mitteilungen über Geschehenes. Was eine
-   Handlung des Trainers erwartet -- Übernahmeanfragen und ausstehende
-   Durchführungsbestätigungen -- gehört ins Dashboard und nicht dorthin.
+   Handlung des Trainers erwartet, gehört ins Dashboard und nicht dorthin.
+
+   Abgelöst durch :need:`REQ_NAC_GRUND_02` und :need:`REQ_DSH_GRUND_02`; die
+   Trennung selbst steht in :need:`DEC_NAC_TRENNUNG_01`.
 
 Offene eigene Vorgänge
 ----------------------
 
+Die eigenen offenen Vorgänge stehen nach :need:`REQ_DSH_VORG_02` im
+Dashboard, getrennt von den Vorgängen, über die der Trainer entscheidet.
+
 .. req:: Liste der offenen eigenen Vorgänge
    :id: REQ_TRA_VORG_01
    :status: draft
-   :priority: high
 
    Ein Trainer sieht in einer eigenen Liste, worauf er noch wartet: seine
    Bewerbungen auf Qualifikationen, seine Vormerkungen, seine
    Assistenzbewerbungen, seine Abwesenheitsanträge und seine gestellten
    Übernahmeanfragen.
 
+   Abgelöst durch :need:`REQ_DSH_VORG_02`.
+
 .. req:: Zurückziehen aus der Liste heraus
    :id: REQ_TRA_VORG_02
    :status: draft
-   :links: REQ_TRA_VORG_01, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
 
    Jeder Vorgang, der zurückgezogen werden kann, lässt sich aus dieser Liste
    heraus zurückziehen.
+
+   Abgelöst durch :need:`REQ_DSH_VORG_07`.
 
 Vergangene Termine
 ------------------

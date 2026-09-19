@@ -526,11 +526,11 @@ Konto beenden
    :id: REQ_USR_ENDE_02
    :status: approved
    :priority: low
-   :links: REQ_USR_ENDE_01
+   :links: REQ_USR_ENDE_01, REQ_NAC_ANZ_05
 
    Ein Administrator kann ein Benutzerkonto löschen. Es verschwindet samt
    seinen Qualifikationen, Vormerkungen, Assistenzbewerbungen, offenen
-   Anfragen, Abwesenheiten und Benachrichtigungen.
+   Anfragen, Abwesenheiten und Mitteilungen.
 
 .. req:: Termine verlieren durch Löschen ihren Trainer
    :id: REQ_USR_ENDE_03
