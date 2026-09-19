@@ -65,22 +65,16 @@ verborgen.
   TRA, ABW, KAT, TER, ASS, VOR, UEB, TLN.
 - Vor jeder Fertigmeldung läuft `./verify.sh`: Traceability-Matrix,
   Dokumentation, Backend- und Frontendtests, Build und ein isolierter
-  E2E-Lauf. Der Umfang wird vorab in `requirements-scope.txt` eingetragen.
+  E2E-Lauf. Der umgesetzte Produktumfang steht im kumulativen Register
+  `implemented-requirements.txt`.
 - Die Fachsprache in `CONTEXT.md` ist verbindlich, samt der dort notierten
   _Avoid_-Begriffe. Produkt- und Oberflächensprache ist Deutsch.
 
 ## Capabilities and Constraints
 
-**Umgesetzt** (`requirements-scope.txt`):
-
-- Benutzerkonten und Anmeldung: Registrierung, Anmeldung, Profil,
-  Kontenverwaltung, Rollen, Zustände aktiv/stillgelegt, Eigentümerregel.
-- Schulungskatalog: Katalogübersicht, Schulungsdetail, Anlegen und
-  Bearbeiten, Kategorienpflege, Schulungsimport (Aufnahme).
-
-**Spezifiziert, noch nicht im Umfang**: Qualifikationen, Trainersicht,
-Abwesenheiten, Terminplanung, Assistenz, Vormerkungen, Übernahmeanfragen
-zwischen Trainern, Teilnehmerbuchungen.
+`implemented-requirements.txt` ist das autoritative kumulative Register der
+Fachbereiche, deren vollständige Umsetzung das Abschluss-Gate prüft.
+Freigegebene Anforderungen außerhalb des Registers sind nur spezifiziert.
 
 **Feste Regeln**:
 
