@@ -504,7 +504,7 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT benutzerkonto_id FROM termin_assistent WHERE termin_id='HISTORIE-ASSISTENZ'", String.class)).isEqualTo(ziel.id());
     }
 
-    // verifies: TEST_USR_ENDE_01, TEST_USR_ENDE_02, TEST_USR_ENDE_06, TEST_USR_LOGIN_05
+    // verifies: TEST_USR_ENDE_01, TEST_USR_ENDE_02, TEST_USR_LOGIN_05
     @Test
     void stilllegenUndLoeschenBereinigenZuweisungenUndErhaltenHistorie() throws Exception {
         Benutzerkonto chef = konten.registrieren("Chef", "chef@example.de", "pw");
@@ -550,7 +550,7 @@ class BenutzerkontoIntegrationTest {
                 .isEqualTo("Ziel");
     }
 
-    // verifies: TEST_USR_ENDE_03, TEST_USR_ENDE_04, TEST_USR_ENDE_05
+    // verifies: TEST_USR_ENDE_04
     @Test
     void loeschenEntferntVorgaengeGibtZukunftFreiUndErhaeltHistorischeNamen() {
         Benutzerkonto chef = konten.registrieren("Chef", "chef@example.de", "pw");

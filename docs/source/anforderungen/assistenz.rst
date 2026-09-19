@@ -68,6 +68,15 @@ Bewerbung
    Termin zugewiesen ist. Ein Assistent ist genauso gebunden wie der
    ausführende Trainer.
 
+.. req:: Assistenzbewerbung zurückziehen
+   :id: REQ_ASS_BEW_04
+   :status: draft
+   :links: REQ_ASS_BEW_01, REQ_DSH_VORG_07
+
+   Ein Trainer kann seine eigene offene Assistenzbewerbung zurückziehen,
+   solange sie nicht entschieden ist. Danach ist der Vorgang erledigt und
+   der Assistenzplatz bleibt frei.
+
 .. req:: Assistenz ist keine Qualifikation
    :id: REQ_ASS_PLATZ_03
    :status: draft

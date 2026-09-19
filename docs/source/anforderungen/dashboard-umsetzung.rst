@@ -44,9 +44,9 @@ Aufbau
    :level: e2e
    :verifies: STORY_DSH_GRUND_01, REQ_DSH_GRUND_01, REQ_DSH_GRUND_03
 
-   Ein Administrator mit einem offenen Abwesenheitsantrag, einem eigenen
-   überfälligen Termin und einem Termin ohne Trainer sieht auf dem
-   Dashboard alle drei Ränge in der Reihenfolge Vorgänge,
+   Nach erfolgreicher Anmeldung landet ein Administrator mit einem offenen
+   Abwesenheitsantrag, einem eigenen überfälligen Termin und einem Termin
+   ohne Trainer auf dem Dashboard und sieht alle drei Ränge in der Reihenfolge Vorgänge,
    Handlungspflichten, Dringlichkeiten. Ein Trainer in derselben Lage sieht
    denselben Aufbau mit den Inhalten seiner Rolle.
 
@@ -83,8 +83,9 @@ Vorgänge entscheiden
 
    Als Trainer sehe ich auf demselben Dashboard meine eigenen offenen
    Vorgänge -- Bewerbungen, Vormerkungen, Assistenzbewerbungen,
-   Abwesenheitsanträge und gestellte Übernahmeanfragen -- und ziehe sie von
-   dort zurück.
+   Abwesenheitsanträge, gestellte Übernahmeanfragen und
+   Ersatztrainer-Anfragen. Die fünf nach ihrem Fachbereich zurückziehbaren
+   Arten ziehe ich von dort zurück.
 
 .. story:: Ich begründe eine Ablehnung, wo es verlangt ist
    :id: STORY_DSH_VORG_03
@@ -105,17 +106,18 @@ Vorgänge entscheiden
    Vorgänge in einem zugeklappten Abschnitt wieder, mit Ergebnis, Zeitpunkt
    und -- falls jemand entschieden hat -- der entscheidenden Person.
 
-.. test:: Alle fünf Vorgangsarten erscheinen beim Zuständigen
+.. test:: Alle sechs Vorgangsarten erscheinen beim Zuständigen
    :id: TEST_DSH_VORG_01
    :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_VORG_01, REQ_DSH_VORG_01, REQ_DSH_VORG_03
 
-   Zu jeder der fünf Vorgangsarten aus :need:`REQ_DSH_VORG_01` wird ein
+   Zu jeder der sechs Vorgangsarten aus :need:`REQ_DSH_VORG_01` wird ein
    offener Vorgang angelegt. Jeder erscheint im ersten Rang des Dashboards
    seines Zuständigen -- und nur dort -- mit Vorgangsart, Antragsteller,
-   Bezug und Zeitpunkt sowie den Aktionen Annehmen und Ablehnen.
+   Bezug und Zeitpunkt sowie den Aktionen Annehmen und Ablehnen. Der Sprung
+   führt jeweils zum betroffenen Termin, zur Schulung oder zum Zeitraum.
 
 .. test:: Eine Entscheidung wirkt genau einmal
    :id: TEST_DSH_VORG_02
@@ -125,9 +127,10 @@ Vorgänge entscheiden
    :verifies: STORY_DSH_VORG_01, REQ_DSH_VORG_04
 
    Ein Administrator nimmt eine Vormerkung an; der Trainer ist danach dem
-   Termin zugewiesen. Ein zweiter Entscheidungsversuch auf denselben
-   Vorgang -- annehmen wie ablehnen -- wird abgewiesen und ändert die
-   Zuweisung nicht.
+   Termin zugewiesen, der Vorgang ist aus dem ersten Rang verschwunden und
+   steht als angenommen unter den erledigten. Ein zweiter
+   Entscheidungsversuch auf denselben Vorgang -- annehmen wie ablehnen --
+   wird abgewiesen und ändert weder Zuweisung noch Vorgangshistorie.
 
 .. test:: Eigene Vorgänge erscheinen und lassen sich zurückziehen
    :id: TEST_DSH_VORG_03
@@ -138,10 +141,12 @@ Vorgänge entscheiden
 
    Ein Trainer mit je einer offenen Bewerbung, Vormerkung,
    Assistenzbewerbung, einem Abwesenheitsantrag und einer gestellten
-   Übernahmeanfrage sieht alle fünf getrennt von den an ihn gerichteten
-   Vorgängen. Er zieht jeden davon aus dem Dashboard zurück; danach ist
-   keiner mehr offen, jeder steht als zurückgezogen unter den erledigten,
-   und es ist zu keinem eine Mitteilung entstanden.
+   Übernahmeanfrage sowie einer Ersatztrainer-Anfrage sieht alle sechs
+   getrennt von den an ihn gerichteten Vorgängen. Er zieht die ersten fünf
+   aus dem Dashboard zurück; danach ist keiner dieser fünf mehr offen, jeder
+   steht als zurückgezogen unter den erledigten, und es ist zu keinem eine
+   Mitteilung entstanden. Die nicht
+   zurückziehbare Ersatztrainer-Anfrage bleibt offen sichtbar.
 
 .. test:: Begründung ist nur bei zwei Vorgangsarten Pflicht
    :id: TEST_DSH_VORG_04
@@ -152,9 +157,9 @@ Vorgänge entscheiden
 
    Eine Ablehnung ohne Begründung wird bei Freigabeanfrage und Vormerkung
    abgewiesen und bei Abwesenheitsantrag, Assistenzbewerbung und
-   Übernahmeanfrage angenommen. Eine Annahme verlangt in keinem Fall eine
-   Begründung, und die Begründung erreicht den Antragsteller mit seiner
-   Mitteilung.
+   Übernahmeanfrage sowie Ersatztrainer-Anfrage angenommen. Eine Annahme
+   verlangt in keinem Fall eine Begründung, und die Begründung erreicht den
+   Antragsteller mit seiner Mitteilung.
 
 .. test:: Ein Vorgang mit zwei Zuständigen entfällt bei beiden
    :id: TEST_DSH_VORG_05
@@ -189,11 +194,37 @@ Vorgänge entscheiden
    :level: integration
    :verifies: STORY_DSH_VORG_04, REQ_DSH_VORG_09
 
-   Für alle vier Fälle aus :need:`REQ_DSH_VORG_09` -- Zuweisung eines
-   anderen Trainers, Tausch durch Übernahme, Archivieren einer Schulung und
-   Fristablauf beim Abwesenheitsantrag -- endet der betroffene Vorgang als
-   erledigt. Das Ergebnis nennt jeweils das auslösende Ereignis und keine
-   entscheidende Person.
+   Für die ersten fünf Fälle aus :need:`REQ_DSH_VORG_09` -- Zuweisung eines
+   anderen Trainers, Tausch durch Übernahme, Archivieren einer Schulung,
+   Fristablauf beim Abwesenheitsantrag und Fristablauf bei der
+   Ersatztrainer-Anfrage -- endet der betroffene Vorgang als erledigt. Das
+   Ergebnis nennt jeweils das auslösende Ereignis und keine entscheidende
+   Person. Nach dem Ablauf der Ersatztrainer-Anfrage ist der daraus
+   entstandene Abwesenheitsantrag offen.
+
+   Dasselbe gilt, wenn die Annahme einer Ersatztrainer-Anfrage an der
+   erneuten fachlichen Prüfung scheitert: Der konkrete Prüfgrund steht am
+   erledigten Vorgang und der daraus entstandene Abwesenheitsantrag ist
+   offen.
+
+   Zusätzlich werden bei Absage und bei Löschung eines Termins dessen offene
+   Vormerkung, Assistenzbewerbung und Übernahmeanfrage jeweils als entfallen
+   erledigt; keine davon lässt sich danach noch entscheiden.
+
+   Betrifft ein Abwesenheitsantrag oder eine Ersatztrainer-Anfrage zwei
+   Termine, entfernt Absage oder Löschung des ersten nur diesen Termin. Nach
+   demselben Ereignis am letzten Termin endet der Vorgang als entfallen und
+   die Abwesenheit ist aktiv.
+
+   Wird ein adressierter Trainer stillgelegt oder gelöscht, endet eine an ihn
+   gerichtete Übernahmeanfrage als entfallen. Eine an ihn gerichtete
+   Ersatztrainer-Anfrage endet ebenfalls; zugleich ist der daraus entstandene
+   Abwesenheitsantrag offen. Die alten Vorgänge lassen sich nicht mehr
+   entscheiden.
+
+   Wird ein Antragsteller stillgelegt oder gelöscht, enden je ein offener
+   Vorgang aller sechs Arten als entfallen und bleiben mit dem Kontoende als
+   Grund historisiert. Keiner lässt sich anschließend noch entscheiden.
 
 .. test:: Jede Entscheidung erreicht den Antragsteller
    :id: TEST_DSH_VORG_08
@@ -202,9 +233,51 @@ Vorgänge entscheiden
    :level: integration
    :verifies: REQ_DSH_VORG_10, REQ_NAC_ANL_04
 
-   Nach jeder Entscheidung über einen Vorgang liegt beim Antragsteller genau
-   eine Mitteilung mit dem Ergebnis vor. Beim Entscheider entsteht keine;
-   für ihn steht der Vorgang unter den erledigten.
+   Für jede der sechs Vorgangsarten wird je eine Annahme und Ablehnung
+   herbeigeführt; nach jeder Entscheidung liegt beim Antragsteller genau eine
+   Mitteilung mit dem Ergebnis vor. Dasselbe gilt für jeden Entfall aus
+   :need:`REQ_DSH_VORG_09` und für die manuelle Genehmigung eines
+   Abwesenheitsantrags. Beim Entscheider entsteht keine; entscheidet ein
+   Administrator seinen eigenen Vorgang, entsteht auch für ihn als
+   Antragsteller keine Mitteilung.
+
+   Bei Stilllegung des Antragstellers entstehen dieselben Mitteilungen nur,
+   wenn ein anderer Administrator sie ausgelöst hat; bei Selbststilllegung
+   entsteht keine. Wird das Konto gelöscht, bleibt jeder entfallene Vorgang
+   historisiert, aber keine persönliche Mitteilung des Antragstellers
+   erhalten.
+
+.. test:: Dashboard schützt Vorgänge und Mutationen
+   :id: TEST_DSH_VORG_09
+   :status: review
+   :automated: yes
+   :level: integration
+   :verifies: REQ_DSH_SICHER_01
+
+   Ohne Anmeldung sind Dashboard und Vorgangsschnittstellen nicht
+   erreichbar. Ein Trainer kann weder einen fremden Vorgang zurückziehen
+   noch einen Vorgang entscheiden, für den er nicht zuständig ist; ein
+   direkter Aufruf mit fremder Vorgangs-ID wird mit demselben Status und
+   Fehlerkörper wie der Aufruf einer nicht existierenden ID abgewiesen. Ein
+   Administrator kann weder eine Übernahmeanfrage noch eine
+   Ersatztrainer-Anfrage entscheiden, wenn er nicht selbst der jeweils
+   adressierte Trainer ist. Annehmen, Ablehnen und Zurückziehen werden ohne
+   gültigen CSRF-Schutz abgewiesen und lassen Vorgang, fachliche Daten und
+   Mitteilungen unverändert.
+
+.. test:: Dashboard ist mit Tastatur und Statusnamen bedienbar
+   :id: TEST_DSH_GRUND_03
+   :status: review
+   :automated: yes
+   :level: e2e
+   :verifies: REQ_DSH_GRUND_03
+
+   Alle drei Ränge, Dringlichkeiten sowie offene und erledigte Zustände
+   besitzen programmatisch ermittelbare Namen und sind nicht allein durch
+   Farbe unterscheidbar. Mit der Tastatur lassen sich der Abschnitt der
+   erledigten Vorgänge öffnen und schließen sowie je ein Vorgang annehmen,
+   ablehnen und zurückziehen; nach jeder Aktion liegt der Fokus am geänderten
+   Vorgang oder an seiner Statusmeldung.
 
 Handlungspflichten und Dringlichkeiten
 --------------------------------------
@@ -271,4 +344,6 @@ Handlungspflichten und Dringlichkeiten
 
    Ein exklusiver Termin unter seiner Mindestteilnehmerzahl mit weniger als
    vier Wochen Vorlauf ist als dringend markiert. Ein öffentlicher Termin
-   und ein Termin ohne Zugangsart erhalten diese Markierung nicht.
+   und ein Termin ohne Zugangsart erhalten diese Markierung nicht. Ein
+   öffentlicher Termin oberhalb seiner Höchstteilnehmerzahl zeigt stattdessen
+   die dafür vorgesehene Warnung; bei eingehaltener Höchstzahl fehlt sie.

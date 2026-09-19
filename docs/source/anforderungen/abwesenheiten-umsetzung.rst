@@ -176,21 +176,24 @@ Verfügbarkeitskonflikt
 
 .. story:: Administratoren werden über den Verfügbarkeitskonflikt informiert
    :id: STORY_ABW_HINW_02
-   :status: approved
+   :status: review
    :implements: REQ_ABW_HINW_02
 
-   Als Administrator sehe ich, dass ein für einen Termin in Frage kommender
-   Trainer im fraglichen Zeitraum nicht verfügbar ist.
+   Als Administrator sehe ich in den Benachrichtigungen, dass ein für einen
+   Termin in Frage kommender Trainer im fraglichen Zeitraum nicht verfügbar
+   ist.
 
-.. test:: Administratoren-Übersicht zeigt Verfügbarkeitskonflikte
+.. test:: Adminbereich erhält Verfügbarkeitskonflikt als Mitteilung
    :id: TEST_ABW_HINW_02
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_HINW_02, REQ_ABW_HINW_02
 
-   Nach dem Eintragen einer Abwesenheit mit Verfügbarkeitskonflikt taucht
-   der Hinweis in der Sicht der Administratoren auf.
+   Nach dem Eintragen einer Abwesenheit mit Verfügbarkeitskonflikt entsteht
+   genau eine Mitteilung an den Adminbereich mit Trainer, Zeitraum und den
+   betroffenen Terminen. In der Vorgangsübersicht erscheint kein rein
+   informativer Eintrag.
 
 Genehmigungsverfahren
 -----------------------
@@ -220,24 +223,27 @@ Genehmigungsverfahren
 
 .. story:: Administrator genehmigt den Antrag
    :id: STORY_ABW_KONFL_02
-   :status: approved
+   :status: review
    :priority: high
    :implements: REQ_ABW_KONFL_04
 
    Als Administrator genehmige ich einen Abwesenheitsantrag. Die Abwesenheit
    wird aktiv, die Zuweisungen aller kollidierenden Termine entfallen, und
-   ich kann die frei gewordenen Termine neu vergeben.
+   ich kann die frei gewordenen Termine neu vergeben. Der Trainer erhält
+   eine Mitteilung über die Genehmigung.
 
 .. test:: Genehmigung entfernt alle kollidierenden Zuweisungen
    :id: TEST_ABW_KONFL_02
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_KONFL_02, REQ_ABW_KONFL_04
 
    Nach der Genehmigung eines Antrags mit mehreren kollidierenden Terminen
    sind alle betroffenen Zuweisungen entfernt, auch bei nur teilweiser
-   Überschneidung. Die Termine lassen sich neu vergeben.
+   Überschneidung. Die Termine lassen sich neu vergeben, und der Trainer
+   erhält genau eine Mitteilung mit dem Zeitraum und allen frei gewordenen
+   Terminen.
 
 .. story:: Administrator lehnt den Antrag ab
    :id: STORY_ABW_KONFL_03
@@ -296,7 +302,7 @@ Genehmigungsverfahren
 
 .. story:: Administrator entscheidet über eigenen Antrag
    :id: STORY_ABW_KONFL_06
-   :status: approved
+   :status: review
    :implements: REQ_ABW_KONFL_07
 
    Als Administrator, der zugleich Trainer ist, entscheide ich über meinen
@@ -304,38 +310,41 @@ Genehmigungsverfahren
 
 .. test:: Administrator kann eigenen Antrag entscheiden
    :id: TEST_ABW_KONFL_06
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_KONFL_06, REQ_ABW_KONFL_07
 
    Ein Administrator, der selbst einen Antrag gestellt hat, kann ihn
-   genehmigen oder ablehnen.
+   genehmigen oder ablehnen. In beiden Fällen entsteht keine Mitteilung an
+   ihn selbst.
 
 .. story:: Administratoren sehen offene Anträge in der Übersicht
    :id: STORY_ABW_UEBER_01
-   :status: approved
+   :status: review
    :implements: REQ_ABW_UEBER_01
 
-   Als Administrator sehe ich alle offenen Abwesenheitsanträge gesammelt,
-   klar unterscheidbar von reinen Verfügbarkeitshinweisen.
+   Als Administrator sehe ich alle offenen Abwesenheitsanträge gesammelt;
+   reine Verfügbarkeitshinweise stehen stattdessen in den
+   Benachrichtigungen.
 
-.. test:: Übersicht trennt Anträge von Hinweisen
+.. test:: Übersicht enthält nur entscheidungsbedürftige Anträge
    :id: TEST_ABW_UEBER_01
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_UEBER_01, REQ_ABW_UEBER_01
 
-   Die Administratoren-Übersicht führt offene Anträge und
-   Verfügbarkeitshinweise erkennbar getrennt.
+   Die Administratoren-Übersicht führt offene Anträge, aber keine
+   Verfügbarkeitshinweise. Letztere stehen ausschließlich in den
+   Benachrichtigungen.
 
 Fristablauf
 ------------
 
 .. story:: Unentschiedener Antrag wird automatisch genehmigt
    :id: STORY_ABW_AUTO_01
-   :status: approved
+   :status: review
    :priority: high
    :implements: REQ_ABW_AUTO_01, REQ_ABW_AUTO_02
 
@@ -345,7 +354,7 @@ Fristablauf
 
 .. test:: Fristablauf genehmigt automatisch und informiert
    :id: TEST_ABW_AUTO_01
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_AUTO_01, REQ_ABW_AUTO_01, REQ_ABW_AUTO_02
@@ -428,7 +437,7 @@ Tausch mit einem Ersatztrainer
 
 .. story:: Ich schlage einen Ersatztrainer vor
    :id: STORY_ABW_TAUSCH_01
-   :status: approved
+   :status: review
    :priority: high
    :implements: REQ_ABW_TAUSCH_01, REQ_ABW_TAUSCH_02
 
@@ -439,7 +448,7 @@ Tausch mit einem Ersatztrainer
 
 .. test:: Tausch-Option nur mit zwei Wochen Vorlauf und passender Qualifikation
    :id: TEST_ABW_TAUSCH_01
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_TAUSCH_01, REQ_ABW_TAUSCH_01
@@ -449,7 +458,7 @@ Tausch mit einem Ersatztrainer
 
 .. test:: Zu kurzer Vorlauf lässt nur den Genehmigungsantrag zu
    :id: TEST_ABW_TAUSCH_02
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_TAUSCH_01, REQ_ABW_TAUSCH_02
@@ -460,7 +469,7 @@ Tausch mit einem Ersatztrainer
 
 .. story:: Ersatztrainer entscheidet über die Anfrage
    :id: STORY_ABW_TAUSCH_02
-   :status: approved
+   :status: review
    :implements: REQ_ABW_TAUSCH_03, REQ_ABW_TAUSCH_04
 
    Als vorgeschlagener Ersatztrainer nehme ich die Anfrage an und werde den
@@ -469,18 +478,41 @@ Tausch mit einem Ersatztrainer
 
 .. test:: Annahme weist den Ersatztrainer allen betroffenen Terminen zu
    :id: TEST_ABW_TAUSCH_03
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_TAUSCH_02, REQ_ABW_TAUSCH_04
 
-   Nimmt der Ersatztrainer an, ist er anschließend allen betroffenen
-   Terminen zugewiesen, die Abwesenheit des ursprünglichen Trainers ist
-   aktiv, und es liegt kein offener Antrag vor.
+   In einem Fall bleibt der Terminumfang unverändert; in einem zweiten wird
+   einer von zwei betroffenen Terminen vor der Annahme nach
+   :need:`REQ_TER_AEND_05` abgesagt. Nimmt der Ersatztrainer an, ist er
+   anschließend allen jeweils verbliebenen betroffenen Terminen zugewiesen,
+   die Abwesenheit des ursprünglichen Trainers ist aktiv, und es liegt kein
+   offener Antrag vor. Der ursprüngliche Trainer hat genau eine Mitteilung
+   über die Annahme. Unmittelbar zuvor werden der unveränderte beziehungsweise
+   zulässig reduzierte Terminumfang sowie Qualifikation, Abwesenheiten und
+   andere Zuweisungen des Ersatztrainers erneut erfolgreich geprüft.
+
+.. test:: Ungültig gewordene Tauschanfrage fällt in die Genehmigung zurück
+   :id: TEST_ABW_TAUSCH_06
+   :status: review
+   :automated: yes
+   :level: integration
+   :verifies: REQ_ABW_TAUSCH_04
+
+   Nach dem Stellen der Anfrage wird je Fall entweder dem ursprünglichen
+   Trainer ein weiterer kollidierender Termin zugewiesen oder beim
+   Ersatztrainer die Qualifikation entzogen, eine kollidierende Abwesenheit
+   eingetragen beziehungsweise eine andere Terminzuweisung erzeugt. Die
+   Annahme weist keinen Termin zu und aktiviert die Abwesenheit noch nicht.
+   Die Ersatztrainer-Anfrage ist als fachlich ungültig erledigt, ein
+   regulärer Abwesenheitsantrag für alle aktuell kollidierenden Termine ist
+   offen, und beide Trainer haben je genau eine Mitteilung mit dem konkreten
+   Grund.
 
 .. story:: Ablehnung oder Fristablauf fällt zurück in die Genehmigung
    :id: STORY_ABW_TAUSCH_03
-   :status: approved
+   :status: review
    :priority: high
    :implements: REQ_ABW_TAUSCH_05
 
@@ -490,7 +522,7 @@ Tausch mit einem Ersatztrainer
 
 .. test:: Ablehnung erzeugt einen Genehmigungsantrag
    :id: TEST_ABW_TAUSCH_04
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_TAUSCH_03, REQ_ABW_TAUSCH_05
@@ -501,7 +533,7 @@ Tausch mit einem Ersatztrainer
 
 .. test:: Ausbleibende Reaktion nach einer Woche erzeugt ebenfalls einen Antrag
    :id: TEST_ABW_TAUSCH_05
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_TAUSCH_03, REQ_ABW_TAUSCH_05
@@ -510,22 +542,23 @@ Tausch mit einem Ersatztrainer
    ebenfalls ein Antrag nach :need:`REQ_ABW_KONFL_02`; der ursprüngliche
    Trainer wird über den Fristablauf informiert.
 
-.. story:: Administrator sieht offene Tauschanfrage informativ
+.. story:: Administrator sieht erst den entscheidungsbedürftigen Antrag
    :id: STORY_ABW_UEBER_03
-   :status: approved
+   :status: review
    :implements: REQ_ABW_UEBER_03
 
-   Als Administrator sehe ich, dass eine Tauschanfrage offen ist, ohne dass
-   ich reagieren müsste.
+   Als Administrator sehe ich eine offene Tauschanfrage nicht in meiner
+   Vorgangsübersicht. Erst wenn daraus ein Genehmigungsantrag wird, sehe und
+   entscheide ich ihn dort.
 
-.. test:: Übersicht zeigt Tauschanfragen getrennt von Anträgen
+.. test:: Übersicht zeigt Tauschanfragen erst als Genehmigungsantrag
    :id: TEST_ABW_UEBER_03
-   :status: approved
+   :status: review
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_UEBER_03, REQ_ABW_UEBER_03
 
-   Eine offene Tauschanfrage erscheint in der Administratoren-Übersicht
-   getrennt von den offenen Anträgen und ohne Aufforderung zur Entscheidung.
-   Fällt sie nach Ablehnung oder Fristablauf in einen Antrag zurück,
-   erscheint sie danach dort.
+   Eine offene Tauschanfrage erscheint beim Antragsteller und beim
+   vorgeschlagenen Ersatztrainer, aber nicht in der
+   Administratoren-Übersicht. Fällt sie nach Ablehnung oder Fristablauf in
+   einen Genehmigungsantrag zurück, erscheint sie danach dort.

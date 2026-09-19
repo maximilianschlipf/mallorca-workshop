@@ -47,7 +47,6 @@ Grundsatz
    :status: review
    :priority: high
    :links: DEC_NAC_TRENNUNG_01, REQ_DAT_NACHR_01
-   :supersedes: REQ_TRA_NACHR_01
 
    Jeder angemeldete Benutzer hat eine eigene Anzeige für die
    Benachrichtigungen, die an ihn gerichtet sind. Dort laufen alle
@@ -102,19 +101,21 @@ Anlässe
       * - Trainerzuweisung gesetzt
         - zugewiesener Trainer
         - Termin
-        - :need:`REQ_TER_ZUW_07`
+        - :need:`REQ_TER_ZUW_07`; nur direkte Zuweisung durch einen
+          Administrator
       * - Trainerzuweisung beendet
         - bisheriger Trainer
         - Termin
-        - :need:`REQ_TER_ZUW_04`, :need:`REQ_TER_ZUW_05`
+        - :need:`REQ_TER_ZUW_04`, :need:`REQ_TER_ZUW_05`; nur direktes
+          Abziehen oder Austauschen durch einen Administrator
       * - Rollenwechsel zum Trainer
         - betroffene Person
         - Termin, bisherige und neue Rolle
         - :need:`REQ_TER_ZUW_08`
       * - Termin geändert
         - Trainer und Assistenten
-        - je geändertem Feld alter und neuer Wert; beim Online-Zugang
-          ausschließlich die neue URL
+        - je geändertem Feld alter und neuer Wert; beim Online-Zugang nur
+          der Hinweis auf die Änderung und der geschützte Sprung zum Termin
         - :need:`REQ_TER_AEND_12`
       * - Termin abgesagt
         - Trainer und Assistenten
@@ -184,10 +185,37 @@ Anlässe
         - antragstellender Trainer
         - Zeitraum
         - :need:`REQ_ABW_KONFL_05`
+      * - Abwesenheitsantrag manuell genehmigt
+        - antragstellender Trainer
+        - Zeitraum, frei gewordene Termine
+        - :need:`REQ_ABW_KONFL_04`
       * - Abwesenheitsantrag nach Fristablauf genehmigt
         - antragstellender Trainer und Adminbereich
         - Zeitraum, frei gewordene Termine
         - :need:`REQ_ABW_AUTO_02`
+      * - Ersatztrainer-Anfrage entschieden, ungültig oder abgelaufen
+        - anfragender und bei fachlicher Ungültigkeit auch vorgeschlagener
+          Ersatztrainer
+        - Zeitraum, Ergebnis und Grund; bei Ablehnung, fachlicher
+          Ungültigkeit oder Fristablauf der entstandene Abwesenheitsantrag
+        - :need:`REQ_ABW_TAUSCH_04`, :need:`REQ_ABW_TAUSCH_05`
+      * - Verfügbarkeitskonflikt durch Abwesenheit
+        - Adminbereich
+        - Trainer, Zeitraum und betroffene Termine
+        - :need:`REQ_ABW_HINW_02`
+      * - Vorgang durch Terminabsage oder -löschung angepasst oder entfallen
+        - Antragsteller des offenen Vorgangs
+        - Vorgangsart, Termin, Anpassung oder Entfall und Absage oder Löschung
+          als Grund
+        - :need:`REQ_DSH_VORG_09`, :need:`REQ_TER_AEND_05`
+      * - Vorgang durch Stilllegung oder Kontolöschung entfallen
+        - Antragsteller des offenen Vorgangs, sofern sein Konto nach dem
+          Ereignis fortbesteht
+        - Vorgangsart, Entfall und Stilllegung oder Kontolöschung als Grund;
+          bei einer an das beendete Konto gerichteten Ersatztrainer-Anfrage
+          der entstandene Abwesenheitsantrag
+        - :need:`REQ_DSH_VORG_09`, :need:`REQ_USR_ENDE_01`,
+          :need:`REQ_USR_ENDE_02`
 
 .. req:: Keine Mitteilung ohne Anlass im Katalog
    :id: REQ_NAC_ANL_02
@@ -215,6 +243,19 @@ Anlässe
    entsteht je geändertem Feld eine Mitteilung -- so, wie
    :need:`REQ_TER_AEND_12` es für den Inhalt verlangt.
 
+   Erfüllt ein Ereignis zugleich einen allgemeinen und einen spezielleren
+   Anlass, entsteht nur die Mitteilung zum spezielleren Anlass. Deshalb
+   erzeugen insbesondere eine bestätigte Vormerkung, eine angenommene
+   Übernahmeanfrage, eine angenommene Ersatztrainer-Anfrage und ein
+   Rollenwechsel keine zusätzliche Mitteilung über das dabei gesetzte oder
+   beendete Trainerverhältnis. Wird eine Qualifikation bei offener
+   Freigabeanfrage direkt vergeben, entsteht nur die Mitteilung zur
+   Direktvergabe. Bei einer manuell oder durch Fristablauf genehmigten
+   Abwesenheit entsteht nur die Mitteilung zur Abwesenheitsgenehmigung und
+   keine zusätzliche zum beendeten Trainerverhältnis. Die allgemeinen
+   Anlässe gelten nur für die direkte Zuweisungsänderung durch einen
+   Administrator.
+
 .. req:: Der Auslöser erhält keine Mitteilung
    :id: REQ_NAC_ANL_04
    :status: review
@@ -226,6 +267,20 @@ Anlässe
 
    Das gilt auch, wenn er als Trainer desselben Termins zugewiesen ist: Die
    eigene Handlung ist ihm bekannt.
+
+   Ist dieselbe Person Antragsteller und Entscheider, hat diese Regel
+   Vorrang vor der Mitteilung an den Antragsteller: Sie erhält keine
+   Mitteilung an sich selbst.
+
+   Die Regel gilt nur für persönliche Mitteilungen. Eine Mitteilung an den
+   gemeinsamen Adminbereich bleibt für alle Administratoren sichtbar, auch
+   wenn einer von ihnen das auslösende Ereignis selbst herbeigeführt hat.
+
+   Scheitert die Annahme einer Ersatztrainer-Anfrage an der unmittelbar
+   ausgeführten erneuten fachlichen Prüfung nach :need:`REQ_ABW_TAUSCH_04`,
+   erhält ausnahmsweise auch der vorgeschlagene Ersatztrainer als Auslöser
+   eine persönliche Mitteilung mit dem konkreten Grund. Die synchrone
+   Fehlermeldung allein ersetzt diesen dauerhaften Nachweis nicht.
 
 .. req:: Teilnehmer erhalten keine Mitteilungen
    :id: REQ_NAC_ANL_05
@@ -245,11 +300,15 @@ Anzeige
    :status: review
    :priority: high
    :links: REQ_NAC_GRUND_01
-   :supersedes: REQ_TRA_NACHR_02
 
    Ungelesene Benachrichtigungen sind als solche erkennbar, ohne die Anzeige
    zu öffnen. Erkennbar ist dabei nicht nur, dass es ungelesene gibt,
    sondern auch wie viele.
+
+   Gelesen und ungelesen sind programmatisch ermittelbar und nicht allein
+   durch Farbe unterschieden. Anzeige, Sprünge und "Alles als gelesen"
+   sind mit der Tastatur bedienbar; nach der Aktion bleibt der Fokus an der
+   Anzeige oder wechselt nachvollziehbar zu ihrer Statusmeldung.
 
 .. req:: Neueste Mitteilung zuerst
    :id: REQ_NAC_ANZ_02
@@ -291,8 +350,10 @@ Anzeige
    :links: REQ_NAC_GRUND_01, REQ_USR_ENDE_02
 
    Mitteilungen werden nicht durch Zeitablauf entfernt und lassen sich vom
-   Empfänger nicht löschen. Sie enden allein mit dem Benutzerkonto, zu dem
-   sie gehören.
+   Empfänger nicht löschen. Persönliche Mitteilungen enden allein mit dem
+   empfangenden Benutzerkonto. Mitteilungen an den Adminbereich bleiben
+   unabhängig vom Anlegen oder Löschen einzelner Administratorkonten
+   bestehen.
 
    Sie sind der einzige dauerhafte Nachweis darüber, worüber ein Benutzer
    informiert wurde. Ein Löschrecht des Empfängers würde genau diesen
@@ -325,6 +386,10 @@ Mitteilungen an den Adminbereich
    einer Qualifikation betreffen den Adminbereich als Ganzes, und ein
    Administrator, der später hinzukommt, sieht dieselbe Geschichte wie
    seine Kollegen.
+
+   Löscht man ein in der Mitteilung genanntes Benutzerkonto, bleibt die
+   Mitteilung mit dem zum Anlass gespeicherten Namen bestehen; sie verweist
+   nicht mehr auf das gelöschte Konto.
 
 .. req:: Gelesen gilt für den gesamten Adminbereich
    :id: REQ_NAC_ADM_02
@@ -379,3 +444,19 @@ Datenhaltung
    einen Prozess, und eine Zustellung über Prozessgrenzen hinweg ist nicht
    nötig -- so, wie :need:`REQ_DAT_NACHR_01` es bereits für das
    Nachrichtensystem festhält.
+
+Zugriffsschutz
+--------------
+
+.. req:: Nur Empfänger sehen und verändern ihren Lesezustand
+   :id: REQ_NAC_SICHER_01
+   :status: review
+   :priority: high
+   :links: REQ_NAC_DAT_02, REQ_USR_LOGIN_02
+
+   Eine persönliche Mitteilung ist ausschließlich für ihr Empfängerkonto
+   sichtbar und als gelesen markierbar. Eine Mitteilung an den Adminbereich
+   ist ausschließlich für angemeldete Administratoren sichtbar und als
+   gelesen markierbar. Direkte Aufrufe mit einer fremden Mitteilungs-ID
+   geben weder Inhalt noch Existenz preis. Jede Änderung des Lesezustands
+   verlangt den CSRF-Schutz der Anwendung.

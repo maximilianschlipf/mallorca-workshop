@@ -396,7 +396,7 @@ class TerminplanungIntegrationTest {
                 "oeffentlich", "vor_ort", "Berlin", null, null, false)));
     }
 
-    // verifies: TEST_TER_AEND_10, TEST_TER_AEND_11
+    // verifies: TEST_TER_AEND_10
     @Test
     void schulungBleibtUnveraenderlichUndOperativeAenderungenWerdenMitgeteilt() {
         var termin = termine.anlegen(ADMIN, form("SCH-001", d("2028-12-01"), d("2028-12-01"), "oeffentlich", "vor_ort", "Köln", null, null, false));

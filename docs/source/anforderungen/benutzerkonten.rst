@@ -489,14 +489,30 @@ Konto beenden
 
 .. req:: Benutzerkonto stilllegen
    :id: REQ_USR_ENDE_01
-   :status: approved
+   :status: review
    :priority: low
    :links: REQ_USR_PROF_02
 
    Ein Administrator kann ein Benutzerkonto stilllegen. Ein stillgelegtes
-   Konto kann sich nicht mehr anmelden. Seine Profildaten und Vorgänge
-   bleiben erhalten; ausschließlich zukünftige Trainer- und
-   Assistenzzuweisungen werden nach :need:`REQ_USR_ENDE_04` entfernt.
+   Konto kann sich nicht mehr anmelden. Seine Profildaten und erledigten
+   Vorgänge bleiben erhalten. Zukünftige Trainer- und Assistenzzuweisungen
+   werden nach :need:`REQ_USR_ENDE_04` entfernt; offene eigene und eingehende
+   Vorgänge werden nach den folgenden Regeln bereinigt.
+
+   Alle offenen selbst gestellten Vorgänge enden als entfallen und bleiben in
+   der Historie. Das stillgelegte Konto erhält je Vorgang genau eine
+   persönliche Mitteilung, die es nach einer möglichen Reaktivierung sehen
+   kann. Legt ein Administrator sein eigenes Konto still, gilt stattdessen
+   die Auslöserregel nach :need:`REQ_NAC_ANL_04`: Für ihn entstehen keine
+   persönlichen Mitteilungen. Damit kann für ein inaktives Konto später
+   weder eine Qualifikation noch eine Termin- oder Assistenzzuweisung aus
+   einem alten Vorgang entstehen.
+
+   Eine an das Konto gerichtete offene Übernahmeanfrage endet als entfallen;
+   ihr Antragsteller erhält genau eine Mitteilung. Eine an das Konto
+   gerichtete Ersatztrainer-Anfrage endet ebenfalls und wird für ihren
+   Antragsteller in einen regulären Abwesenheitsantrag überführt; auch darüber
+   erhält er genau eine Mitteilung.
 
 .. req:: Stilllegen löst zukünftige Zuweisungen
    :id: REQ_USR_ENDE_04
@@ -524,13 +540,23 @@ Konto beenden
 
 .. req:: Benutzerkonto löschen
    :id: REQ_USR_ENDE_02
-   :status: approved
+   :status: review
    :priority: low
    :links: REQ_USR_ENDE_01, REQ_NAC_ANZ_05
 
    Ein Administrator kann ein Benutzerkonto löschen. Es verschwindet samt
-   seinen Qualifikationen, Vormerkungen, Assistenzbewerbungen, offenen
-   Anfragen, Abwesenheiten und Mitteilungen.
+   seinen Qualifikationen, offenen Vormerkungen, offenen
+   Assistenzbewerbungen, offenen Anfragen, Abwesenheiten und persönlichen
+   Mitteilungen. Erledigte Vorgänge bleiben nach :need:`REQ_DSH_VORG_08` als
+   Historie erhalten.
+
+   Noch offene selbst gestellte Vorgänge werden vor dem Löschen wie bei der
+   Stilllegung als entfallen beendet. Ihre anschließend zusammen mit dem
+   Konto entfernten persönlichen Mitteilungen bleiben nicht erhalten.
+
+   Offene Übernahme- und Ersatztrainer-Anfragen, die an das gelöschte Konto
+   gerichtet sind, werden zuvor genauso beendet beziehungsweise überführt und
+   mitgeteilt wie beim Stilllegen nach :need:`REQ_USR_ENDE_01`.
 
 .. req:: Termine verlieren durch Löschen ihren Trainer
    :id: REQ_USR_ENDE_03
@@ -544,9 +570,9 @@ Konto beenden
 
 .. req:: Historie behält den Namen
    :id: REQ_USR_ENDE_06
-   :status: approved
+   :status: review
    :priority: high
-   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01, REQ_TER_STAT_01
+   :links: REQ_USR_ENDE_02, REQ_ASS_PLATZ_01, REQ_TER_STAT_01, REQ_DSH_VORG_08
 
    Bei abgeschlossenen Terminen werden die Zuweisungen als ausführender
    Trainer und als Assistent beim Löschen von einem Verweis auf das Konto in
@@ -554,3 +580,7 @@ Konto beenden
    Schulung gehalten oder assistiert hat, überlebt damit das Löschen, ohne
    dass das Konto selbst weiterbestehen muss. Das Löschen wird deswegen
    nicht verweigert.
+
+   Dasselbe gilt für erledigte Vorgänge: Antragsteller und Entscheider werden
+   als Namens-Snapshot erhalten, ohne weiter auf das gelöschte Konto zu
+   verweisen.

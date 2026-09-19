@@ -203,14 +203,15 @@ Was an der Genehmigungspflicht hängt:
 
 .. req:: Genehmigung hebt die Trainerzuweisung auf
    :id: REQ_ABW_KONFL_04
-   :status: approved
+   :status: review
    :priority: high
-   :links: REQ_ABW_KONFL_02, REQ_ABW_PRUEF_02
+   :links: REQ_ABW_KONFL_02, REQ_ABW_PRUEF_02, REQ_NAC_ANL_01
 
    Genehmigt ein Administrator den Antrag, wird die Abwesenheit aktiv und
    die Zuweisungen aller kollidierenden Termine entfallen. Das gilt auch,
    wenn die Abwesenheit einen Termin nur teilweise überschneidet; die
-   Termine wechseln in den Zustand "nicht zugewiesen".
+   Termine wechseln in den Zustand "nicht zugewiesen". Der Trainer erhält
+   eine Mitteilung über die Genehmigung und die frei gewordenen Termine.
 
 .. req:: Ablehnung lässt die Zuweisung bestehen
    :id: REQ_ABW_KONFL_05
@@ -223,18 +224,19 @@ Was an der Genehmigungspflicht hängt:
 
 .. req:: Administrator entscheidet auch über eigene Anträge
    :id: REQ_ABW_KONFL_07
-   :status: approved
-   :links: REQ_ABW_KONFL_02, DEC_USR_SELBST_01
+   :status: review
+   :links: REQ_ABW_KONFL_02, DEC_USR_SELBST_01, REQ_NAC_ANL_04
 
    Ein Administrator darf einen Abwesenheitsantrag entscheiden, den er
-   selbst gestellt hat.
+   selbst gestellt hat. Weil Antragsteller und Entscheider dieselbe Person
+   sind, entsteht dabei keine Mitteilung an ihn selbst.
 
 Unentschiedene Anträge
 ----------------------
 
 .. req:: Genehmigung eine Woche vor Beginn
    :id: REQ_ABW_AUTO_01
-   :status: approved
+   :status: review
    :priority: high
    :links: REQ_ABW_KONFL_03, REQ_DSH_VORG_09
 
@@ -249,7 +251,7 @@ Unentschiedene Anträge
 
 .. req:: Beteiligte werden über die Genehmigung nach Frist informiert
    :id: REQ_ABW_AUTO_02
-   :status: approved
+   :status: review
    :priority: high
    :links: REQ_ABW_AUTO_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
@@ -271,12 +273,13 @@ Ablauf bei Verfügbarkeitskonflikt
 
 .. req:: Information an die Administratoren
    :id: REQ_ABW_HINW_02
-   :status: approved
-   :links: REQ_ABW_HINW_01
+   :status: review
+   :links: REQ_ABW_HINW_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
-   Bei einem Verfügbarkeitskonflikt werden die Administratoren darüber
-   informiert, dass ein für diese Termine in Frage kommender Trainer im
-   Zeitraum nicht zur Verfügung steht.
+   Bei einem Verfügbarkeitskonflikt erhält der Adminbereich eine Mitteilung,
+   dass ein für die betroffenen Termine in Frage kommender Trainer im
+   Zeitraum nicht zur Verfügung steht. Eine zusätzliche rein informative
+   Zeile in der Vorgangsübersicht entsteht nicht.
 
 Tausch mit einem Ersatztrainer
 -------------------------------
@@ -286,7 +289,7 @@ Zuweisungskonflikt einen bereits qualifizierten Ersatztrainer vorschlagen.
 
 .. req:: Ersatztrainer statt Genehmigungsantrag
    :id: REQ_ABW_TAUSCH_01
-   :status: approved
+   :status: review
    :priority: high
    :links: REQ_ABW_KONFL_02
 
@@ -299,7 +302,7 @@ Zuweisungskonflikt einen bereits qualifizierten Ersatztrainer vorschlagen.
 
 .. req:: Tausch braucht zwei Wochen Vorlauf
    :id: REQ_ABW_TAUSCH_02
-   :status: approved
+   :status: review
    :priority: high
    :links: REQ_ABW_TAUSCH_01, REQ_ABW_ERF_07
 
@@ -318,27 +321,41 @@ Zuweisungskonflikt einen bereits qualifizierten Ersatztrainer vorschlagen.
 
 .. req:: Anfrage an den Ersatztrainer
    :id: REQ_ABW_TAUSCH_03
-   :status: approved
-   :links: REQ_ABW_TAUSCH_01
+   :status: review
+   :links: REQ_ABW_TAUSCH_01, REQ_DSH_VORG_01
 
    Der ausgewählte Ersatztrainer erhält eine Anfrage, die betroffenen
    Termine zu übernehmen, und kann sie annehmen oder ablehnen.
 
 .. req:: Annahme weist den Ersatztrainer zu
    :id: REQ_ABW_TAUSCH_04
-   :status: approved
+   :status: review
    :priority: high
-   :links: REQ_ABW_TAUSCH_03
+   :links: REQ_ABW_TAUSCH_03, REQ_NAC_ANL_01
 
    Nimmt der Ersatztrainer an, wird er den betroffenen Terminen zugewiesen,
    und die Abwesenheit des ursprünglichen Trainers wird aktiv. Es ist keine
-   weitere Entscheidung durch einen Administrator nötig.
+   weitere Entscheidung durch einen Administrator nötig. Der ursprüngliche
+   Trainer erhält genau eine Mitteilung über die Annahme.
+
+   Unmittelbar vor der Annahme prüft das System Qualifikation, aktive
+   Abwesenheiten und andere Terminzuweisungen des Ersatztrainers erneut.
+   Außerdem darf die Menge der vom Abwesenheitszeitraum betroffenen Termine
+   seit der Anfrage nur durch Absage oder Löschung nach
+   :need:`REQ_TER_AEND_05` kleiner geworden sein; neue Termine werden nicht
+   stillschweigend Teil der Anfrage.
+
+   Ist eine dieser Bedingungen nicht mehr erfüllt, endet die
+   Ersatztrainer-Anfrage als fachlich ungültig. Für die aktuell betroffenen
+   Termine entsteht stattdessen ein regulärer Abwesenheitsantrag nach
+   :need:`REQ_ABW_KONFL_02`. Ursprünglicher und vorgeschlagener Ersatztrainer
+   erhalten jeweils genau eine Mitteilung über den Grund.
 
 .. req:: Ablehnung oder Fristablauf führt zur Genehmigung
    :id: REQ_ABW_TAUSCH_05
-   :status: approved
+   :status: review
    :priority: high
-   :links: REQ_ABW_TAUSCH_03, REQ_ABW_KONFL_02
+   :links: REQ_ABW_TAUSCH_03, REQ_ABW_KONFL_02, REQ_NAC_ANL_01
 
    Lehnt der Ersatztrainer ab, oder reagiert er eine Woche nach der Anfrage
    nicht, wird daraus ein regulärer Genehmigungsantrag nach
@@ -359,13 +376,13 @@ Anforderungen dieser Bereiche, sobald sie entstehen.
 
 .. req:: Abwesenheiten in der Administratorenübersicht
    :id: REQ_ABW_UEBER_01
-   :status: approved
-   :links: REQ_ABW_KONFL_02, REQ_ABW_HINW_02
+   :status: review
+   :links: REQ_ABW_KONFL_02
 
-   Administratoren sehen in ihrer Übersicht die offenen Abwesenheitsanträge
-   sowie die Informationen zu Verfügbarkeitskonflikten. Offene Anträge sind
-   von reinen Informationen unterscheidbar, da nur Erstere eine Entscheidung
-   erfordern.
+   Administratoren sehen in ihrer Vorgangsübersicht die offenen
+   Abwesenheitsanträge. Informationen zu Verfügbarkeitskonflikten stehen als
+   Mitteilungen in den Benachrichtigungen nach :need:`REQ_ABW_HINW_02` und
+   nicht zwischen den entscheidungsbedürftigen Anträgen.
 
 .. req:: Offene Anträge zeigen ihre Restfrist
    :id: REQ_ABW_UEBER_02
@@ -376,13 +393,13 @@ Anforderungen dieser Bereiche, sobald sie entstehen.
    Zu jedem offenen Abwesenheitsantrag ist erkennbar, wie lange er noch
    entschieden werden kann, bevor er durch Fristablauf genehmigt wird.
 
-.. req:: Offene Tauschanfragen sind rein informativ
+.. req:: Offene Tauschanfragen betreffen nur die Beteiligten
    :id: REQ_ABW_UEBER_03
-   :status: approved
+   :status: review
    :links: REQ_ABW_UEBER_01, REQ_ABW_TAUSCH_01
 
-   Administratoren sehen eine offene Tauschanfrage in ihrer Übersicht, klar
-   unterscheidbar von den offenen Genehmigungsanträgen. Von ihr geht kein
-   Handlungsbedarf aus -- solange sie offen ist, muss kein Administrator
-   reagieren. Erst wenn sie nach :need:`REQ_ABW_TAUSCH_05` in einen
+   Solange eine Tauschanfrage offen ist, erscheint sie nur bei ihrem
+   Antragsteller und dem vorgeschlagenen Ersatztrainer. In der
+   Administratorenübersicht erscheint sie nicht, weil dort niemand handeln
+   muss. Erst wenn sie nach :need:`REQ_ABW_TAUSCH_05` in einen
    Genehmigungsantrag übergeht, erscheint sie unter den offenen Anträgen.

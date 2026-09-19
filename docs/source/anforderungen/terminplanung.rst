@@ -498,15 +498,17 @@ Zustände eines Termins
 
 .. req:: Operative Änderungen werden mitgeteilt
    :id: REQ_TER_AEND_12
-   :status: approved
+   :status: review
    :priority: high
    :links: REQ_TER_AEND_01, REQ_TER_AEND_03, REQ_NAC_ANL_01
 
    Ändert ein Administrator Zeitraum, Ort, Durchführungsart, Kundenfirma oder
    Online-Zugang eines Termins, erhalten der zugewiesene Trainer und alle
    zugewiesenen Assistenten je geändertem Feld eine Mitteilung. Sie nennt den
-   alten und den neuen Wert. Beim Online-Zugang enthält sie ausschließlich
-   die neue URL, damit veraltete Einwahldaten nicht weiterverwendet werden.
+   alten und den neuen Wert. Beim Online-Zugang enthält sie keine URL,
+   sondern nur den Hinweis auf die Änderung und den geschützten Sprung zum
+   Termin. Dort sehen ausschließlich die aktuell nach
+   :need:`REQ_TER_FORM_12` Berechtigten die aktuelle URL.
 
    Eine reine Änderung der Zugangsart ohne Änderung einer Kundenfirma erzeugt
    keine Mitteilung.
@@ -579,8 +581,8 @@ Zustände eines Termins
 
 .. req:: Absage und Löschen werden mitgeteilt
    :id: REQ_TER_AEND_05
-   :status: approved
-   :links: REQ_TER_AEND_04, REQ_NAC_ANL_01
+   :status: review
+   :links: REQ_TER_AEND_04, REQ_NAC_ANL_01, REQ_DSH_VORG_09
 
    Ist dem abgesagten Termin ein Trainer zugewiesen, erhält er eine
    Mitteilung über die Absage. Dasselbe gilt für zugewiesene Assistenten.
@@ -589,6 +591,19 @@ Zustände eines Termins
    Wird ein noch nicht gestarteter Termin gelöscht, erhalten sein zugewiesener
    Trainer und seine Assistenten ebenfalls eine Mitteilung. Einen Löschgrund
    gibt es nicht; ein fachlich relevanter Ausfall wird stattdessen abgesagt.
+
+   Bei Absage oder Löschung enden alle offenen Vormerkungen,
+   Assistenzbewerbungen und Übernahmeanfragen zu diesem Termin als entfallen.
+   Sie lassen sich danach nicht mehr entscheiden; ihre Antragsteller erhalten
+   je Vorgang genau eine Mitteilung mit Absage oder Löschung als Grund.
+
+   Gehört der Termin zu einem Abwesenheitsantrag oder einer
+   Ersatztrainer-Anfrage für mehrere Termine, wird nur dieser Termin daraus
+   entfernt. Der Vorgang bleibt für die übrigen Termine offen und sein
+   Antragsteller erhält genau eine Mitteilung über die Anpassung. Bleibt kein
+   betroffener Termin übrig, wird die Abwesenheit ohne Genehmigung aktiv und
+   der Vorgang endet als entfallen; auch darüber erhält der Antragsteller
+   genau eine Mitteilung.
 
 .. req:: Termin löschen
    :id: REQ_TER_AEND_06

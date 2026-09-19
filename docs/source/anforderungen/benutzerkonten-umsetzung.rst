@@ -488,30 +488,53 @@ Konto beenden
 .. story:: Ich lege ein Konto still und aktiviere es wieder
    :id: STORY_USR_ENDE_01
    :status: approved
-   :implements: REQ_USR_ENDE_01, REQ_USR_ENDE_04, REQ_USR_ENDE_05, REQ_USR_PROF_02
+   :implements: REQ_USR_ENDE_04, REQ_USR_ENDE_05, REQ_USR_PROF_02
 
    Als Administrator lege ich ein Konto still. Es kann sich nicht mehr
    anmelden und ist aus den zukünftigen Terminen heraus. Später aktiviere
    ich es wieder; seine alten Zuweisungen kommen nicht zurück.
 
-.. story:: Ich lösche ein Konto
+.. story:: Ich gebe durch Löschen zukünftige Termine frei
    :id: STORY_USR_ENDE_02
    :status: approved
-   :implements: REQ_USR_ENDE_02, REQ_USR_ENDE_03, REQ_USR_ENDE_06
+   :implements: REQ_USR_ENDE_03
 
-   Als Administrator lösche ich ein Konto. Es verschwindet mit allen seinen
-   Vorgängen, seine zukünftigen Termine werden frei -- in den
-   abgeschlossenen Terminen bleibt sein Name stehen.
+   Als Administrator lösche ich ein Konto. Seine zukünftigen Termine werden
+   frei.
+
+.. story:: Kontoende bereinigt Vorgänge und erhält Historien
+   :id: STORY_USR_ENDE_03
+   :status: review
+   :implements: REQ_USR_ENDE_01, REQ_USR_ENDE_02, REQ_USR_ENDE_06
+
+   Als Administrator lege ich ein Konto still oder lösche es. An das Konto
+   gerichtete Übernahme- und Ersatztrainer-Anfragen sowie alle selbst
+   gestellten offenen Vorgänge enden geordnet. Beim Löschen verschwinden die
+   persönlichen Mitteilungen, während erledigte Vorgänge und
+   Adminbereich-Mitteilungen mit Namens-Snapshots erhalten bleiben.
 
 .. test:: Stilllegen sperrt die Anmeldung
    :id: TEST_USR_ENDE_06
-   :status: approved
+   :status: review
    :automated: yes
    :verifies: REQ_USR_ENDE_01
 
    Ein Administrator legt ein aktives Konto still. Dessen Anmeldung gelingt
-   danach nicht mehr. Profildaten und Vorgänge bleiben erhalten; nur
-   zukünftige Trainer- und Assistenzzuweisungen entfallen.
+   danach nicht mehr. Profildaten und erledigte Vorgänge bleiben erhalten;
+   zukünftige Trainer- und Assistenzzuweisungen entfallen. Je eine offene
+   Freigabeanfrage, Vormerkung, Assistenzbewerbung, Übernahmeanfrage,
+   Abwesenheitsantrag und Ersatztrainer-Anfrage des Kontos ist als entfallen
+   historisiert; das Konto hat je Vorgang genau eine persönliche Mitteilung.
+   Keine spätere Entscheidung darüber ist möglich.
+
+   Wiederholt ein Administrator das Szenario mit seinem eigenen
+   Nicht-Eigentümerkonto, enden und historisieren dieselben sechs Vorgänge,
+   ohne dass für ihn persönliche Mitteilungen entstehen.
+
+   Eine an das Konto gerichtete Übernahmeanfrage ist mit einer Mitteilung an
+   ihren Antragsteller entfallen. Eine an das Konto gerichtete
+   Ersatztrainer-Anfrage ist mit genau einer Mitteilung an ihren
+   Antragsteller in einen regulären Abwesenheitsantrag übergegangen.
 
 .. test:: Stilllegen räumt zukünftige Zuweisungen ab
    :id: TEST_USR_ENDE_01
@@ -532,15 +555,21 @@ Konto beenden
    Nach dem Reaktivieren ist das Konto wieder anmeldbar, die beim
    Stilllegen entfallenen Zuweisungen bestehen aber nicht wieder.
 
-.. test:: Löschen entfernt Konto und Vorgänge
+.. test:: Löschen entfernt Konto und offene Vorgänge
    :id: TEST_USR_ENDE_03
-   :status: approved
+   :status: review
    :automated: yes
    :verifies: REQ_USR_ENDE_02
 
    Nach dem Löschen existiert weder das Konto noch eine seiner
-   Qualifikationen, Vormerkungen, Assistenzbewerbungen, Abwesenheiten oder
-   Benachrichtigungen.
+   Qualifikationen, offenen Vormerkungen, offenen Assistenzbewerbungen,
+   offenen Anfragen, Abwesenheiten oder persönlichen Benachrichtigungen.
+   Erledigte Vorgänge und Mitteilungen an den Adminbereich bleiben erhalten.
+   Die zuvor offenen selbst gestellten Vorgänge sind als entfallen
+   historisiert; ihre persönlichen Mitteilungen sind mit dem Konto entfernt.
+   Zuvor an das Konto gerichtete Übernahme- und Ersatztrainer-Anfragen enden
+   beziehungsweise wechseln mit denselben Folgen und Mitteilungen wie beim
+   Stilllegen.
 
 .. test:: Löschen gibt zukünftige Termine frei
    :id: TEST_USR_ENDE_04
@@ -551,15 +580,17 @@ Konto beenden
    Ein zukünftiger Termin des gelöschten Kontos ist danach nicht
    zugewiesen; ein Assistenzplatz ist wieder frei.
 
-.. test:: Abgeschlossene Termine behalten den Namen
+.. test:: Historien behalten den Namen
    :id: TEST_USR_ENDE_05
-   :status: approved
+   :status: review
    :automated: yes
    :verifies: REQ_USR_ENDE_06
 
    Ein abgeschlossener Termin zeigt nach dem Löschen weiterhin den Namen des
    ausführenden Trainers oder Assistenten, verweist aber nicht mehr auf ein
-   Konto.
+   Konto. Ein erledigter Vorgang, an dem das Konto als Antragsteller oder
+   Entscheider beteiligt war, zeigt denselben Namens-Snapshot ebenfalls ohne
+   Kontoverweis.
 
 Profil
 ------

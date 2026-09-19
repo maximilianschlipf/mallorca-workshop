@@ -64,10 +64,11 @@ Anzeige und Lesezustand
    :verifies: STORY_NAC_ANZ_01, REQ_NAC_GRUND_01, REQ_NAC_ANZ_02, REQ_NAC_ANZ_03
 
    Ein Trainer mit drei Mitteilungen aus verschiedenen Anlässen öffnet seine
-   Benachrichtigungen von zwei verschiedenen Seiten der Anwendung aus. Beide
-   Male stehen alle drei Mitteilungen da, die neueste zuerst, jede mit
-   Anlasstext und Zeitpunkt. Der Sprung an einer terminbezogenen Mitteilung
-   führt zu genau diesem Termin.
+   Benachrichtigungen über den gemeinsamen Einstieg jeder angemeldeten
+   Hauptansicht. Stets stehen alle drei Mitteilungen da, die neueste zuerst,
+   jede mit Anlasstext und Zeitpunkt. Das Lesen ändert ihre Reihenfolge
+   nicht. Die Sprünge einer termin- und einer schulungsbezogenen Mitteilung
+   führen jeweils zum richtigen Gegenstand.
 
 .. test:: Ungelesene sind mit Anzahl erkennbar
    :id: TEST_NAC_ANZ_02
@@ -102,7 +103,7 @@ Anzeige und Lesezustand
    markiert alles als gelesen. Danach ist keine seiner fünf Mitteilungen
    ungelesen, und die Zeitpunkte der bereits gelesenen sind unverändert.
 
-.. test:: Mitteilungen lassen sich nicht löschen und enden mit dem Konto
+.. test:: Persönliche Mitteilungen enden nur mit dem Konto
    :id: TEST_NAC_ANZ_05
    :status: review
    :automated: yes
@@ -110,9 +111,24 @@ Anzeige und Lesezustand
    :verifies: STORY_NAC_ANZ_03, REQ_NAC_ANZ_05
 
    Ein Löschversuch auf eine eigene Mitteilung wird abgewiesen, und die
-   Mitteilung besteht unverändert fort. Nach dem Löschen des Benutzerkontos
-   nach :need:`REQ_USR_ENDE_02` ist keine Mitteilung dieses Empfängers mehr
-   vorhanden.
+   Mitteilung besteht auch nach einem weit in die Zukunft gesetzten
+   Zeitpunkt unverändert fort. Nach dem Löschen des Benutzerkontos nach
+   :need:`REQ_USR_ENDE_02` ist keine persönliche Mitteilung dieses
+   Empfängers mehr vorhanden; Mitteilungen an den Adminbereich bleiben
+   bestehen.
+
+.. test:: Lesezustand und Bedienung sind barrierefrei erkennbar
+   :id: TEST_NAC_ANZ_08
+   :status: review
+   :automated: yes
+   :level: e2e
+   :verifies: REQ_NAC_ANZ_01, REQ_NAC_ANZ_04
+
+   Gelesene und ungelesene Mitteilungen sowie ihre Anzahl besitzen
+   programmatisch ermittelbare Namen und sind nicht allein durch Farbe
+   unterscheidbar. Mit der Tastatur wird eine Mitteilung geöffnet und
+   "Alles als gelesen" ausgelöst; danach liegt der Fokus an der Anzeige oder
+   an ihrer Statusmeldung.
 
 .. test:: Benachrichtigungen bieten keine Entscheidung an
    :id: TEST_NAC_ANZ_06
@@ -182,9 +198,29 @@ Anlässe
    :verifies: STORY_NAC_ANL_01, REQ_NAC_ANL_03, REQ_TER_AEND_12
 
    Ein Administrator ändert an einem Termin mit Trainer und Assistent
-   Zeitraum, Ort und Online-Zugang in einem Vorgang. Trainer und Assistent
-   erhalten je Feld eine eigene Mitteilung; die zu Zeitraum und Ort nennen
-   alten und neuen Wert, die zum Online-Zugang ausschließlich die neue URL.
+   Zeitraum, Ort, Durchführungsart, Kundenfirma und Online-Zugang in einem
+   Vorgang. Trainer und Assistent erhalten je Feld eine eigene Mitteilung;
+   die zu den ersten vier Feldern nennen alten und neuen Wert. Die zum
+   Online-Zugang enthält keine URL, sondern den geschützten Sprung zum
+   Termin. Nach dem Abziehen eines Empfängers liefert weder Mitteilung noch
+   Sprung ihm die URL.
+
+.. test:: Der spezifische Anlass verhindert doppelte Mitteilungen
+   :id: TEST_NAC_ANL_06
+   :status: review
+   :automated: yes
+   :level: integration
+   :verifies: REQ_NAC_ANL_03
+
+   Eine bestätigte Vormerkung, eine angenommene Übernahmeanfrage, eine
+   angenommene Ersatztrainer-Anfrage, ein Rollenwechsel und die direkte
+   Vergabe einer bereits beantragten Qualifikation sowie eine manuell und
+   eine durch Fristablauf genehmigte Abwesenheit erzeugen beim jeweils
+   Betroffenen genau eine Mitteilung mit dem spezifischen Anlass.
+   Zusätzliche Mitteilungen "Trainerzuweisung gesetzt" oder
+   "Trainerzuweisung beendet" beziehungsweise "Freigabeanfrage genehmigt"
+   entstehen nicht. Eine direkte Zuweisung und ein direktes Abziehen durch
+   einen Administrator erzeugen dagegen je die allgemeine Mitteilung.
 
 .. test:: Kein Anlass außerhalb des Katalogs
    :id: TEST_NAC_ANL_03
@@ -206,7 +242,17 @@ Anlässe
 
    Ein Administrator, der zugleich Trainer des Termins ist, sagt diesen
    Termin ab. Der zugewiesene Assistent erhält eine Mitteilung, der
-   absagende Administrator keine.
+   absagende Administrator keine persönliche Mitteilung.
+
+   Derselbe Administrator legt anschließend eine eigene Qualifikation ab.
+   Die dadurch entstandene gemeinsame Mitteilung an den Adminbereich bleibt
+   für ihn und einen zweiten Administrator sichtbar; es entsteht kein
+   persönlicher Datensatz für den Auslöser.
+
+   Schließlich versucht ein vorgeschlagener Ersatztrainer, eine inzwischen
+   fachlich ungültige Anfrage anzunehmen. Als ausdrücklich geregelte Ausnahme
+   erhält er genau eine persönliche Mitteilung mit dem Prüfgrund; der
+   ursprüngliche Trainer erhält seine eigene Mitteilung.
 
 .. test:: Teilnehmer erhalten keine Mitteilungen
    :id: TEST_NAC_ANL_05
@@ -241,7 +287,13 @@ Adminbereich als Empfänger
    Ein Trainer legt eine Qualifikation ab. Es entsteht genau ein Datensatz
    mit dem Adminbereich als Empfänger, und er erscheint in der Anzeige
    beider vorhandenen Administratoren. Ein weiterer Administrator, der
-   danach angelegt wird, sieht dieselbe Mitteilung.
+   danach angelegt wird, sieht dieselbe Mitteilung. Der Datensatz enthält
+   weder ein persönliches Empfängerkonto noch einen davon getrennten
+   Lesezustand. Eine persönliche Mitteilung aus demselben Test trägt dagegen
+   genau ein Empfängerkonto und ist für den anderen Administrator unsichtbar.
+   Nach dem Löschen des genannten Trainerkontos bleibt die Mitteilung an den
+   Adminbereich mit dessen gespeichertem Namen, aber ohne Kontoverweis,
+   erhalten.
 
 .. test:: Gelesen durch einen gilt für alle
    :id: TEST_NAC_ADM_02
@@ -278,7 +330,8 @@ Datenhaltung
    Nach der Absage eines Termins trägt die Mitteilung den Anlasstyp für eine
    Absage, die ID des betroffenen Termins, den Zeitpunkt, den Lesezustand
    und den Text. Nach der Ablehnung einer Freigabeanfrage trägt sie den
-   Bezug auf die Schulung und die Begründung.
+   Bezug auf die Schulung und die Begründung. Nach der Ablehnung eines
+   Abwesenheitsantrags trägt sie den Bezug auf genau diesen Vorgang.
 
 .. test:: Kein Versand nach außen
    :id: TEST_NAC_DAT_02
@@ -289,3 +342,21 @@ Datenhaltung
 
    Das Erzeugen einer Mitteilung löst keinen ausgehenden Versand aus: Der
    Produktcode enthält keinen Zustellweg neben der Datenbank.
+
+Zugriffsschutz
+--------------
+
+.. test:: Mitteilungen sind gegen fremde Zugriffe geschützt
+   :id: TEST_NAC_SICHER_01
+   :status: review
+   :automated: yes
+   :level: integration
+   :verifies: REQ_NAC_SICHER_01
+
+   Ohne Anmeldung sind Anzeige und Schnittstellen nicht erreichbar. Ein
+   Benutzer kann eine fremde persönliche Mitteilung weder lesen noch als
+   gelesen markieren; ein reiner Trainer kann dasselbe mit einer Mitteilung
+   an den Adminbereich nicht. Direkte Aufrufe mit der jeweiligen ID geben
+   Inhalt und Existenz nicht preis. Das Markieren einer einzelnen oder aller
+   Mitteilungen ohne gültigen CSRF-Schutz wird abgewiesen und verändert
+   keinen Lesezustand.

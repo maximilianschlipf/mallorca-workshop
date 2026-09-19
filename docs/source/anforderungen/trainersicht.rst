@@ -17,6 +17,7 @@ zeigen würden.
 .. req:: Dashboard als Einstieg
    :id: REQ_TRA_DASH_01
    :status: draft
+   :priority: high
 
    Ein Trainer hat ein Dashboard als Einstieg. Es führt seine Termine und
    die offenen Übernahmeanfragen an ihn zusammen -- also alles, was eine
@@ -28,6 +29,8 @@ zeigen würden.
 .. req:: Überfällige eigene Termine stehen ganz oben
    :id: REQ_TRA_DASH_02
    :status: draft
+   :priority: high
+   :links: REQ_TRA_DASH_01, REQ_TER_STAT_02
 
    Eigene Termine, deren Enddatum vorüber ist und die noch geplant sind,
    stehen an erster Stelle -- vor den anstehenden. Abgesagte und
@@ -38,12 +41,14 @@ zeigen würden.
 .. req:: Offene Übernahmeanfragen im Dashboard
    :id: REQ_TRA_DASH_03
    :status: draft
+   :priority: high
+   :links: REQ_TRA_DASH_01, REQ_UEB_ANFR_02
 
    Übernahmeanfragen anderer Trainer zu seinen Terminen erscheinen im
    Dashboard und werden dort entschieden.
 
    Abgelöst durch :need:`REQ_DSH_VORG_01`, das die Übernahmeanfrage als eine
-   von fünf Vorgangsarten führt.
+   von sechs Vorgangsarten führt.
 
 Terminübersicht
 ---------------
@@ -120,6 +125,8 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 .. req:: Eigene Anzeige für Benachrichtigungen
    :id: REQ_TRA_NACHR_01
    :status: draft
+   :priority: high
+   :links: REQ_DAT_NACHR_01
 
    Ein Trainer hat eine eigene Anzeige für seine Benachrichtigungen. Dort
    laufen alle Mitteilungen zusammen.
@@ -130,6 +137,8 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 .. req:: Ungelesene Benachrichtigungen sind erkennbar
    :id: REQ_TRA_NACHR_02
    :status: draft
+   :priority: high
+   :links: REQ_TRA_NACHR_01
 
    Ungelesene Benachrichtigungen sind als solche erkennbar, ohne die Anzeige
    zu öffnen.
@@ -139,6 +148,7 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 .. req:: Benachrichtigungen sind keine Aufgaben
    :id: REQ_TRA_NACHR_03
    :status: draft
+   :links: REQ_TRA_NACHR_01, REQ_TRA_DASH_01
 
    In den Benachrichtigungen stehen Mitteilungen über Geschehenes. Was eine
    Handlung des Trainers erwartet, gehört ins Dashboard und nicht dorthin.
@@ -155,6 +165,7 @@ Dashboard, getrennt von den Vorgängen, über die der Trainer entscheidet.
 .. req:: Liste der offenen eigenen Vorgänge
    :id: REQ_TRA_VORG_01
    :status: draft
+   :priority: high
 
    Ein Trainer sieht in einer eigenen Liste, worauf er noch wartet: seine
    Bewerbungen auf Qualifikationen, seine Vormerkungen, seine
@@ -166,6 +177,7 @@ Dashboard, getrennt von den Vorgängen, über die der Trainer entscheidet.
 .. req:: Zurückziehen aus der Liste heraus
    :id: REQ_TRA_VORG_02
    :status: draft
+   :links: REQ_TRA_VORG_01, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
 
    Jeder Vorgang, der zurückgezogen werden kann, lässt sich aus dieser Liste
    heraus zurückziehen.

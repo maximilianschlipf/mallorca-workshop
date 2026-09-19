@@ -22,7 +22,6 @@ Grundsatz
    :status: review
    :priority: high
    :links: DEC_NAC_TRENNUNG_01
-   :supersedes: REQ_TRA_DASH_01
 
    Jeder angemeldete Benutzer hat ein Dashboard als Einstieg. Es führt
    zusammen, was eine Handlung von ihm erwartet -- unabhängig davon, aus
@@ -36,7 +35,6 @@ Grundsatz
    :status: review
    :priority: high
    :links: REQ_DSH_GRUND_01, DEC_NAC_TRENNUNG_01, REQ_NAC_GRUND_02
-   :supersedes: REQ_TRA_NACHR_03
 
    Im Dashboard steht, was eine Handlung erwartet. Mitteilungen über
    Geschehenes gehören in die Benachrichtigungen und erscheinen nicht im
@@ -61,6 +59,12 @@ Grundsatz
    Die Reihenfolge folgt dem Grad der Verbindlichkeit: Ein Vorgang lässt
    jemand anderen warten, eine Handlungspflicht nur den Benutzer selbst, eine
    Dringlichkeit niemanden unmittelbar.
+
+   Rang, Dringlichkeit und Zustand sind programmatisch erkennbar und werden
+   nicht allein durch Farbe vermittelt. Alle Aktionen sowie der auf- und
+   zuklappbare Abschnitt der erledigten Vorgänge sind mit der Tastatur
+   bedienbar; nach einer Aktion bleibt der Fokus am geänderten Vorgang oder
+   wechselt nachvollziehbar zur zugehörigen Statusmeldung.
 
 Vorgänge
 --------
@@ -104,6 +108,10 @@ Vorgänge
         - Trainer
         - zugewiesener Trainer
         - :need:`REQ_UEB_ANFR_02`
+      * - Ersatztrainer-Anfrage bei Abwesenheit
+        - abwesender Trainer
+        - vorgeschlagener Ersatztrainer
+        - :need:`REQ_ABW_TAUSCH_03`
 
    Eine ausstehende Durchführungsbestätigung ist kein Vorgang in diesem
    Sinne: Sie hat kein Gegenüber, das auf eine Antwort wartet, und kennt
@@ -115,20 +123,19 @@ Vorgänge
    :status: review
    :priority: high
    :links: REQ_DSH_VORG_01, REQ_DSH_GRUND_03
-   :supersedes: REQ_TRA_VORG_01
 
    Das Dashboard führt Vorgänge in beiden Richtungen, getrennt voneinander:
 
    * **An mich gerichtet** -- Vorgänge, über die ich entscheide. Sie stehen
      im ersten Rang nach :need:`REQ_DSH_GRUND_03`.
    * **Von mir gestellt** -- eigene Vorgänge, auf deren Entscheidung ich
-     warte. Sie stehen nach den drei Rängen und erwarten keine Handlung
-     außer dem Zurückziehen.
+     warte. Sie stehen nach den drei Rängen. Soweit der Fachbereich das
+     erlaubt, lassen sie sich dort zurückziehen.
 
    Ein Trainer sieht damit an einer Stelle, worüber er zu entscheiden hat und
    worauf er selbst wartet -- seine Bewerbungen, Vormerkungen,
-   Assistenzbewerbungen, Abwesenheitsanträge und gestellten
-   Übernahmeanfragen.
+   Assistenzbewerbungen, Abwesenheitsanträge, gestellten
+   Übernahmeanfragen und Ersatztrainer-Anfragen.
 
 .. req:: Einheitliche Darstellung eines Vorgangs
    :id: REQ_DSH_VORG_03
@@ -142,8 +149,9 @@ Vorgänge
    Sprung zum betroffenen Gegenstand.
 
    Bei einem an mich gerichteten Vorgang stehen dort die beiden Aktionen
-   Annehmen und Ablehnen, bei einem von mir gestellten das Zurückziehen nach
-   :need:`REQ_DSH_VORG_07`.
+   Annehmen und Ablehnen. Bei einem von mir gestellten Vorgang steht das
+   Zurückziehen nach :need:`REQ_DSH_VORG_07` nur dann bereit, wenn sein
+   Fachbereich es erlaubt.
 
 .. req:: Eine Entscheidung ist endgültig
    :id: REQ_DSH_VORG_04
@@ -194,8 +202,7 @@ Vorgänge
 .. req:: Zurückziehen aus dem Dashboard heraus
    :id: REQ_DSH_VORG_07
    :status: review
-   :links: REQ_DSH_VORG_02, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
-   :supersedes: REQ_TRA_VORG_02
+   :links: REQ_DSH_VORG_02, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ASS_BEW_04, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
 
    Jeder eigene Vorgang, der nach seinem Fachbereich zurückgezogen werden
    kann, lässt sich aus dem Dashboard heraus zurückziehen, solange er nicht
@@ -219,6 +226,11 @@ Vorgänge
    Er nennt zu jedem Vorgang das Ergebnis, den Zeitpunkt der Entscheidung
    und -- sofern jemand entschieden hat -- wer das war.
 
+   Wird ein beteiligtes Benutzerkonto gelöscht, bleibt der erledigte Vorgang
+   erhalten. Der Name von Antragsteller und Entscheider wird dafür wie bei
+   abgeschlossenen Terminen als unveränderlicher Snapshot geführt; ein
+   Verweis auf das gelöschte Konto bleibt nicht bestehen.
+
    Er ist standardmäßig zugeklappt, weil das Dashboard die Frage "Was liegt
    bei mir?" beantwortet und Erledigtes darauf keine Antwort ist.
 
@@ -226,7 +238,7 @@ Vorgänge
    :id: REQ_DSH_VORG_09
    :status: review
    :priority: high
-   :links: REQ_DSH_VORG_08, REQ_VOR_ABL_02, REQ_UEB_ENTS_06, REQ_KAT_ARCH_05, REQ_ABW_AUTO_01
+   :links: REQ_DSH_VORG_08, REQ_VOR_ABL_02, REQ_UEB_ENTS_06, REQ_KAT_ARCH_05, REQ_ABW_AUTO_01, REQ_TER_AEND_05, REQ_USR_ENDE_01, REQ_USR_ENDE_02
 
    Ein Vorgang kann auch ohne Entscheidung enden, weil ein anderes Ereignis
    ihn gegenstandslos macht. Er gilt dann als erledigt, und das Ergebnis
@@ -235,8 +247,26 @@ Vorgänge
    Das betrifft: die übrigen Vormerkungen nach der Zuweisung eines Trainers
    (:need:`REQ_VOR_ABL_02`), die übrigen Übernahmeanfragen nach einem Tausch
    (:need:`REQ_UEB_ENTS_06`), offene Freigabeanfragen beim Archivieren einer
-   Schulung (:need:`REQ_KAT_ARCH_05`) und den nach Fristablauf selbsttätig
-   genehmigten Abwesenheitsantrag (:need:`REQ_ABW_AUTO_01`).
+   Schulung (:need:`REQ_KAT_ARCH_05`), den nach Fristablauf selbsttätig
+   genehmigten Abwesenheitsantrag (:need:`REQ_ABW_AUTO_01`), die nach einer
+   Woche abgelaufene oder bei der erneuten Prüfung fachlich ungültige
+   Ersatztrainer-Anfrage (:need:`REQ_ABW_TAUSCH_04`,
+   :need:`REQ_ABW_TAUSCH_05`) sowie
+   alle noch offenen Vormerkungen, Assistenzbewerbungen und
+   Übernahmeanfragen, wenn ihr Termin abgesagt oder gelöscht wird. Ein
+   Abwesenheitsantrag oder eine Ersatztrainer-Anfrage endet aus diesem Grund
+   nur, wenn nach dem Entfernen des Termins kein betroffener Termin übrig
+   bleibt (:need:`REQ_TER_AEND_05`).
+
+   Wird der adressierte Trainer stillgelegt oder gelöscht, endet eine offene
+   Übernahmeanfrage ebenfalls als entfallen. Eine an ihn gerichtete
+   Ersatztrainer-Anfrage endet als entfallen und wird für ihren Antragsteller
+   in einen neuen regulären Abwesenheitsantrag überführt
+   (:need:`REQ_USR_ENDE_01`, :need:`REQ_USR_ENDE_02`).
+
+   Wird der Antragsteller selbst stillgelegt oder gelöscht, enden alle seine
+   noch offenen Vorgänge als entfallen. Sie bleiben mit dem Kontoende als
+   Grund in der Historie und lassen sich nicht mehr entscheiden.
 
 .. req:: Jede Entscheidung erreicht den Antragsteller
    :id: REQ_DSH_VORG_10
@@ -245,9 +275,28 @@ Vorgänge
    :links: REQ_DSH_VORG_04, REQ_NAC_ANL_01, REQ_NAC_ANL_04
 
    Sobald ein Vorgang entschieden ist oder entfällt, entsteht beim
-   Antragsteller eine Mitteilung nach :need:`REQ_NAC_ANL_01`. Der
+   Antragsteller genau eine Mitteilung nach :need:`REQ_NAC_ANL_01`. Der
    Entscheider erhält keine -- für ihn ist der erledigte Vorgang nach
-   :need:`REQ_DSH_VORG_08` der Beleg.
+   :need:`REQ_DSH_VORG_08` der Beleg. Entscheidet ein Administrator einen
+   eigenen Vorgang nach :need:`DEC_USR_SELBST_01`, gilt die Regel für den
+   Auslöser: Es entsteht keine Mitteilung an ihn selbst.
+
+   Entfällt ein Vorgang durch Kontoende des Antragstellers, entsteht die
+   Mitteilung nur, wenn sein Konto fortbesteht und er die Stilllegung nicht
+   selbst ausgelöst hat. Die Historie nach :need:`REQ_DSH_VORG_08` bleibt
+   unabhängig davon erhalten.
+
+.. req:: Nur Zuständige entscheiden und Antragsteller ziehen zurück
+   :id: REQ_DSH_SICHER_01
+   :status: review
+   :priority: high
+   :links: REQ_DSH_VORG_01, REQ_DSH_VORG_07, REQ_USR_LOGIN_02
+
+   Einen Vorgang sehen und entscheiden ausschließlich seine nach
+   :need:`REQ_DSH_VORG_01` zuständigen Personen oder Rollen. Zurückziehen
+   darf ihn ausschließlich sein Antragsteller. Direkte Aufrufe mit einer
+   fremden Vorgangs-ID geben weder Inhalt noch Existenz preis. Annehmen,
+   Ablehnen und Zurückziehen verlangen den CSRF-Schutz der Anwendung.
 
 Eigene Handlungspflichten
 -------------------------
@@ -257,7 +306,6 @@ Eigene Handlungspflichten
    :status: review
    :priority: high
    :links: REQ_DSH_GRUND_03, REQ_TER_STAT_02
-   :supersedes: REQ_TRA_DASH_02
 
    Eigene Termine, deren Enddatum vorüber ist und die noch geplant sind,
    stehen im zweiten Rang des Dashboards. Abgesagte und abgeschlossene
@@ -275,7 +323,6 @@ Dringlichkeiten
    :status: review
    :priority: high
    :links: REQ_DSH_GRUND_03, REQ_TER_ANL_02
-   :supersedes: REQ_TER_DASH_01
 
    Das Dashboard eines Administrators zeigt im dritten Rang alle zukünftigen
    geplanten Termine ohne Trainerzuweisung, aufsteigend nach Startdatum
@@ -286,7 +333,6 @@ Dringlichkeiten
    :status: review
    :priority: high
    :links: REQ_DSH_DRIN_01, REQ_TER_STAT_06
-   :supersedes: REQ_TER_DASH_04
 
    Termine, deren Enddatum vorüber ist und die noch geplant sind, stehen im
    Dashboard eines Administrators vor den anstehenden Terminen. Abgesagte
@@ -301,7 +347,6 @@ Dringlichkeiten
    :status: review
    :priority: high
    :links: REQ_DSH_DRIN_01
-   :supersedes: REQ_TER_DASH_02
 
    Ein zukünftiger geplanter Termin ohne Trainerzuweisung wird als dringend
    markiert, wenn sein Startdatum weniger als vier Wochen entfernt ist. Bei
@@ -316,7 +361,6 @@ Dringlichkeiten
    :status: review
    :priority: high
    :links: REQ_DSH_DRIN_03, REQ_TLN_GRENZ_01
-   :supersedes: REQ_TER_DASH_03
 
    Erreicht ein exklusiver Termin weniger als vier Wochen vor dem Start seine
    Mindestteilnehmerzahl nicht, wird er im Dashboard ebenso als dringend

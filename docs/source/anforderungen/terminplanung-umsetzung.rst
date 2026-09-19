@@ -503,15 +503,18 @@ Zustände und Abschluss
 
 .. test:: Operative Änderungen werden mitgeteilt
    :id: TEST_TER_AEND_11
-   :status: approved
+   :status: review
    :automated: yes
    :verifies: REQ_TER_AEND_12
 
-   Nach einer Änderung von Zeitraum, Ort, Durchführungsart, Kundenfirma oder
-   Online-Zugang erhalten der zugewiesene Trainer und alle Assistenten eine
-   Benachrichtigung. Beim Online-Zugang enthält sie nur die neue URL, bei den
-   übrigen Angaben alten und neuen Wert. Eine alleinige Änderung der
-   Zugangsart ohne Kundenwechsel erzeugt keine Benachrichtigung.
+   Ein Administrator ändert Zeitraum, Ort, Durchführungsart, Kundenfirma und
+   Online-Zugang eines Termins in einem Vorgang. Der zugewiesene Trainer und
+   alle Assistenten erhalten je geändertem Feld eine Benachrichtigung. Beim
+   Online-Zugang enthält sie keine URL, sondern den geschützten Sprung zum
+   Termin; bei den übrigen Angaben alten und neuen Wert. Nach dem Abziehen
+   eines Trainers oder Assistenten gibt weder die alte Mitteilung noch ihr
+   Sprung die URL preis. Eine alleinige Änderung der Zugangsart ohne
+   Kundenwechsel erzeugt keine Benachrichtigung.
 
 .. test:: Zugeordnete Schulung lässt sich nicht ändern
    :id: TEST_TER_AEND_10
@@ -561,11 +564,11 @@ Zustände und Abschluss
    Der Versuch, einen abgesagten Termin wieder in den Zustand geplant zu
    versetzen, wird abgewiesen.
 
-.. test:: Absage und Löschen benachrichtigen Trainer und Assistenten
+.. test:: Absage informiert Beteiligte, aber keine Teilnehmer
    :id: TEST_TER_AEND_06
    :status: approved
    :automated: yes
-   :verifies: REQ_TER_AEND_05, REQ_TER_AEND_08
+   :verifies: REQ_TER_AEND_08
 
    Nach der Absage mit Grund liegen Benachrichtigungen einschließlich des
    Grunds für den zugewiesenen Trainer und alle Assistenten vor. Für gebuchte
@@ -573,6 +576,31 @@ Zustände und Abschluss
    leeren Platzhalter. Beim Löschen eines noch nicht gestarteten Termins
    werden Trainer und Assistenten ebenfalls benachrichtigt; die Nachricht
    enthält keinen Löschgrund.
+
+.. test:: Absage und Löschen bereinigen offene Vorgänge
+   :id: TEST_TER_AEND_13
+   :status: review
+   :automated: yes
+   :level: integration
+   :verifies: REQ_TER_AEND_05
+
+   Nach der Absage mit und ohne Grund sowie nach dem Löschen liegen die in
+   :need:`REQ_TER_AEND_05` beschriebenen Mitteilungen für Trainer und
+   Assistenten vor.
+
+   Zu Absage und Löschung bestehen je eine offene Vormerkung,
+   Assistenzbewerbung und Übernahmeanfrage. Danach sind alle drei als
+   entfallen erledigt und nicht mehr entscheidbar; jeder Antragsteller hat
+   je Vorgang genau eine Mitteilung mit Absage beziehungsweise Löschung als
+   Grund.
+
+   Zusätzlich betreffen ein Abwesenheitsantrag und eine Ersatztrainer-Anfrage
+   jeweils zwei Termine. Nach Absage beziehungsweise Löschung des ersten
+   Termins bleiben sie für den zweiten offen, enthalten nur noch diesen und
+   ihr Antragsteller hat genau eine Mitteilung über die Anpassung. Nach dem
+   gleichen Ereignis am zweiten Termin sind beide Vorgänge als entfallen
+   erledigt, die Abwesenheit ist aktiv und der Antragsteller hat je Vorgang
+   genau eine weitere Mitteilung mit dem Ereignis als Grund.
 
 .. test:: Warnung nennt, was am Termin hängt
    :id: TEST_TER_AEND_07
