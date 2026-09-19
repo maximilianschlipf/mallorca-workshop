@@ -66,4 +66,17 @@ describe("Dashboard und Benachrichtigungen", () => {
     expect(document.activeElement).toBe(wrapper.get('[role="status"]').element);
     wrapper.unmount();
   });
+
+  it("benennt eine überschrittene Höchstteilnehmerzahl", async () => {
+    vi.mocked(fetchDashboard).mockResolvedValue({ vorgaenge: [], pflichten: [], eigeneVorgaenge: [],
+      erledigteVorgaenge: [], erledigteEigeneVorgaenge: [], dringlichkeiten: [{
+        terminId: "SCH-001-T0001", schulungTitel: "Scrum", startdatum: "2026-10-12",
+        enddatum: "2026-10-12", ueberfaellig: false, ohneTrainer: true, dringend: true,
+        mindestteilnehmerUnterschritten: false, hoechstteilnehmerUeberschritten: true,
+      }] });
+    const wrapper = mount(DashboardAnsicht, { global: { plugins: [router] } });
+    await flushPromises();
+    expect(wrapper.text()).toContain("Trainerzuweisung fehlt");
+    expect(wrapper.text()).toContain("Höchstteilnehmerzahl überschritten");
+  });
 });

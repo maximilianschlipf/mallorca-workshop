@@ -803,7 +803,7 @@ Dashboard
    :id: STORY_TER_DASH_01
    :status: approved
    :priority: high
-   :implements: REQ_TER_ZEIT_01, REQ_TER_DASH_01, REQ_TER_DASH_02, REQ_TER_DASH_03, REQ_TER_DASH_04
+   :implements: REQ_TER_ZEIT_01, REQ_DSH_DRIN_01, REQ_DSH_DRIN_02, REQ_DSH_DRIN_03, REQ_DSH_DRIN_04
 
    Auf meinem Dashboard stehen zuerst die überfälligen Termine ohne
    Abschluss, danach die Termine ohne Trainer nach Dringlichkeit, und ich
@@ -813,7 +813,7 @@ Dashboard
    :id: STORY_TER_DASH_02
    :status: approved
    :priority: high
-   :implements: REQ_TRA_DASH_02
+   :implements: REQ_DSH_PFLI_01
 
    Nach dem Enddatum finde ich meine noch geplanten Termine zuerst, damit
    ich deren Durchführung bestätigen kann. Abgesagte und abgeschlossene
@@ -823,7 +823,7 @@ Dashboard
    :id: TEST_TER_DASH_01
    :status: approved
    :automated: yes
-   :verifies: REQ_TER_ZEIT_01, REQ_TER_DASH_01
+   :verifies: REQ_TER_ZEIT_01, REQ_DSH_DRIN_01
 
    Das Dashboard führt alle geplanten Termine ohne Trainerzuweisung, deren
    Enddatum heute oder später liegt, aufsteigend nach Startdatum. Ein bereits
@@ -835,7 +835,7 @@ Dashboard
    :id: TEST_TER_DASH_02
    :status: approved
    :automated: yes
-   :verifies: REQ_TER_DASH_02
+   :verifies: REQ_DSH_DRIN_03
 
    Ein Termin ohne Trainer in weniger als vier Wochen ist als dringend
    markiert. Bei genau vier Wochen und mit mehr Vorlauf bleibt er sichtbar,
@@ -845,7 +845,7 @@ Dashboard
    :id: TEST_TER_DASH_03
    :status: approved
    :automated: yes
-   :verifies: REQ_TER_DASH_04
+   :verifies: REQ_DSH_DRIN_02
 
    Ein Termin, dessen Enddatum vorüber ist und der noch geplant ist, steht
    im Dashboard vor allen anstehenden Terminen. Ein abgesagter und ein
@@ -855,7 +855,7 @@ Dashboard
    :id: TEST_TER_DASH_04
    :status: approved
    :automated: yes
-   :verifies: REQ_TER_DASH_03
+   :verifies: REQ_DSH_DRIN_04
 
    Ein exklusiver Termin in drei Wochen unter seiner Mindestteilnehmerzahl
    wird im Dashboard als dringend markiert; fünf Wochen vor dem Start noch
@@ -866,7 +866,7 @@ Dashboard
    :id: TEST_TER_DASH_05
    :status: approved
    :automated: yes
-   :verifies: REQ_TRA_DASH_02
+   :verifies: REQ_DSH_PFLI_01
 
    Ein dem Trainer zugewiesener, noch geplanter Termin mit vergangenem
    Enddatum steht vor seinen anstehenden Terminen. Ein abgesagter und ein

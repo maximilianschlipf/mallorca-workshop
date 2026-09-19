@@ -9,18 +9,17 @@ folgende in umsetzbare Stories und in Tests, die sie abprüfen.
 * Ein **Test** beschreibt eine nachprüfbare Beobachtung und verweist mit
   ``verifies`` auf die Story oder Anforderung, die er absichert.
 
-Die Anforderungen dieses Bereichs stehen auf ``review``. Stories und Tests
-stehen deshalb ebenfalls auf ``review`` und sind noch nicht implementiert;
-sie zählen erst nach der fachlichen Freigabe in das Requirements-Gate. Die
-Dringlichkeiten im dritten Rang sind heute durch ``TEST_TER_DASH_01`` bis
-``TEST_TER_DASH_05`` abgedeckt; diese Tests wandern mit der Freigabe hierher.
+Die Anforderungen, Stories und Tests dieses Bereichs sind fachlich
+freigegeben und zählen im Requirements-Gate. Die bestehenden Nachweise
+``TEST_TER_DASH_01`` bis ``TEST_TER_DASH_05`` sind auf die neuen
+Dashboard-Anforderungen umgezogen.
 
 Aufbau
 ------
 
 .. story:: Ich sehe auf dem Dashboard, was bei mir liegt
    :id: STORY_DSH_GRUND_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_GRUND_01, REQ_DSH_GRUND_03
 
@@ -30,7 +29,7 @@ Aufbau
 
 .. story:: Mitteilungen stören mein Dashboard nicht
    :id: STORY_DSH_GRUND_02
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_GRUND_02
 
@@ -39,7 +38,7 @@ Aufbau
 
 .. test:: Die drei Ränge stehen in fester Reihenfolge
    :id: TEST_DSH_GRUND_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_DSH_GRUND_01, REQ_DSH_GRUND_01, REQ_DSH_GRUND_03
@@ -52,7 +51,7 @@ Aufbau
 
 .. test:: Mitteilungen erscheinen nicht im Dashboard
    :id: TEST_DSH_GRUND_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_DSH_GRUND_02, REQ_DSH_GRUND_02
@@ -67,7 +66,7 @@ Vorgänge entscheiden
 
 .. story:: Ich entscheide die Vorgänge, die an mich gerichtet sind
    :id: STORY_DSH_VORG_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_VORG_01, REQ_DSH_VORG_03, REQ_DSH_VORG_04
 
@@ -77,7 +76,7 @@ Vorgänge entscheiden
 
 .. story:: Ich sehe, worauf ich selbst warte
    :id: STORY_DSH_VORG_02
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_VORG_02, REQ_DSH_VORG_07
 
@@ -89,7 +88,7 @@ Vorgänge entscheiden
 
 .. story:: Ich begründe eine Ablehnung, wo es verlangt ist
    :id: STORY_DSH_VORG_03
-   :status: review
+   :status: approved
    :implements: REQ_DSH_VORG_05
 
    Als Administrator gebe ich beim Ablehnen einer Freigabeanfrage und einer
@@ -98,7 +97,7 @@ Vorgänge entscheiden
 
 .. story:: Erledigtes bleibt auffindbar
    :id: STORY_DSH_VORG_04
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_VORG_08, REQ_DSH_VORG_09
 
@@ -108,7 +107,7 @@ Vorgänge entscheiden
 
 .. test:: Alle sechs Vorgangsarten erscheinen beim Zuständigen
    :id: TEST_DSH_VORG_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_VORG_01, REQ_DSH_VORG_01, REQ_DSH_VORG_03
@@ -121,7 +120,7 @@ Vorgänge entscheiden
 
 .. test:: Eine Entscheidung wirkt genau einmal
    :id: TEST_DSH_VORG_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_VORG_01, REQ_DSH_VORG_04
@@ -134,7 +133,7 @@ Vorgänge entscheiden
 
 .. test:: Eigene Vorgänge erscheinen und lassen sich zurückziehen
    :id: TEST_DSH_VORG_03
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_DSH_VORG_02, REQ_DSH_VORG_02, REQ_DSH_VORG_07
@@ -150,7 +149,7 @@ Vorgänge entscheiden
 
 .. test:: Begründung ist nur bei zwei Vorgangsarten Pflicht
    :id: TEST_DSH_VORG_04
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_VORG_03, REQ_DSH_VORG_05
@@ -163,7 +162,7 @@ Vorgänge entscheiden
 
 .. test:: Ein Vorgang mit zwei Zuständigen entfällt bei beiden
    :id: TEST_DSH_VORG_05
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_DSH_VORG_06, REQ_ASS_BEW_02
@@ -176,7 +175,7 @@ Vorgänge entscheiden
 
 .. test:: Erledigte Vorgänge bleiben zugeklappt erhalten
    :id: TEST_DSH_VORG_06
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_DSH_VORG_04, REQ_DSH_VORG_08
@@ -189,7 +188,7 @@ Vorgänge entscheiden
 
 .. test:: Entfallene Vorgänge nennen das Ereignis als Grund
    :id: TEST_DSH_VORG_07
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_VORG_04, REQ_DSH_VORG_09
@@ -228,7 +227,7 @@ Vorgänge entscheiden
 
 .. test:: Jede Entscheidung erreicht den Antragsteller
    :id: TEST_DSH_VORG_08
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_DSH_VORG_10, REQ_NAC_ANL_04
@@ -249,7 +248,7 @@ Vorgänge entscheiden
 
 .. test:: Dashboard schützt Vorgänge und Mutationen
    :id: TEST_DSH_VORG_09
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_DSH_SICHER_01
@@ -267,7 +266,7 @@ Vorgänge entscheiden
 
 .. test:: Dashboard ist mit Tastatur und Statusnamen bedienbar
    :id: TEST_DSH_GRUND_03
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: REQ_DSH_GRUND_03
@@ -284,7 +283,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. story:: Meine überfälligen Termine gehen mir nicht verloren
    :id: STORY_DSH_PFLI_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_PFLI_01
 
@@ -293,7 +292,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. story:: Als Administrator sehe ich, wo es eng wird
    :id: STORY_DSH_DRIN_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_DSH_DRIN_01, REQ_DSH_DRIN_02, REQ_DSH_DRIN_03, REQ_DSH_DRIN_04
 
@@ -304,7 +303,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. test:: Überfällige eigene Termine stehen im zweiten Rang
    :id: TEST_DSH_PFLI_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_DSH_PFLI_01, REQ_DSH_PFLI_01
@@ -315,7 +314,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. test:: Termine ohne Trainer erscheinen sortiert und markiert
    :id: TEST_DSH_DRIN_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_DRIN_01, REQ_DSH_DRIN_01, REQ_DSH_DRIN_03
@@ -327,7 +326,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. test:: Überfällige Termine stehen vor den anstehenden
    :id: TEST_DSH_DRIN_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_DRIN_01, REQ_DSH_DRIN_02
@@ -337,7 +336,7 @@ Handlungspflichten und Dringlichkeiten
 
 .. test:: Zu wenige Teilnehmer machen einen exklusiven Termin dringend
    :id: TEST_DSH_DRIN_03
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_DSH_DRIN_01, REQ_DSH_DRIN_04

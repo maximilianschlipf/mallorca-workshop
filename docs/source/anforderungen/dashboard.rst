@@ -19,7 +19,7 @@ Grundsatz
 
 .. req:: Dashboard als Einstieg
    :id: REQ_DSH_GRUND_01
-   :status: review
+   :status: approved
    :priority: high
    :links: DEC_NAC_TRENNUNG_01
 
@@ -32,7 +32,7 @@ Grundsatz
 
 .. req:: Nur Handlungsbedarf gehört ins Dashboard
    :id: REQ_DSH_GRUND_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_GRUND_01, DEC_NAC_TRENNUNG_01, REQ_NAC_GRUND_02
 
@@ -42,7 +42,7 @@ Grundsatz
 
 .. req:: Drei Ränge und ihre Reihenfolge
    :id: REQ_DSH_GRUND_03
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_GRUND_01
 
@@ -71,7 +71,7 @@ Vorgänge
 
 .. req:: Was ein Vorgang ist
    :id: REQ_DSH_VORG_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_GRUND_03, DEC_NAC_TRENNUNG_01
 
@@ -120,7 +120,7 @@ Vorgänge
 
 .. req:: Beide Richtungen im Dashboard
    :id: REQ_DSH_VORG_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_01, REQ_DSH_GRUND_03
 
@@ -139,7 +139,7 @@ Vorgänge
 
 .. req:: Einheitliche Darstellung eines Vorgangs
    :id: REQ_DSH_VORG_03
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_01
 
@@ -155,7 +155,7 @@ Vorgänge
 
 .. req:: Eine Entscheidung ist endgültig
    :id: REQ_DSH_VORG_04
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_01
 
@@ -171,7 +171,7 @@ Vorgänge
 
 .. req:: Begründung bei einer Ablehnung
    :id: REQ_DSH_VORG_05
-   :status: review
+   :status: approved
    :links: REQ_DSH_VORG_04, REQ_QUA_BEW_08, REQ_VOR_ABL_04
 
    Ob eine Ablehnung eine Begründung verlangt, bestimmt die Vorgangsart. Für
@@ -184,7 +184,7 @@ Vorgänge
 
 .. req:: Vorgänge mit mehreren Zuständigen
    :id: REQ_DSH_VORG_06
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_01, REQ_ASS_BEW_02
 
@@ -201,7 +201,7 @@ Vorgänge
 
 .. req:: Zurückziehen aus dem Dashboard heraus
    :id: REQ_DSH_VORG_07
-   :status: review
+   :status: approved
    :links: REQ_DSH_VORG_02, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ASS_BEW_04, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
 
    Jeder eigene Vorgang, der nach seinem Fachbereich zurückgezogen werden
@@ -214,7 +214,7 @@ Vorgänge
 
 .. req:: Erledigte Vorgänge bleiben dauerhaft
    :id: REQ_DSH_VORG_08
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_04, REQ_DSH_VORG_02
 
@@ -236,7 +236,7 @@ Vorgänge
 
 .. req:: Entfallene Vorgänge werden als erledigt geführt
    :id: REQ_DSH_VORG_09
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_08, REQ_VOR_ABL_02, REQ_UEB_ENTS_06, REQ_KAT_ARCH_05, REQ_ABW_AUTO_01, REQ_TER_AEND_05, REQ_USR_ENDE_01, REQ_USR_ENDE_02
 
@@ -270,7 +270,7 @@ Vorgänge
 
 .. req:: Jede Entscheidung erreicht den Antragsteller
    :id: REQ_DSH_VORG_10
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_04, REQ_NAC_ANL_01, REQ_NAC_ANL_04
 
@@ -288,7 +288,7 @@ Vorgänge
 
 .. req:: Nur Zuständige entscheiden und Antragsteller ziehen zurück
    :id: REQ_DSH_SICHER_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_VORG_01, REQ_DSH_VORG_07, REQ_USR_LOGIN_02
 
@@ -303,7 +303,7 @@ Eigene Handlungspflichten
 
 .. req:: Überfällige eigene Termine stehen im zweiten Rang
    :id: REQ_DSH_PFLI_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_GRUND_03, REQ_TER_STAT_02
 
@@ -320,7 +320,7 @@ Dringlichkeiten
 
 .. req:: Termine ohne Trainer prominent anzeigen
    :id: REQ_DSH_DRIN_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_GRUND_03, REQ_TER_ANL_02
 
@@ -330,7 +330,7 @@ Dringlichkeiten
 
 .. req:: Überfällige Termine stehen ganz oben
    :id: REQ_DSH_DRIN_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_DRIN_01, REQ_TER_STAT_06
 
@@ -344,7 +344,7 @@ Dringlichkeiten
 
 .. req:: Dringliche Termine nach Vorlauf
    :id: REQ_DSH_DRIN_03
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_DRIN_01
 
@@ -358,7 +358,7 @@ Dringlichkeiten
 
 .. req:: Warnung bei zu wenigen Teilnehmern
    :id: REQ_DSH_DRIN_04
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DSH_DRIN_03, REQ_TLN_GRENZ_01
 
@@ -377,15 +377,9 @@ Ablösung der bisherigen Dashboard-Anforderungen
 
 .. note::
 
-   Die Anforderungen dieses Bereichs lösen ``REQ_TRA_DASH_01``,
-   ``REQ_TRA_DASH_02``, ``REQ_TRA_VORG_01``, ``REQ_TRA_VORG_02``,
+   Die Anforderungen dieses Bereichs lösen ``REQ_TRA_DASH_01`` bis
+   ``REQ_TRA_DASH_03``, ``REQ_TRA_VORG_01``, ``REQ_TRA_VORG_02``,
    ``REQ_TRA_NACHR_01`` bis ``REQ_TRA_NACHR_03`` sowie ``REQ_TER_DASH_01``
-   bis ``REQ_TER_DASH_04`` ab. Die abgelösten Anforderungen behalten ihren
-   bisherigen Status, solange dieser Bereich in Prüfung ist -- die
-   freigegebenen ``REQ_TER_DASH_*`` bleiben mit ihren Abnahmetests in Kraft.
-
-   Mit der Freigabe dieses Bereichs wechseln sie auf ``superseded``, und die
-   ``:verifies:``-Einträge von ``TEST_TER_DASH_01`` bis ``TEST_TER_DASH_05``
-   werden auf die neuen IDs gezogen. Vorher darf das nicht geschehen: Sonst
-   verlören freigegebene Anforderungen ihren Nachweis, obwohl fachlich
-   nichts entschieden ist.
+   bis ``REQ_TER_DASH_04`` ab. Die abgelösten Anforderungen stehen auf
+   ``superseded``; die ``:verifies:``-Einträge von ``TEST_TER_DASH_01`` bis
+   ``TEST_TER_DASH_05`` verweisen auf die neuen IDs.

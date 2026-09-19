@@ -19,7 +19,7 @@ Grundsatz
 
 .. decision:: Kenntnisnahme und Entscheidung sind getrennte Orte
    :id: DEC_NAC_TRENNUNG_01
-   :status: review
+   :status: approved
 
    Was das System einem Benutzer zu sagen hat, wird nach der erwarteten
    Reaktion getrennt:
@@ -44,7 +44,7 @@ Grundsatz
 
 .. req:: Eigene Anzeige für Benachrichtigungen
    :id: REQ_NAC_GRUND_01
-   :status: review
+   :status: approved
    :priority: high
    :links: DEC_NAC_TRENNUNG_01, REQ_DAT_NACHR_01
 
@@ -56,7 +56,7 @@ Grundsatz
 
 .. req:: Benachrichtigungen verlangen keine Handlung
    :id: REQ_NAC_GRUND_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_GRUND_01, DEC_NAC_TRENNUNG_01, REQ_DSH_GRUND_02
 
@@ -70,7 +70,7 @@ Grundsatz
 
 .. req:: Benachrichtigungen gelten für alle Rollen
    :id: REQ_NAC_GRUND_03
-   :status: review
+   :status: approved
    :links: REQ_NAC_GRUND_01
 
    Die Benachrichtigungen sind nicht auf Trainer beschränkt. Administratoren
@@ -82,7 +82,7 @@ Anlässe
 
 .. req:: Katalog der Anlässe
    :id: REQ_NAC_ANL_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_GRUND_01
 
@@ -219,7 +219,7 @@ Anlässe
 
 .. req:: Keine Mitteilung ohne Anlass im Katalog
    :id: REQ_NAC_ANL_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_ANL_01
 
@@ -232,7 +232,7 @@ Anlässe
 
 .. req:: Ein Ereignis, eine Mitteilung je Empfänger
    :id: REQ_NAC_ANL_03
-   :status: review
+   :status: approved
    :links: REQ_NAC_ANL_01
 
    Betrifft ein Anlass mehrere Empfänger, entsteht für jeden von ihnen eine
@@ -258,7 +258,7 @@ Anlässe
 
 .. req:: Der Auslöser erhält keine Mitteilung
    :id: REQ_NAC_ANL_04
-   :status: review
+   :status: approved
    :links: REQ_NAC_ANL_01
 
    Wer eine Handlung selbst ausgelöst hat, erhält darüber keine Mitteilung.
@@ -284,7 +284,7 @@ Anlässe
 
 .. req:: Teilnehmer erhalten keine Mitteilungen
    :id: REQ_NAC_ANL_05
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_ANL_01, REQ_TER_AEND_08
 
@@ -297,7 +297,7 @@ Anzeige
 
 .. req:: Ungelesene Benachrichtigungen sind erkennbar
    :id: REQ_NAC_ANZ_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_GRUND_01
 
@@ -312,7 +312,7 @@ Anzeige
 
 .. req:: Neueste Mitteilung zuerst
    :id: REQ_NAC_ANZ_02
-   :status: review
+   :status: approved
    :links: REQ_NAC_GRUND_01
 
    Die Mitteilungen erscheinen absteigend nach ihrem Zeitpunkt, die neueste
@@ -321,7 +321,7 @@ Anzeige
 
 .. req:: Inhalt einer Mitteilung
    :id: REQ_NAC_ANZ_03
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_GRUND_01, REQ_NAC_ANL_01
 
@@ -331,7 +331,7 @@ Anzeige
 
 .. req:: Gelesen durch Anzeigen
    :id: REQ_NAC_ANZ_04
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_ANZ_01, REQ_DAT_NACHR_01
 
@@ -346,7 +346,7 @@ Anzeige
 
 .. req:: Mitteilungen bleiben dauerhaft
    :id: REQ_NAC_ANZ_05
-   :status: review
+   :status: approved
    :links: REQ_NAC_GRUND_01, REQ_USR_ENDE_02
 
    Mitteilungen werden nicht durch Zeitablauf entfernt und lassen sich vom
@@ -361,7 +361,7 @@ Anzeige
 
 .. req:: Entfallener Bezug macht die Mitteilung nicht ungültig
    :id: REQ_NAC_ANZ_06
-   :status: review
+   :status: approved
    :links: REQ_NAC_ANZ_03, REQ_NAC_ANZ_05
 
    Ist der Gegenstand einer Mitteilung nicht mehr vorhanden -- etwa ein
@@ -374,7 +374,7 @@ Mitteilungen an den Adminbereich
 
 .. req:: Der Adminbereich ist ein gemeinsamer Empfänger
    :id: REQ_NAC_ADM_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_GRUND_03, REQ_NAC_ANL_01
 
@@ -393,7 +393,7 @@ Mitteilungen an den Adminbereich
 
 .. req:: Gelesen gilt für den gesamten Adminbereich
    :id: REQ_NAC_ADM_02
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_ADM_01, REQ_NAC_ANZ_04
 
@@ -410,7 +410,7 @@ Datenhaltung
 
 .. req:: Anlasstyp und Bezug werden mitgeführt
    :id: REQ_NAC_DAT_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DAT_NACHR_01, REQ_NAC_ANL_01, REQ_NAC_ANZ_03
 
@@ -424,7 +424,7 @@ Datenhaltung
 
 .. req:: Empfänger ist eine Person oder der Adminbereich
    :id: REQ_NAC_DAT_02
-   :status: review
+   :status: approved
    :links: REQ_NAC_DAT_01, REQ_NAC_ADM_01, REQ_DAT_NACHR_01
 
    Der Empfänger einer Mitteilung ist entweder ein Benutzerkonto oder der
@@ -433,7 +433,7 @@ Datenhaltung
 
 .. req:: Zustellung ausschließlich in der Anwendung
    :id: REQ_NAC_DAT_03
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_DAT_NACHR_01, REQ_NAC_GRUND_01
 
@@ -450,7 +450,7 @@ Zugriffsschutz
 
 .. req:: Nur Empfänger sehen und verändern ihren Lesezustand
    :id: REQ_NAC_SICHER_01
-   :status: review
+   :status: approved
    :priority: high
    :links: REQ_NAC_DAT_02, REQ_USR_LOGIN_02
 

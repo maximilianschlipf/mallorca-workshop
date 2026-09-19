@@ -855,7 +855,7 @@ Dashboard der Administratoren
 
 .. req:: Termine ohne Trainer prominent anzeigen
    :id: REQ_TER_DASH_01
-   :status: approved
+   :status: superseded
    :priority: high
    :links: REQ_TER_ANL_02
 
@@ -865,7 +865,7 @@ Dashboard der Administratoren
 
 .. req:: Dringliche Termine nach Vorlauf
    :id: REQ_TER_DASH_02
-   :status: approved
+   :status: superseded
    :priority: high
    :links: REQ_TER_DASH_01
 
@@ -879,7 +879,7 @@ Dashboard der Administratoren
 
 .. req:: Überfällige Termine stehen ganz oben
    :id: REQ_TER_DASH_04
-   :status: approved
+   :status: superseded
    :priority: high
    :links: REQ_TER_DASH_01, REQ_TER_STAT_06
 
@@ -893,7 +893,7 @@ Dashboard der Administratoren
 
 .. req:: Warnung bei zu wenigen Teilnehmern
    :id: REQ_TER_DASH_03
-   :status: approved
+   :status: superseded
    :priority: high
    :links: REQ_TER_DASH_02, REQ_TLN_GRENZ_01
 

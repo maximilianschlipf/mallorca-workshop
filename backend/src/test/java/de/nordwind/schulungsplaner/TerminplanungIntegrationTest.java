@@ -619,6 +619,8 @@ class TerminplanungIntegrationTest {
         jdbc.update("UPDATE termin SET startdatum=?, enddatum=? WHERE termin_id=?", HEUTE.minusDays(1), HEUTE, laufend.terminId());
         var dashboard = termine.dashboard(ADMIN);
         assertThat(dashboard.getFirst().terminId()).isEqualTo(ueberfaellig.terminId());
+        assertThat(dashboard.indexOf(dashboard.stream().filter(e -> e.terminId().equals(dringend.terminId())).findFirst().orElseThrow()))
+                .isLessThan(dashboard.indexOf(dashboard.stream().filter(e -> e.terminId().equals(vierWochen.terminId())).findFirst().orElseThrow()));
         assertThat(dashboard).filteredOn(e -> e.terminId().equals(dringend.terminId())).singleElement().satisfies(e -> assertThat(e.dringend()).isTrue());
         assertThat(dashboard).filteredOn(e -> e.terminId().equals(vierWochen.terminId())).singleElement().satisfies(e -> assertThat(e.dringend()).isFalse());
         assertThat(dashboard).filteredOn(e -> e.terminId().equals(exklusiv.terminId())).singleElement().satisfies(e -> assertThat(e.mindestteilnehmerUnterschritten()).isTrue());
@@ -630,14 +632,27 @@ class TerminplanungIntegrationTest {
         var oeffentlich = termine.anlegen(ADMIN, form("SCH-001", HEUTE.plusWeeks(3).plusDays(1), HEUTE.plusWeeks(3).plusDays(1), "oeffentlich", "remote", null, null, null, false));
         assertThat(termine.dashboard(ADMIN)).filteredOn(e -> e.terminId().equals(oeffentlich.terminId())).singleElement()
                 .satisfies(e -> assertThat(e.mindestteilnehmerUnterschritten()).isFalse());
+        var oeffentlichVoll = termine.anlegen(ADMIN, form("SCH-001", HEUTE.plusWeeks(3).plusDays(4), HEUTE.plusWeeks(3).plusDays(4), "oeffentlich", "remote", null, null, null, false));
+        termine.trainerZuweisen(ADMIN, oeffentlichVoll.terminId(), "TRN-005", false);
+        var oeffentlichUeberbelegt = termine.anlegen(ADMIN, form("SCH-001", HEUTE.plusWeeks(3).plusDays(5), HEUTE.plusWeeks(3).plusDays(5), "oeffentlich", "remote", null, null, null, false));
+        termine.trainerZuweisen(ADMIN, oeffentlichUeberbelegt.terminId(), "TRN-005", false);
+        for (int i = 0; i < 12; i++) {
+            termine.buchungAnlegen(ADMIN, oeffentlichVoll.terminId(), buchung("Voll " + i, "Acme"));
+            termine.buchungAnlegen(ADMIN, oeffentlichUeberbelegt.terminId(), buchung("Überbelegt " + i, "Acme"));
+        }
+        termine.buchungAnlegen(ADMIN, oeffentlichUeberbelegt.terminId(), buchung("Überbelegt 12", "Acme"));
+        dashboard = termine.dashboard(ADMIN);
+        assertThat(dashboard).noneMatch(e -> e.terminId().equals(oeffentlichVoll.terminId()));
+        assertThat(dashboard).filteredOn(e -> e.terminId().equals(oeffentlichUeberbelegt.terminId())).singleElement()
+                .satisfies(e -> assertThat(e.hoechstteilnehmerUeberschritten()).isTrue());
         termine.trainerZuweisen(ADMIN, ueberfaellig.terminId(), "TRN-005", false);
         var anstehend = termine.anlegen(ADMIN, minimal("SCH-001", HEUTE.plusWeeks(6).toString(), HEUTE.plusWeeks(6).toString()));
         termine.trainerZuweisen(ADMIN, anstehend.terminId(), "TRN-005", false);
         assertThat(termine.dashboard("TRN-005").getFirst().terminId()).isEqualTo(ueberfaellig.terminId());
         jdbc.update("UPDATE termin SET status='abgesagt' WHERE termin_id=?", ueberfaellig.terminId());
         assertThat(termine.dashboard("TRN-005")).noneMatch(e -> e.terminId().equals(ueberfaellig.terminId()));
-        jdbc.update("UPDATE termin SET status='abgeschlossen', abschlussart='manuell', abgeschlossen_am=? WHERE termin_id=?", HEUTE, ueberfaellig.terminId());
-        assertThat(termine.dashboard("TRN-005")).noneMatch(e -> e.terminId().equals(ueberfaellig.terminId()));
+        jdbc.update("UPDATE termin SET status='abgeschlossen', abschlussart='manuell', abgeschlossen_am=? WHERE termin_id=?", HEUTE, anstehend.terminId());
+        assertThat(termine.dashboard("TRN-005")).noneMatch(e -> e.terminId().equals(anstehend.terminId()));
     }
 
     @Test

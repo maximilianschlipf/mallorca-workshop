@@ -50,6 +50,7 @@ export interface DashboardTermin {
   ohneTrainer: boolean;
   dringend: boolean;
   mindestteilnehmerUnterschritten: boolean;
+  hoechstteilnehmerUeberschritten: boolean;
 }
 
 export type Schulungszustand = "AKTIV" | "ARCHIVIERT";

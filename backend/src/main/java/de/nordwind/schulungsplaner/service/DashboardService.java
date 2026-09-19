@@ -83,7 +83,7 @@ public class DashboardService {
                     .orElse(rs.getString("schulung_titel"));
             return new TerminService.DashboardEintrag(rs.getString("termin_id"), titel,
                     rs.getDate("startdatum").toLocalDate(), rs.getDate("enddatum").toLocalDate(),
-                    true, false, true, false);
+                    true, false, true, false, false);
         }, kontoId, heute);
     }
 

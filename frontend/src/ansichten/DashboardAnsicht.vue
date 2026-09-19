@@ -46,6 +46,13 @@ function datum(iso: string) {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 }
 
+function hinweise(termin: Dashboard["dringlichkeiten"][number]) {
+  return [termin.ueberfaellig && "Überfälliger Termin",
+    termin.ohneTrainer && "Trainerzuweisung fehlt",
+    termin.mindestteilnehmerUnterschritten && "Mindestteilnehmerzahl nicht erreicht",
+    termin.hoechstteilnehmerUeberschritten && "Höchstteilnehmerzahl überschritten"].filter(Boolean).join(" · ");
+}
+
 onMounted(() => laden().catch((error) => {
   fehler.value = error instanceof Error ? error.message : "Das Dashboard konnte nicht geladen werden.";
 }));
@@ -102,7 +109,7 @@ onMounted(() => laden().catch((error) => {
         <ul v-if="daten.dringlichkeiten.length" class="task-list">
           <li v-for="termin in daten.dringlichkeiten" :key="termin.terminId" class="task-row" :class="{ urgent: termin.dringend || termin.ueberfaellig }">
             <div><strong>{{ termin.schulungTitel }}</strong><p>
-              {{ termin.ueberfaellig ? "Überfälliger Termin" : termin.ohneTrainer ? "Trainerzuweisung fehlt" : "Mindestteilnehmerzahl nicht erreicht" }}
+              {{ hinweise(termin) }}
             </p><small>{{ termin.startdatum }} bis {{ termin.enddatum }}</small></div>
             <RouterLink to="/planer#kalender">Termin öffnen</RouterLink>
           </li>

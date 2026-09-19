@@ -9,16 +9,15 @@ folgende in umsetzbare Stories und in Tests, die sie abprüfen.
 * Ein **Test** beschreibt eine nachprüfbare Beobachtung und verweist mit
   ``verifies`` auf die Story oder Anforderung, die er absichert.
 
-Die Anforderungen dieses Bereichs stehen auf ``review``. Stories und Tests
-stehen deshalb ebenfalls auf ``review`` und sind noch nicht implementiert;
-sie zählen erst nach der fachlichen Freigabe in das Requirements-Gate.
+Die Anforderungen, Stories und Tests dieses Bereichs sind fachlich
+freigegeben und zählen im Requirements-Gate.
 
 Anzeige und Lesezustand
 -----------------------
 
 .. story:: Ich sehe meine Benachrichtigungen
    :id: STORY_NAC_ANZ_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_GRUND_01, REQ_NAC_GRUND_03, REQ_NAC_ANZ_02, REQ_NAC_ANZ_03
 
@@ -28,7 +27,7 @@ Anzeige und Lesezustand
 
 .. story:: Ich erkenne Ungelesenes, ohne die Anzeige zu öffnen
    :id: STORY_NAC_ANZ_02
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_ANZ_01
 
@@ -37,7 +36,7 @@ Anzeige und Lesezustand
 
 .. story:: Gelesenes bleibt gelesen
    :id: STORY_NAC_ANZ_03
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_ANZ_04, REQ_NAC_ANZ_05
 
@@ -48,7 +47,7 @@ Anzeige und Lesezustand
 
 .. story:: Ich sehe keine Handlungen in den Benachrichtigungen
    :id: STORY_NAC_ANZ_04
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_GRUND_02
 
@@ -58,7 +57,7 @@ Anzeige und Lesezustand
 
 .. test:: Mitteilungen erscheinen absteigend mit Anlass und Zeitpunkt
    :id: TEST_NAC_ANZ_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_NAC_ANZ_01, REQ_NAC_GRUND_01, REQ_NAC_ANZ_02, REQ_NAC_ANZ_03
@@ -72,7 +71,7 @@ Anzeige und Lesezustand
 
 .. test:: Ungelesene sind mit Anzahl erkennbar
    :id: TEST_NAC_ANZ_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_NAC_ANZ_02, REQ_NAC_ANZ_01
@@ -83,7 +82,7 @@ Anzeige und Lesezustand
 
 .. test:: Anzeigen markiert als gelesen und ist nicht umkehrbar
    :id: TEST_NAC_ANZ_03
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANZ_03, REQ_NAC_ANZ_04
@@ -94,7 +93,7 @@ Anzeige und Lesezustand
 
 .. test:: Alles als gelesen markieren erfasst nur Ungelesenes
    :id: TEST_NAC_ANZ_04
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANZ_03, REQ_NAC_ANZ_04
@@ -105,7 +104,7 @@ Anzeige und Lesezustand
 
 .. test:: Persönliche Mitteilungen enden nur mit dem Konto
    :id: TEST_NAC_ANZ_05
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANZ_03, REQ_NAC_ANZ_05
@@ -119,7 +118,7 @@ Anzeige und Lesezustand
 
 .. test:: Lesezustand und Bedienung sind barrierefrei erkennbar
    :id: TEST_NAC_ANZ_08
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: REQ_NAC_ANZ_01, REQ_NAC_ANZ_04
@@ -132,7 +131,7 @@ Anzeige und Lesezustand
 
 .. test:: Benachrichtigungen bieten keine Entscheidung an
    :id: TEST_NAC_ANZ_06
-   :status: review
+   :status: approved
    :automated: yes
    :level: e2e
    :verifies: STORY_NAC_ANZ_04, REQ_NAC_GRUND_02
@@ -144,7 +143,7 @@ Anzeige und Lesezustand
 
 .. test:: Gelöschter Termin lässt die Mitteilung bestehen
    :id: TEST_NAC_ANZ_07
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_NAC_ANZ_06
@@ -159,7 +158,7 @@ Anlässe
 
 .. story:: Ich werde über Entscheidungen und Änderungen informiert
    :id: STORY_NAC_ANL_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_ANL_01, REQ_NAC_ANL_03
 
@@ -170,7 +169,7 @@ Anlässe
 
 .. story:: Ich werde nicht über meine eigenen Handlungen informiert
    :id: STORY_NAC_ANL_02
-   :status: review
+   :status: approved
    :implements: REQ_NAC_ANL_04
 
    Als Administrator, der einen Termin absagt, finde ich darüber keine
@@ -179,7 +178,7 @@ Anlässe
 
 .. test:: Jeder Anlass des Katalogs erzeugt seine Mitteilung
    :id: TEST_NAC_ANL_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANL_01, REQ_NAC_ANL_01
@@ -192,7 +191,7 @@ Anlässe
 
 .. test:: Terminänderung nennt alten und neuen Wert je Feld
    :id: TEST_NAC_ANL_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANL_01, REQ_NAC_ANL_03, REQ_TER_AEND_12
@@ -207,7 +206,7 @@ Anlässe
 
 .. test:: Der spezifische Anlass verhindert doppelte Mitteilungen
    :id: TEST_NAC_ANL_06
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_NAC_ANL_03
@@ -224,7 +223,7 @@ Anlässe
 
 .. test:: Kein Anlass außerhalb des Katalogs
    :id: TEST_NAC_ANL_03
-   :status: review
+   :status: approved
    :automated: yes
    :level: unit
    :verifies: REQ_NAC_ANL_02
@@ -235,7 +234,7 @@ Anlässe
 
 .. test:: Der Auslöser erhält keine Mitteilung
    :id: TEST_NAC_ANL_04
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ANL_02, REQ_NAC_ANL_04
@@ -256,7 +255,7 @@ Anlässe
 
 .. test:: Teilnehmer erhalten keine Mitteilungen
    :id: TEST_NAC_ANL_05
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_NAC_ANL_05, REQ_TER_AEND_08
@@ -269,7 +268,7 @@ Adminbereich als Empfänger
 
 .. story:: Wir sehen als Administratoren dieselben Mitteilungen
    :id: STORY_NAC_ADM_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_ADM_01, REQ_NAC_ADM_02, REQ_NAC_DAT_02
 
@@ -279,7 +278,7 @@ Adminbereich als Empfänger
 
 .. test:: Eine Mitteilung erreicht alle Administratoren
    :id: TEST_NAC_ADM_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ADM_01, REQ_NAC_ADM_01, REQ_NAC_DAT_02
@@ -297,7 +296,7 @@ Adminbereich als Empfänger
 
 .. test:: Gelesen durch einen gilt für alle
    :id: TEST_NAC_ADM_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_ADM_01, REQ_NAC_ADM_02
@@ -312,7 +311,7 @@ Datenhaltung
 
 .. story:: Mitteilungen tragen ihren Anlasstyp und ihren Bezug
    :id: STORY_NAC_DAT_01
-   :status: review
+   :status: approved
    :priority: high
    :implements: REQ_NAC_DAT_01, REQ_NAC_DAT_03
 
@@ -322,7 +321,7 @@ Datenhaltung
 
 .. test:: Anlasstyp und Bezug werden gespeichert
    :id: TEST_NAC_DAT_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_NAC_DAT_01, REQ_NAC_DAT_01
@@ -335,7 +334,7 @@ Datenhaltung
 
 .. test:: Kein Versand nach außen
    :id: TEST_NAC_DAT_02
-   :status: review
+   :status: approved
    :automated: yes
    :level: unit
    :verifies: STORY_NAC_DAT_01, REQ_NAC_DAT_03
@@ -348,7 +347,7 @@ Zugriffsschutz
 
 .. test:: Mitteilungen sind gegen fremde Zugriffe geschützt
    :id: TEST_NAC_SICHER_01
-   :status: review
+   :status: approved
    :automated: yes
    :level: integration
    :verifies: REQ_NAC_SICHER_01

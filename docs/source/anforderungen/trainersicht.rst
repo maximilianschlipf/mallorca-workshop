@@ -9,14 +9,11 @@ Dashboard
 
 Das Dashboard ist rollenübergreifend beschrieben und steht deshalb in einem
 eigenen Bereich: :ref:`Dashboard <dashboard>`. Die folgenden Anforderungen
-werden davon abgelöst. Sie behalten ihren Status, bis der neue Bereich
-freigegeben ist -- ``REQ_TRA_DASH_02`` trägt mit ``STORY_TER_DASH_02`` und
-``TEST_TER_DASH_05`` bereits freigegebene Nachweise, die sonst ins Leere
-zeigen würden.
+werden davon abgelöst und stehen nach dessen Freigabe auf ``superseded``.
 
 .. req:: Dashboard als Einstieg
    :id: REQ_TRA_DASH_01
-   :status: draft
+   :status: superseded
    :priority: high
 
    Ein Trainer hat ein Dashboard als Einstieg. Es führt seine Termine und
@@ -28,7 +25,7 @@ zeigen würden.
 
 .. req:: Überfällige eigene Termine stehen ganz oben
    :id: REQ_TRA_DASH_02
-   :status: draft
+   :status: superseded
    :priority: high
    :links: REQ_TRA_DASH_01, REQ_TER_STAT_02
 
@@ -40,7 +37,7 @@ zeigen würden.
 
 .. req:: Offene Übernahmeanfragen im Dashboard
    :id: REQ_TRA_DASH_03
-   :status: draft
+   :status: superseded
    :priority: high
    :links: REQ_TRA_DASH_01, REQ_UEB_ANFR_02
 
@@ -124,7 +121,7 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 
 .. req:: Eigene Anzeige für Benachrichtigungen
    :id: REQ_TRA_NACHR_01
-   :status: draft
+   :status: superseded
    :priority: high
    :links: REQ_DAT_NACHR_01
 
@@ -136,7 +133,7 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 
 .. req:: Ungelesene Benachrichtigungen sind erkennbar
    :id: REQ_TRA_NACHR_02
-   :status: draft
+   :status: superseded
    :priority: high
    :links: REQ_TRA_NACHR_01
 
@@ -147,7 +144,7 @@ einem eigenen Bereich: :ref:`Benachrichtigungen <benachrichtigungen>`.
 
 .. req:: Benachrichtigungen sind keine Aufgaben
    :id: REQ_TRA_NACHR_03
-   :status: draft
+   :status: superseded
    :links: REQ_TRA_NACHR_01, REQ_TRA_DASH_01
 
    In den Benachrichtigungen stehen Mitteilungen über Geschehenes. Was eine
@@ -164,7 +161,7 @@ Dashboard, getrennt von den Vorgängen, über die der Trainer entscheidet.
 
 .. req:: Liste der offenen eigenen Vorgänge
    :id: REQ_TRA_VORG_01
-   :status: draft
+   :status: superseded
    :priority: high
 
    Ein Trainer sieht in einer eigenen Liste, worauf er noch wartet: seine
@@ -176,7 +173,7 @@ Dashboard, getrennt von den Vorgängen, über die der Trainer entscheidet.
 
 .. req:: Zurückziehen aus der Liste heraus
    :id: REQ_TRA_VORG_02
-   :status: draft
+   :status: superseded
    :links: REQ_TRA_VORG_01, REQ_QUA_BEW_07, REQ_VOR_ABG_03, REQ_ABW_ERF_06, REQ_UEB_ANFR_04
 
    Jeder Vorgang, der zurückgezogen werden kann, lässt sich aus dieser Liste

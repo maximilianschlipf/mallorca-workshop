@@ -387,11 +387,13 @@ public class TerminService {
             boolean zuWenig = s != null && "exklusiv".equals(t.zugangsart())
                     && buchungenAnzahl(id) < s.mindestteilnehmerExklusiv()
                     && t.startdatum().isBefore(heute.plusWeeks(4));
+            boolean zuViele = s != null && "oeffentlich".equals(t.zugangsart())
+                    && s.hatObergrenze() && buchungenAnzahl(id) > s.maxTeilnehmerOeffentlich();
             boolean dringend = (ohneTrainer && t.startdatum().isBefore(heute.plusWeeks(4))) || zuWenig;
             return new DashboardEintrag(id, s == null ? t.schulungTitel() : s.titel(), t.startdatum(), t.enddatum(), ueberfaellig,
-                    ohneTrainer, dringend, zuWenig);
+                    ohneTrainer, dringend, zuWenig, zuViele);
         }).filter(e -> !admin || e.ueberfaellig() || e.ohneTrainer()
-                || e.mindestteilnehmerUnterschritten()).toList();
+                || e.mindestteilnehmerUnterschritten() || e.hoechstteilnehmerUeberschritten()).toList();
     }
 
     @Transactional
@@ -760,7 +762,7 @@ public class TerminService {
     public record Loeschwarnung(int anzahlBuchungen, String trainer, List<String> assistenten) {}
     public record DashboardEintrag(String terminId, String schulungTitel, LocalDate startdatum,
             LocalDate enddatum, boolean ueberfaellig, boolean ohneTrainer, boolean dringend,
-            boolean mindestteilnehmerUnterschritten) {}
+            boolean mindestteilnehmerUnterschritten, boolean hoechstteilnehmerUeberschritten) {}
     public record TrainerOption(String id, String name, String email, boolean verfuegbar,
             String grund, List<Belegung> kalender) {}
     public record Belegung(String art, LocalDate von, LocalDate bis) {}
