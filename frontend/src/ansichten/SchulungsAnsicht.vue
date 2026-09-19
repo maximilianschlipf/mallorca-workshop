@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { fetchSchulung } from "../api";
+import {
+  fetchQualifikationenDerSchulung, fetchSchulung, qualifikationDirektErteilen,
+  qualifikationEntziehen, qualifikationsbewerbungAblehnen,
+  qualifikationsbewerbungGenehmigen,
+} from "../api";
 import { aktuellesKonto } from "../auth";
-import type { Schulung } from "../types";
+import type { Qualifikationszeile, Schulung } from "../types";
 import LadeZustand from "../komponenten/LadeZustand.vue";
+import RueckfrageDialog from "../komponenten/RueckfrageDialog.vue";
 import ZustandsSchild from "../komponenten/ZustandsSchild.vue";
 
 const props = defineProps<{ id: string }>();
@@ -15,17 +20,70 @@ const istAdministrator = computed(() =>
 const schulung = ref<Schulung | null>(null);
 const laedt = ref(true);
 const fehler = ref<string | null>(null);
+const aktionsfehler = ref<string | null>(null);
+const qualifikationen = ref<Qualifikationszeile[]>([]);
+const aktionsmeldung = ref<string | null>(null);
+const abzulehnendeBewerbung = ref<Qualifikationszeile | null>(null);
+const zuEntziehendeQualifikation = ref<Qualifikationszeile | null>(null);
 
 async function laden() {
   laedt.value = true;
-  fehler.value = null;
+  fehler.value = aktionsfehler.value = null;
   try {
     schulung.value = await fetchSchulung(props.id);
   } catch (ursache) {
     fehler.value = ursache instanceof Error ? ursache.message : "Unbekannter Fehler";
-  } finally {
     laedt.value = false;
+    return;
   }
+  if (istAdministrator.value) {
+    try {
+      qualifikationen.value = await fetchQualifikationenDerSchulung(props.id);
+    } catch (ursache) {
+      qualifikationen.value = [];
+      aktionsfehler.value = ursache instanceof Error
+        ? ursache.message : "Die Qualifikationen konnten nicht geladen werden.";
+    }
+  } else {
+    qualifikationen.value = [];
+  }
+  laedt.value = false;
+}
+
+async function qualifikationsvorgang(aktion: () => Promise<void>, meldung: string) {
+  aktionsfehler.value = aktionsmeldung.value = null;
+  try {
+    await aktion();
+    aktionsmeldung.value = meldung;
+  } catch (ursache) {
+    aktionsfehler.value = ursache instanceof Error ? ursache.message : "Der Vorgang ist fehlgeschlagen.";
+    return;
+  }
+  try {
+    qualifikationen.value = await fetchQualifikationenDerSchulung(props.id);
+  } catch {
+    aktionsfehler.value = `${meldung} Der aktuelle Stand konnte aber nicht geladen werden.`;
+  }
+}
+
+function ablehnen(begruendung?: string) {
+  const zeile = abzulehnendeBewerbung.value;
+  abzulehnendeBewerbung.value = null;
+  if (!begruendung || zeile?.bewerbungId == null) return;
+  return qualifikationsvorgang(
+    () => qualifikationsbewerbungAblehnen(zeile.bewerbungId!, begruendung),
+    "Die Bewerbung wurde abgelehnt.",
+  );
+}
+
+function entziehen() {
+  const zeile = zuEntziehendeQualifikation.value;
+  zuEntziehendeQualifikation.value = null;
+  if (!zeile) return;
+  return qualifikationsvorgang(
+    () => qualifikationEntziehen(props.id, zeile.trainerId),
+    "Die Qualifikation wurde entzogen.",
+  );
 }
 
 function zeitraum(von: string, bis: string) {
@@ -53,6 +111,8 @@ onMounted(laden);
           angelegt werden; bestehende finden weiterhin statt.
         </p>
         <ZustandsSchild v-else :zustand="schulung.zustand" />
+        <p v-if="aktionsmeldung" class="success" role="status">{{ aktionsmeldung }}</p>
+        <p v-if="aktionsfehler" class="form-error" role="alert">{{ aktionsfehler }}</p>
 
         <div class="verwaltung-aktionen">
           <RouterLink
@@ -97,6 +157,33 @@ onMounted(laden);
           </div>
         </dl>
 
+        <template v-if="istAdministrator">
+          <h2>Qualifikationen</h2>
+          <table class="verwaltungstabelle">
+            <caption class="sr-only">Qualifikationen und Bewerbungen für diese Schulung</caption>
+            <thead><tr><th scope="col">Trainer</th><th scope="col">Status</th><th scope="col">Vorgänge</th></tr></thead>
+            <tbody>
+              <tr v-for="zeile in qualifikationen" :key="zeile.trainerId">
+                <td>{{ zeile.trainerName }}</td><td>{{ zeile.status }}</td>
+                <td class="zeilen-aktionen">
+                  <template v-if="zeile.status === 'OFFEN' && zeile.bewerbungId != null">
+                    <button type="button" :aria-label="`Bewerbung von ${zeile.trainerName} genehmigen`" @click="qualifikationsvorgang(
+                      () => qualifikationsbewerbungGenehmigen(zeile.bewerbungId!),
+                      'Die Bewerbung wurde genehmigt.')">Genehmigen</button>
+                    <button type="button" :aria-label="`Bewerbung von ${zeile.trainerName} ablehnen`" @click="abzulehnendeBewerbung = zeile">Ablehnen</button>
+                  </template>
+                  <button v-else-if="zeile.status === 'QUALIFIZIERT'" type="button" class="gefahr"
+                    :aria-label="`Qualifikation von ${zeile.trainerName} entziehen`"
+                    @click="zuEntziehendeQualifikation = zeile">Entziehen</button>
+                  <button v-else type="button" :aria-label="`${zeile.trainerName} direkt qualifizieren`" @click="qualifikationsvorgang(
+                    () => qualifikationDirektErteilen(props.id, zeile.trainerId),
+                    'Die Qualifikation wurde erteilt.')">Direkt qualifizieren</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+
         <h2>Voraussetzungen</h2>
         <ul v-if="schulung.voraussetzungen.length" data-testid="voraussetzungen">
           <li v-for="(text, index) in schulung.voraussetzungen" :key="index">
@@ -115,5 +202,23 @@ onMounted(laden);
         <p v-else class="state">Zu dieser Schulung ist derzeit kein Termin geplant.</p>
       </template>
     </LadeZustand>
+    <RueckfrageDialog
+      v-if="abzulehnendeBewerbung"
+      :titel="`Bewerbung von ${abzulehnendeBewerbung.trainerName} ablehnen?`"
+      text="Die Ablehnung wird dem Trainer mit der Begründung zugestellt."
+      bestaetigung="Bewerbung ablehnen"
+      eingabe-label="Begründung"
+      :eingabe-maxlength="1000"
+      @bestaetigt="ablehnen"
+      @abgebrochen="abzulehnendeBewerbung = null"
+    />
+    <RueckfrageDialog
+      v-if="zuEntziehendeQualifikation"
+      :titel="`Qualifikation von ${zuEntziehendeQualifikation.trainerName} entziehen?`"
+      text="Künftige Zuweisungen dieser Schulung werden aufgehoben."
+      bestaetigung="Qualifikation entziehen"
+      @bestaetigt="entziehen"
+      @abgebrochen="zuEntziehendeQualifikation = null"
+    />
   </section>
 </template>

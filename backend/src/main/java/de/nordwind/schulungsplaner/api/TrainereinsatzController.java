@@ -40,6 +40,69 @@ public class TrainereinsatzController {
         einsaetze.aufQualifikationBewerben(konto.id(), schulungId);
     }
 
+    @DeleteMapping("/ich/qualifikationsbewerbungen/{schulungId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bewerbungZurueckziehen(@AuthenticationPrincipal KontoPrincipal konto,
+                                       @PathVariable String schulungId) {
+        einsaetze.bewerbungZurueckziehen(konto.id(), schulungId);
+    }
+
+    @GetMapping("/ich/qualifikationen")
+    public List<TrainereinsatzService.EigenerQualifikationsstand> meineQualifikationen(
+            @AuthenticationPrincipal KontoPrincipal konto) {
+        return einsaetze.meineQualifikationen(konto.id());
+    }
+
+    @DeleteMapping("/ich/qualifikationen/{schulungId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eigeneQualifikationAblegen(@AuthenticationPrincipal KontoPrincipal konto,
+                                            @PathVariable String schulungId) {
+        einsaetze.eigeneQualifikationAblegen(konto.id(), schulungId);
+    }
+
+    @GetMapping("/ich/benachrichtigungen")
+    public List<TrainereinsatzService.Benachrichtigung> meineBenachrichtigungen(
+            @AuthenticationPrincipal KontoPrincipal konto) {
+        return einsaetze.meineBenachrichtigungen(konto.id());
+    }
+
+    @GetMapping("/schulungen/{schulungId}/qualifikationen")
+    public List<TrainereinsatzService.Qualifikationszeile> qualifikationenDerSchulung(
+            @AuthenticationPrincipal KontoPrincipal konto, @PathVariable String schulungId) {
+        return einsaetze.qualifikationenDerSchulung(konto.id(), schulungId);
+    }
+
+    @PutMapping("/schulungen/{schulungId}/qualifikationen/{trainerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void direktQualifizieren(@AuthenticationPrincipal KontoPrincipal konto,
+                                    @PathVariable String schulungId,
+                                    @PathVariable String trainerId) {
+        einsaetze.direktQualifizieren(konto.id(), schulungId, trainerId);
+    }
+
+    @DeleteMapping("/schulungen/{schulungId}/qualifikationen/{trainerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void qualifikationEntziehen(@AuthenticationPrincipal KontoPrincipal konto,
+                                       @PathVariable String schulungId,
+                                       @PathVariable String trainerId) {
+        einsaetze.qualifikationEntziehen(konto.id(), schulungId, trainerId);
+    }
+
+    @PostMapping("/qualifikationsbewerbungen/{bewerbungId}/genehmigung")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bewerbungGenehmigen(@AuthenticationPrincipal KontoPrincipal konto,
+                                     @PathVariable long bewerbungId) {
+        einsaetze.bewerbungGenehmigen(konto.id(), bewerbungId);
+    }
+
+    @PostMapping("/qualifikationsbewerbungen/{bewerbungId}/ablehnung")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bewerbungAblehnen(@AuthenticationPrincipal KontoPrincipal konto,
+                                  @PathVariable long bewerbungId,
+                                  @Valid @RequestBody Ablehnung anfrage) {
+        einsaetze.bewerbungAblehnen(konto.id(), bewerbungId, anfrage.begruendung());
+    }
+
     @PostMapping("/ich/assistenzbewerbungen/{terminId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void aufAssistenzplatzBewerben(@AuthenticationPrincipal KontoPrincipal konto,
@@ -87,4 +150,6 @@ public class TrainereinsatzController {
             @NotNull LocalDate bis,
             @Size(max = 255) String grund) {
     }
+
+    public record Ablehnung(@NotNull @Size(min = 1, max = 1000) String begruendung) {}
 }

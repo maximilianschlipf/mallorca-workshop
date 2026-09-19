@@ -144,3 +144,24 @@ export interface Benutzerkonto {
   rollen: Rolle[];
   zustand: Kontozustand;
 }
+
+export interface EigenerQualifikationsstand {
+  schulungId: string;
+  schulungstitel: string;
+  status: "OFFEN" | "GENEHMIGT" | "ABGELEHNT" | "QUALIFIZIERT";
+  begruendung: string | null;
+  kuenftigeTermine: number;
+}
+
+export interface Qualifikationszeile {
+  trainerId: string;
+  trainerName: string;
+  bewerbungId: number | null;
+  status: "KEINE" | "OFFEN" | "GENEHMIGT" | "ABGELEHNT" | "QUALIFIZIERT";
+}
+
+export interface Benachrichtigung {
+  id: number;
+  anlass: string;
+  erstelltAm: string;
+}

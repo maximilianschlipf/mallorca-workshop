@@ -3,26 +3,82 @@ Qualifikationen: Stories und Tests
 
 Diese Seite übersetzt die Anforderungen aus :need:`REQ_QUA_BEW_02` und
 folgende in umsetzbare Stories und in Tests, die sie abprüfen. Sie ist die
-Arbeitsgrundlage für die Umsetzung des Adminbereichs: die Bewerbung selbst
-ist bereits umgesetzt, die Entscheidung darüber und der Entzug einer
-Qualifikation noch nicht.
+Arbeitsgrundlage für Bewerbung, Entscheidung, Entzug und Direktvergabe von
+Qualifikationen.
 
 * Eine **Story** beschreibt einen Ablauf aus Sicht des Benutzers und
   verweist mit ``implements`` auf die Anforderungen, die sie erfüllt.
 * Ein **Test** beschreibt eine nachprüfbare Beobachtung und verweist mit
   ``verifies`` auf die Story oder Anforderung, die er absichert.
 
-Die zugrundeliegenden Anforderungen ``REQ_QUA_BEW_02`` und folgende tragen
-noch den Status ``draft``. Stories und Tests dieser Seite bleiben deshalb
-ebenfalls ``draft``, bis die Anforderungen freigegeben sind -- erst danach
-darf die Umsetzung beginnen.
+Die zugrundeliegenden Anforderungen ``REQ_QUA_BEW_02`` und folgende sowie
+die Stories und Tests dieser Seite sind freigegeben.
+
+Bewerbung verwalten
+--------------------
+
+.. story:: Ich bewerbe mich auf eine Qualifikation
+   :id: STORY_QUA_BEW_01
+   :status: approved
+   :priority: high
+   :implements: REQ_QUA_UMF_01, REQ_QUA_BEW_01, REQ_QUA_BEW_05, REQ_QUA_BEW_06
+
+   Als Trainer bewerbe ich mich einmalig auf die Qualifikation für eine
+   Schulung. Eine bestehende Qualifikation oder offene Bewerbung wird mir
+   stattdessen als bestehender Zustand angezeigt.
+
+.. story:: Ich ziehe meine Bewerbung zurück
+   :id: STORY_QUA_BEW_02
+   :status: approved
+   :implements: REQ_QUA_BEW_07
+
+   Als Trainer ziehe ich eine eigene offene Bewerbung zurück und kann mich
+   danach erneut für dieselbe Schulung bewerben.
+
+.. test:: Qualifikation gilt für alle Termine der Schulung
+   :id: TEST_QUA_BEW_01
+   :status: approved
+   :automated: yes
+   :verifies: STORY_QUA_BEW_01, REQ_QUA_UMF_01, REQ_QUA_BEW_01
+
+   Ein Trainer bewirbt sich für eine Schulung und erhält nach der
+   Genehmigung genau eine Qualifikation. Diese berechtigt ihn zur Zuweisung
+   auf zwei verschiedene Termine derselben Schulung.
+
+.. test:: Bestehende Qualifikation verhindert eine Bewerbung
+   :id: TEST_QUA_BEW_02
+   :status: approved
+   :automated: yes
+   :verifies: STORY_QUA_BEW_01, REQ_QUA_BEW_05
+
+   Für eine bereits qualifizierte Schulung sieht der Trainer den Zustand
+   "Qualifiziert" statt der Bewerbungsaktion. Auch ein direkter
+   Bewerbungsversuch wird abgewiesen.
+
+.. test:: Nur eine offene Bewerbung ist möglich
+   :id: TEST_QUA_BEW_03
+   :status: approved
+   :automated: yes
+   :verifies: STORY_QUA_BEW_01, REQ_QUA_BEW_06
+
+   Nach einer Bewerbung wird ein zweiter Versuch für dieselbe Schulung
+   abgewiesen und es besteht weiterhin genau eine offene Bewerbung.
+
+.. test:: Zurückziehen ermöglicht eine neue Bewerbung
+   :id: TEST_QUA_BEW_04
+   :status: approved
+   :automated: yes
+   :verifies: STORY_QUA_BEW_02, REQ_QUA_BEW_07
+
+   Ein Trainer zieht seine offene Bewerbung zurück. Sie ist danach nicht
+   mehr offen und eine neue Bewerbung für dieselbe Schulung gelingt.
 
 Freigabeanfragen entscheiden
 -----------------------------
 
 .. story:: Ich entscheide über eine Freigabeanfrage
    :id: STORY_QUA_ENTSCHEID_01
-   :status: draft
+   :status: approved
    :priority: high
    :implements: REQ_QUA_BEW_02, REQ_QUA_BEW_04
 
@@ -33,7 +89,7 @@ Freigabeanfragen entscheiden
 
 .. story:: Ich lehne eine Freigabeanfrage begründet ab
    :id: STORY_QUA_ENTSCHEID_02
-   :status: draft
+   :status: approved
    :priority: high
    :implements: REQ_QUA_BEW_08, REQ_QUA_BEW_09
 
@@ -43,7 +99,7 @@ Freigabeanfragen entscheiden
 
 .. story:: Der Trainer erfährt von der Entscheidung
    :id: STORY_QUA_ENTSCHEID_03
-   :status: draft
+   :status: approved
    :implements: REQ_QUA_BEW_03
 
    Als Trainer werde ich benachrichtigt, sobald über meine Freigabeanfrage
@@ -52,7 +108,7 @@ Freigabeanfragen entscheiden
 
 .. test:: Genehmigung erteilt die Qualifikation
    :id: TEST_QUA_ENTSCHEID_01
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTSCHEID_01, REQ_QUA_BEW_02
 
@@ -64,7 +120,7 @@ Freigabeanfragen entscheiden
 
 .. test:: Genehmigung schaltet künftige Termine frei
    :id: TEST_QUA_ENTSCHEID_02
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTSCHEID_01, REQ_QUA_BEW_04
 
@@ -75,7 +131,7 @@ Freigabeanfragen entscheiden
 
 .. test:: Ablehnung verlangt eine Begründung
    :id: TEST_QUA_ENTSCHEID_03
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTSCHEID_02, REQ_QUA_BEW_08
 
@@ -86,7 +142,7 @@ Freigabeanfragen entscheiden
 
 .. test:: Sperrfrist nach einer Ablehnung
    :id: TEST_QUA_ENTSCHEID_04
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTSCHEID_02, REQ_QUA_BEW_09
 
@@ -96,7 +152,7 @@ Freigabeanfragen entscheiden
 
 .. test:: Benachrichtigung nennt die Entscheidung
    :id: TEST_QUA_ENTSCHEID_05
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTSCHEID_03, REQ_QUA_BEW_03
 
@@ -109,7 +165,7 @@ Qualifikation entziehen
 
 .. story:: Ich entziehe eine Qualifikation
    :id: STORY_QUA_ENTZUG_01
-   :status: draft
+   :status: approved
    :priority: high
    :implements: REQ_QUA_ENTZ_01, REQ_QUA_ENTZ_02, REQ_QUA_ENTZ_03
 
@@ -120,7 +176,7 @@ Qualifikation entziehen
 
 .. story:: Nach einem Entzug kann ich mich sofort erneut bewerben
    :id: STORY_QUA_ENTZUG_02
-   :status: draft
+   :status: approved
    :implements: REQ_QUA_ENTZ_04
 
    Als Trainer, dem eine Qualifikation entzogen wurde, kann ich mich für
@@ -129,7 +185,7 @@ Qualifikation entziehen
 
 .. test:: Entzug räumt künftige Zuweisungen ab
    :id: TEST_QUA_ENTZUG_01
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTZUG_01, REQ_QUA_ENTZ_02
 
@@ -140,7 +196,7 @@ Qualifikation entziehen
 
 .. test:: Entzug benachrichtigt den Trainer
    :id: TEST_QUA_ENTZUG_02
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTZUG_01, REQ_QUA_ENTZ_03
 
@@ -149,7 +205,7 @@ Qualifikation entziehen
 
 .. test:: Entzug ohne bestehende Qualifikation wird abgewiesen
    :id: TEST_QUA_ENTZUG_03
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: REQ_QUA_ENTZ_01
 
@@ -158,7 +214,7 @@ Qualifikation entziehen
 
 .. test:: Nach Entzug ist sofort erneute Bewerbung möglich
    :id: TEST_QUA_ENTZUG_04
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ENTZUG_02, REQ_QUA_ENTZ_04
 
@@ -171,7 +227,7 @@ Qualifikation selbst ablegen
 
 .. story:: Ich lege eine eigene Qualifikation ab
    :id: STORY_QUA_ABLEGEN_01
-   :status: draft
+   :status: approved
    :priority: high
    :implements: REQ_QUA_ABLEGEN_01, REQ_QUA_ABLEGEN_02
 
@@ -183,7 +239,7 @@ Qualifikation selbst ablegen
 
 .. story:: Nach dem Ablegen kann ich mich sofort erneut bewerben
    :id: STORY_QUA_ABLEGEN_02
-   :status: draft
+   :status: approved
    :implements: REQ_QUA_ABLEGEN_03
 
    Als Trainer, der eine Qualifikation abgelegt hat, kann ich mich für
@@ -192,7 +248,7 @@ Qualifikation selbst ablegen
 
 .. test:: Ablegen verlangt eine ausdrückliche Bestätigung
    :id: TEST_QUA_ABLEGEN_01
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ABLEGEN_01, REQ_QUA_ABLEGEN_01
 
@@ -202,7 +258,7 @@ Qualifikation selbst ablegen
 
 .. test:: Ablegen warnt bei künftigen Terminen und räumt sie ab
    :id: TEST_QUA_ABLEGEN_02
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ABLEGEN_01, REQ_QUA_ABLEGEN_02
 
@@ -214,7 +270,7 @@ Qualifikation selbst ablegen
 
 .. test:: Nach dem Ablegen ist sofort erneute Bewerbung möglich
    :id: TEST_QUA_ABLEGEN_03
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_ABLEGEN_02, REQ_QUA_ABLEGEN_03
 
@@ -224,19 +280,27 @@ Qualifikation selbst ablegen
 
 .. test:: Ablegen benachrichtigt den Adminbereich
    :id: TEST_QUA_ABLEGEN_04
-   :status: draft
+   :status: approved
    :automated: yes
-   :verifies: REQ_QUA_ABLEGEN_04
+   :verifies: STORY_QUA_ABLEGEN_03, REQ_QUA_ABLEGEN_04
 
    Nachdem ein Trainer eine Qualifikation abgelegt hat, erhalten
    Administratoren eine Benachrichtigung darüber.
+
+.. story:: Der Adminbereich erfährt vom Ablegen
+   :id: STORY_QUA_ABLEGEN_03
+   :status: approved
+   :implements: REQ_QUA_ABLEGEN_04
+
+   Als Administrator werde ich benachrichtigt, wenn ein Trainer eine
+   Qualifikation selbst ablegt.
 
 Trainer direkt qualifizieren
 ------------------------------
 
 .. story:: Ich qualifiziere einen Trainer direkt für eine Schulung
    :id: STORY_QUA_DIREKT_01
-   :status: draft
+   :status: approved
    :priority: high
    :implements: REQ_QUA_DIREKT_01, REQ_QUA_DIREKT_04
 
@@ -247,7 +311,7 @@ Trainer direkt qualifizieren
 
 .. story:: Direktvergabe schließt eine offene Bewerbung
    :id: STORY_QUA_DIREKT_02
-   :status: draft
+   :status: approved
    :implements: REQ_QUA_DIREKT_02, REQ_QUA_DIREKT_03
 
    Hat der direkt qualifizierte Trainer für dieselbe Schulung noch eine
@@ -257,7 +321,7 @@ Trainer direkt qualifizieren
 
 .. test:: Direktvergabe erteilt die Qualifikation ohne Bewerbung
    :id: TEST_QUA_DIREKT_01
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_DIREKT_01, REQ_QUA_DIREKT_01
 
@@ -267,7 +331,7 @@ Trainer direkt qualifizieren
 
 .. test:: Bereits qualifizierter Trainer wird nicht erneut angeboten
    :id: TEST_QUA_DIREKT_02
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_DIREKT_01, REQ_QUA_DIREKT_04
 
@@ -276,7 +340,7 @@ Trainer direkt qualifizieren
 
 .. test:: Direktvergabe genehmigt eine offene Bewerbung automatisch
    :id: TEST_QUA_DIREKT_03
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_DIREKT_02, REQ_QUA_DIREKT_02
 
@@ -288,7 +352,7 @@ Trainer direkt qualifizieren
 
 .. test:: Direktvergabe benachrichtigt den Trainer
    :id: TEST_QUA_DIREKT_04
-   :status: draft
+   :status: approved
    :automated: yes
    :verifies: STORY_QUA_DIREKT_02, REQ_QUA_DIREKT_03
 

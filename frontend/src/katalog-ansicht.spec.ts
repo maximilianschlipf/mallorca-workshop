@@ -26,11 +26,20 @@ function jsonResponse(data: unknown) {
 
 /** Kategorien immer, Schulungen aus dem Rückgabewert. */
 function mockFetch(schulungen: (url: string) => unknown, protokoll: string[] = []) {
+  let beworben = false;
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const url = String(input);
     protokoll.push(url);
     if (url.includes("/api/auth/csrf")) return jsonResponse({ token: "csrf" });
     if (url.includes("/api/kategorien")) return jsonResponse(["Agile", "Cloud & DevOps"]);
+    if (url.includes("/api/ich/qualifikationsbewerbungen/")) {
+      beworben = true;
+      return { ok: true, status: 204, json: async () => ({}) } as Response;
+    }
+    if (url.includes("/api/ich/qualifikationen")) return jsonResponse(beworben ? [{
+      schulungId: "SCH-001", schulungstitel: aktiv.titel, status: "OFFEN",
+      begruendung: null, kuenftigeTermine: 0,
+    }] : []);
     return jsonResponse(schulungen(url));
   });
 }
@@ -152,7 +161,26 @@ describe("Katalogansicht", () => {
 
     expect(aufrufe).toContain("/api/ich/qualifikationsbewerbungen/SCH-001");
     expect(wrapper.text()).toContain("Die Bewerbung auf die Qualifikation wurde eingereicht.");
-    expect(wrapper.findAll("tbody tr")[0].find("button").text()).toBe("Beworben");
+    expect(wrapper.findAll("tbody tr")[0].find("button").text()).toBe("Bewerbung zurückziehen");
+  });
+
+  it("zeigt für eine bestehende Qualifikation keine Bewerbungsaktion", async () => {
+    anmelden(["TRAINER"]);
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/kategorien")) return jsonResponse([]);
+      if (url.includes("/api/ich/qualifikationen")) return jsonResponse([{
+        schulungId: "SCH-001", schulungstitel: aktiv.titel, status: "QUALIFIZIERT",
+        begruendung: null, kuenftigeTermine: 0,
+      }]);
+      return jsonResponse([aktiv]);
+    });
+
+    const wrapper = montieren();
+    await flushPromises();
+
+    expect(wrapper.find("tbody tr").text()).toContain("Qualifiziert");
+    expect(wrapper.find("tbody tr").text()).not.toContain("Auf Qualifikation bewerben");
   });
 
   // Deckt REQ_KAT_SICHT_01 an der Oberflaeche ab; die Schutzschicht ist SecurityConfig.

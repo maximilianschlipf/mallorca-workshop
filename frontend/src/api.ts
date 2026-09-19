@@ -1,9 +1,12 @@
 import type {
   Aufnahmebericht,
+  Benachrichtigung,
   Benutzerkonto,
   Feldfehler,
   Katalogantwort,
   Kennungsschema,
+  EigenerQualifikationsstand,
+  Qualifikationszeile,
   Rolle,
   Schulung,
   Schulungseingabe,
@@ -172,6 +175,26 @@ export const kontoLoeschen = (id: string, aenderungsstand: number) =>
   api<void>(`/api/benutzerkonten/${id}`, { method: "DELETE", headers: stand(aenderungsstand) });
 export const aufQualifikationBewerben = (schulungId: string) =>
   api<void>(`/api/ich/qualifikationsbewerbungen/${schulungId}`, { method: "POST" });
+export const qualifikationsbewerbungZurueckziehen = (schulungId: string) =>
+  api<void>(`/api/ich/qualifikationsbewerbungen/${schulungId}`, { method: "DELETE" });
+export const fetchEigeneQualifikationen = () =>
+  api<EigenerQualifikationsstand[]>("/api/ich/qualifikationen");
+export const eigeneQualifikationAblegen = (schulungId: string) =>
+  api<void>(`/api/ich/qualifikationen/${schulungId}`, { method: "DELETE" });
+export const fetchBenachrichtigungen = () =>
+  api<Benachrichtigung[]>("/api/ich/benachrichtigungen");
+export const fetchQualifikationenDerSchulung = (schulungId: string) =>
+  api<Qualifikationszeile[]>(`/api/schulungen/${schulungId}/qualifikationen`);
+export const qualifikationDirektErteilen = (schulungId: string, trainerId: string) =>
+  api<void>(`/api/schulungen/${schulungId}/qualifikationen/${trainerId}`, { method: "PUT" });
+export const qualifikationEntziehen = (schulungId: string, trainerId: string) =>
+  api<void>(`/api/schulungen/${schulungId}/qualifikationen/${trainerId}`, { method: "DELETE" });
+export const qualifikationsbewerbungGenehmigen = (bewerbungId: number) =>
+  api<void>(`/api/qualifikationsbewerbungen/${bewerbungId}/genehmigung`, { method: "POST" });
+export const qualifikationsbewerbungAblehnen = (bewerbungId: number, begruendung: string) =>
+  api<void>(`/api/qualifikationsbewerbungen/${bewerbungId}/ablehnung`, {
+    method: "POST", body: JSON.stringify({ begruendung }),
+  });
 export const aufAssistenzplatzBewerben = (terminId: string) =>
   api<void>(`/api/ich/assistenzbewerbungen/${terminId}`, { method: "POST" });
 export const abwesenheitEintragen = (von: string, bis: string, grund: string) =>

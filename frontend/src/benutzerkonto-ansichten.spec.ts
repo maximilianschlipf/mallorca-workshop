@@ -6,7 +6,8 @@ import KontenAnsicht from "./ansichten/KontenAnsicht.vue";
 import ProfilAnsicht from "./ansichten/ProfilAnsicht.vue";
 import RegistrierenAnsicht from "./ansichten/RegistrierenAnsicht.vue";
 import {
-  anmelden, fetchKonten, nameAendern, passwortAendern, registrieren,
+  anmelden, eigeneQualifikationAblegen, fetchEigeneQualifikationen,
+  fetchBenachrichtigungen, fetchKonten, nameAendern, passwortAendern, registrieren,
 } from "./api";
 import { aktuellesKonto, setzeKonto } from "./auth";
 import type { Benutzerkonto } from "./types";
@@ -23,6 +24,9 @@ vi.mock("./api", () => ({
   passwortAendern: vi.fn(),
   registrieren: vi.fn(),
   abwesenheitEintragen: vi.fn(),
+  eigeneQualifikationAblegen: vi.fn(),
+  fetchEigeneQualifikationen: vi.fn().mockResolvedValue([]),
+  fetchBenachrichtigungen: vi.fn().mockResolvedValue([]),
 }));
 
 const trainer: Benutzerkonto = {
@@ -46,6 +50,47 @@ describe("Benutzerkonto-Ansichten", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     aktuellesKonto.value = null;
+    vi.mocked(fetchEigeneQualifikationen).mockResolvedValue([]);
+    vi.mocked(fetchBenachrichtigungen).mockResolvedValue([]);
+  });
+
+  it("zeigt Benachrichtigungen auch reinen Administratoren", async () => {
+    setzeKonto({ ...trainer, rollen: ["ADMINISTRATOR"] });
+    vi.mocked(fetchBenachrichtigungen).mockResolvedValue([{
+      id: 1, anlass: "Trainer hat eine Qualifikation abgelegt.", erstelltAm: "2026-09-19T10:00:00",
+    }]);
+    const profil = mount(ProfilAnsicht);
+    await flushPromises();
+
+    expect(profil.text()).toContain("Trainer hat eine Qualifikation abgelegt.");
+    expect(fetchEigeneQualifikationen).not.toHaveBeenCalled();
+  });
+
+  // verifies: TEST_QUA_ABLEGEN_01
+  it("legt eine Qualifikation erst nach bestätigter Warnung ab", async () => {
+    setzeKonto(trainer);
+    const stand = {
+      schulungId: "SCH-001", schulungstitel: "Scrum", status: "QUALIFIZIERT",
+      begruendung: null, kuenftigeTermine: 2,
+    } as const;
+    vi.mocked(fetchEigeneQualifikationen)
+      .mockResolvedValueOnce([stand]).mockResolvedValueOnce([]);
+    const profil = mount(ProfilAnsicht);
+    await flushPromises();
+    const schalter = profil.findAll("button").find((button) => button.text() === "Qualifikation ablegen")!;
+
+    await schalter.trigger("click");
+    expect(eigeneQualifikationAblegen).not.toHaveBeenCalled();
+    expect(profil.get("[role=dialog]").text()).toContain("2 künftige Terminzuweisung");
+    await profil.get("[role=dialog]").findAll("button")[0].trigger("click");
+    expect(eigeneQualifikationAblegen).not.toHaveBeenCalled();
+
+    await schalter.trigger("click");
+    await profil.get("[role=dialog]").findAll("button")[1].trigger("click");
+    await flushPromises();
+    expect(eigeneQualifikationAblegen).toHaveBeenCalledWith("SCH-001");
+    expect(profil.text()).not.toContain("Scrum");
+    expect(profil.text()).toContain("Die Qualifikation wurde abgelegt.");
   });
 
   it("registriert und meldet ein Konto über die Formulare an", async () => {

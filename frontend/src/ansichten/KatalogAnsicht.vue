@@ -4,13 +4,15 @@ import {
   ApiFehler,
   archiviereSchulung,
   aufQualifikationBewerben,
+  fetchEigeneQualifikationen,
   fetchKategorien,
   fetchSchulungen,
   loescheSchulung,
+  qualifikationsbewerbungZurueckziehen,
   reaktiviereSchulung,
 } from "../api";
 import { aktuellesKonto } from "../auth";
-import type { Schulung } from "../types";
+import type { EigenerQualifikationsstand, Schulung } from "../types";
 import LadeZustand from "../komponenten/LadeZustand.vue";
 import RueckfrageDialog from "../komponenten/RueckfrageDialog.vue";
 import ZustandsSchild from "../komponenten/ZustandsSchild.vue";
@@ -20,6 +22,7 @@ const kategorien = ref<string[]>([]);
 const laedt = ref(true);
 const ladefehler = ref<string | null>(null);
 const meldung = ref<string | null>(null);
+const aktualisierungsfehler = ref<string | null>(null);
 
 const istAdministrator = computed(() =>
   aktuellesKonto.value?.rollen.includes("ADMINISTRATOR") ?? false,
@@ -27,7 +30,7 @@ const istAdministrator = computed(() =>
 const istTrainer = computed(() =>
   aktuellesKonto.value?.rollen.includes("TRAINER") ?? false,
 );
-const bewerbungen = ref(new Set<string>());
+const qualifikationen = ref(new Map<string, EigenerQualifikationsstand>());
 const bewerbungsmeldung = ref<string | null>(null);
 
 const suche = ref("");
@@ -75,15 +78,42 @@ async function vorgang(tun: () => Promise<unknown>) {
  * (REQ_KAT_SICHT_03); der Schalter ist dort erst gar nicht sichtbar.
  */
 async function bewerben(schulungId: string) {
-  meldung.value = null;
+  meldung.value = aktualisierungsfehler.value = null;
   bewerbungsmeldung.value = null;
   try {
     await aufQualifikationBewerben(schulungId);
-    bewerbungen.value.add(schulungId);
     bewerbungsmeldung.value = "Die Bewerbung auf die Qualifikation wurde eingereicht.";
   } catch (fehler) {
     meldung.value = alsText(fehler);
+    return;
   }
+  try {
+    await qualifikationsstandLaden();
+  } catch {
+    aktualisierungsfehler.value = "Die Bewerbung wurde eingereicht, der aktuelle Stand konnte aber nicht geladen werden.";
+  }
+}
+
+async function zurueckziehen(schulungId: string) {
+  meldung.value = bewerbungsmeldung.value = aktualisierungsfehler.value = null;
+  try {
+    await qualifikationsbewerbungZurueckziehen(schulungId);
+    bewerbungsmeldung.value = "Die Bewerbung wurde zurückgezogen.";
+  } catch (fehler) {
+    meldung.value = alsText(fehler);
+    return;
+  }
+  try {
+    await qualifikationsstandLaden();
+  } catch {
+    aktualisierungsfehler.value = "Die Bewerbung wurde zurückgezogen, der aktuelle Stand konnte aber nicht geladen werden.";
+  }
+}
+
+async function qualifikationsstandLaden() {
+  if (!istTrainer.value) return;
+  const staende = await fetchEigeneQualifikationen();
+  qualifikationen.value = new Map(staende.map((stand) => [stand.schulungId, stand]));
 }
 
 function loeschenBestaetigt() {
@@ -115,6 +145,11 @@ onMounted(async () => {
     kategorien.value = [];
   }
   await laden();
+  try {
+    await qualifikationsstandLaden();
+  } catch (fehler) {
+    aktualisierungsfehler.value = `Der Qualifikationsstand konnte nicht geladen werden: ${alsText(fehler)}`;
+  }
 });
 </script>
 
@@ -177,6 +212,9 @@ onMounted(async () => {
     <p v-if="bewerbungsmeldung" class="success" role="status">
       {{ bewerbungsmeldung }}
     </p>
+    <p v-if="aktualisierungsfehler" class="state state-error" role="status">
+      {{ aktualisierungsfehler }}
+    </p>
 
     <div v-if="meldung" class="state state-error" role="alert">
       <p>Der Vorgang wurde abgewiesen.</p>
@@ -226,13 +264,23 @@ onMounted(async () => {
             <td>{{ schulung.oeffentlicheTermine.length }}</td>
             <td class="zeilen-aktionen">
               <button
-                v-if="istTrainer && schulung.zustand === 'AKTIV'"
+                v-if="istTrainer && schulung.zustand === 'AKTIV' && !qualifikationen.get(schulung.id)"
                 type="button"
-                :disabled="bewerbungen.has(schulung.id)"
                 @click="bewerben(schulung.id)"
               >
-                {{ bewerbungen.has(schulung.id) ? "Beworben" : "Auf Qualifikation bewerben" }}
+                Auf Qualifikation bewerben
               </button>
+              <button
+                v-else-if="qualifikationen.get(schulung.id)?.status === 'OFFEN'"
+                type="button"
+                @click="zurueckziehen(schulung.id)"
+              >Bewerbung zurückziehen</button>
+              <span v-else-if="qualifikationen.get(schulung.id)?.status === 'QUALIFIZIERT'">
+                Qualifiziert
+              </span>
+              <span v-else-if="qualifikationen.get(schulung.id)?.status === 'ABGELEHNT'">
+                Erneute Bewerbung derzeit gesperrt
+              </span>
               <template v-if="istAdministrator">
                 <RouterLink :to="`/katalog/${schulung.id}/bearbeiten`"
                   >Bearbeiten</RouterLink

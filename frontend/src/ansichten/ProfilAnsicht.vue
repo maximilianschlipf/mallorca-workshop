@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
-import { abwesenheitEintragen, nameAendern, passwortAendern } from "../api";
+import { onMounted, ref, watchEffect } from "vue";
+import {
+  abwesenheitEintragen, eigeneQualifikationAblegen, fetchBenachrichtigungen,
+  fetchEigeneQualifikationen, nameAendern, passwortAendern,
+} from "../api";
 import { aktuellesKonto, setzeKonto } from "../auth";
-import type { Rolle } from "../types";
+import type { Benachrichtigung, EigenerQualifikationsstand, Rolle } from "../types";
+import RueckfrageDialog from "../komponenten/RueckfrageDialog.vue";
 
 const name = ref("");
 const bisher = ref("");
@@ -12,6 +16,9 @@ const fehler = ref("");
 const abwesendVon = ref("");
 const abwesendBis = ref("");
 const abwesenheitsgrund = ref("");
+const qualifikationen = ref<EigenerQualifikationsstand[]>([]);
+const benachrichtigungen = ref<Benachrichtigung[]>([]);
+const abzulegendeQualifikation = ref<EigenerQualifikationsstand | null>(null);
 const rollenNamen: Record<Rolle, string> = {
   TRAINER: "Trainer",
   ADMINISTRATOR: "Administrator",
@@ -52,6 +59,43 @@ async function speichereAbwesenheit() {
     fehler.value = error instanceof Error ? error.message : "Eintragen fehlgeschlagen.";
   }
 }
+
+async function profilLaden() {
+  if (aktuellesKonto.value?.rollen.includes("TRAINER")) {
+    [qualifikationen.value, benachrichtigungen.value] = await Promise.all([
+      fetchEigeneQualifikationen(), fetchBenachrichtigungen(),
+    ]);
+  } else {
+    benachrichtigungen.value = await fetchBenachrichtigungen();
+  }
+}
+
+async function qualifikationAblegen(stand: EigenerQualifikationsstand) {
+  abzulegendeQualifikation.value = null;
+  fehler.value = meldung.value = "";
+  try {
+    await eigeneQualifikationAblegen(stand.schulungId);
+    meldung.value = "Die Qualifikation wurde abgelegt.";
+  } catch (error) {
+    fehler.value = error instanceof Error ? error.message : "Ablegen fehlgeschlagen.";
+    return;
+  }
+  try {
+    await profilLaden();
+  } catch {
+    fehler.value = "Die Qualifikation wurde abgelegt, die Profildaten konnten aber nicht neu geladen werden.";
+  }
+}
+
+function ablegewarnung(stand: EigenerQualifikationsstand) {
+  return stand.kuenftigeTermine
+    ? `Dadurch werden ${stand.kuenftigeTermine} künftige Terminzuweisung(en) aufgehoben.`
+    : `Die Qualifikation für ${stand.schulungstitel} wird entfernt.`;
+}
+
+onMounted(() => profilLaden().catch((error) => {
+  fehler.value = error instanceof Error ? error.message : "Profildaten konnten nicht geladen werden.";
+}));
 </script>
 
 <template>
@@ -63,6 +107,29 @@ async function speichereAbwesenheit() {
     <p v-if="meldung" class="success" role="status">{{ meldung }}</p>
     <p v-if="fehler" class="form-error" role="alert">{{ fehler }}</p>
     <div class="profile-grid">
+      <section v-if="aktuellesKonto.rollen.includes('TRAINER')" class="konto-karte">
+        <header class="konto-kartenkopf">
+          <h2>Qualifikationen</h2>
+          <p>Bestätigte Qualifikationen und laufende Bewerbungen.</p>
+        </header>
+        <ul v-if="qualifikationen.length">
+          <li v-for="stand in qualifikationen" :key="stand.schulungId">
+            <strong>{{ stand.schulungstitel }}</strong> – {{ stand.status }}
+            <span v-if="stand.begruendung">: {{ stand.begruendung }}</span>
+            <button v-if="stand.status === 'QUALIFIZIERT'" type="button" @click="abzulegendeQualifikation = stand">
+              Qualifikation ablegen
+            </button>
+          </li>
+        </ul>
+        <p v-else>Noch keine Qualifikationen oder Bewerbungen.</p>
+      </section>
+      <section class="konto-karte">
+        <header class="konto-kartenkopf"><h2>Benachrichtigungen</h2></header>
+        <ul v-if="benachrichtigungen.length">
+          <li v-for="eintrag in benachrichtigungen" :key="eintrag.id">{{ eintrag.anlass }}</li>
+        </ul>
+        <p v-else>Keine Benachrichtigungen.</p>
+      </section>
       <form class="konto-karte" @submit.prevent="speichereName">
         <header class="konto-kartenkopf">
           <h2>Profildaten</h2>
@@ -121,5 +188,13 @@ async function speichereAbwesenheit() {
         <button class="primary-action" type="submit">Abwesenheit eintragen</button>
       </form>
     </div>
+    <RueckfrageDialog
+      v-if="abzulegendeQualifikation"
+      titel="Qualifikation ablegen?"
+      :text="ablegewarnung(abzulegendeQualifikation)"
+      bestaetigung="Qualifikation ablegen"
+      @bestaetigt="qualifikationAblegen(abzulegendeQualifikation)"
+      @abgebrochen="abzulegendeQualifikation = null"
+    />
   </main>
 </template>

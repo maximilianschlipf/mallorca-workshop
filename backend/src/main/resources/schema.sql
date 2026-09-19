@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS qualifikationsbewerbung (
     schulung_id VARCHAR(50) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'OFFEN',
     erstellt_am TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    entschieden_am TIMESTAMP,
+    begruendung VARCHAR(1000),
     CONSTRAINT uq_qualifikationsbewerbung UNIQUE (benutzerkonto_id, schulung_id),
     CONSTRAINT fk_qualifikationsbewerbung_konto FOREIGN KEY (benutzerkonto_id)
         REFERENCES benutzerkonto(id) ON DELETE CASCADE,
@@ -71,6 +73,8 @@ CREATE TABLE IF NOT EXISTS qualifikationsbewerbung (
 
 ALTER TABLE qualifikationsbewerbung
     ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'OFFEN';
+ALTER TABLE qualifikationsbewerbung ADD COLUMN IF NOT EXISTS entschieden_am TIMESTAMP;
+ALTER TABLE qualifikationsbewerbung ADD COLUMN IF NOT EXISTS begruendung VARCHAR(1000);
 
 -- Termine dürfen nach dem Löschen einer Schulung bestehen bleiben.
 CREATE TABLE IF NOT EXISTS termin (

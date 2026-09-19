@@ -12,7 +12,10 @@ const trainer = {
 };
 
 describe("Benutzerkonten", () => {
-  beforeEach(() => vi.restoreAllMocks());
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.stubGlobal("scrollTo", vi.fn());
+  });
 
   it("lässt nur Anmelde- und Registrierungsroute öffentlich", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue({

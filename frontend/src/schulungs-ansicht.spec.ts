@@ -39,11 +39,11 @@ describe("Schulungsansicht", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     aktuellesKonto.value = null;
-    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => ({
       ok: true,
       status: 200,
-      json: async () => schulung,
-    } as Response);
+      json: async () => String(input).endsWith("/qualifikationen") ? [] : schulung,
+    } as Response));
   });
 
   // REQ_KAT_SICHT_01: Der Trainer sieht den Katalog, veraendert ihn aber nicht.
@@ -61,5 +61,29 @@ describe("Schulungsansicht", () => {
     await flushPromises();
 
     expect(adminAnsicht.text()).toContain("Bearbeiten");
+  });
+
+  // verifies: TEST_QUA_DIREKT_02
+  it("bietet für bereits Qualifizierte keine Direktvergabe an", async () => {
+    anmelden(["TRAINER", "ADMINISTRATOR"]);
+    vi.mocked(fetch).mockImplementation(async (input) => ({
+      ok: true, status: 200,
+      json: async () => String(input).endsWith("/qualifikationen") ? [{
+        trainerId: "K-2", trainerName: "Qualifiziert", bewerbungId: null,
+        status: "QUALIFIZIERT",
+      }] : schulung,
+    } as Response));
+    const wrapper = montieren();
+    await flushPromises();
+
+    const zeile = wrapper.find(".verwaltungstabelle tbody tr");
+    expect(zeile.text()).toContain("Qualifiziert");
+    expect(zeile.text()).toContain("Entziehen");
+    expect(zeile.text()).not.toContain("Direkt qualifizieren");
+    const aufrufe = vi.mocked(fetch).mock.calls.length;
+    await zeile.get("button").trigger("click");
+    expect(wrapper.get("[role=dialog]").text()).toContain("Künftige Zuweisungen");
+    await wrapper.get("[role=dialog]").findAll("button")[0].trigger("click");
+    expect(vi.mocked(fetch).mock.calls).toHaveLength(aufrufe);
   });
 });
