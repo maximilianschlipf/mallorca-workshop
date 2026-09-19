@@ -68,7 +68,7 @@ Vorgänge entscheiden
    :id: STORY_DSH_VORG_01
    :status: approved
    :priority: high
-   :implements: REQ_DSH_VORG_01, REQ_DSH_VORG_03, REQ_DSH_VORG_04
+   :implements: REQ_DSH_VORG_01, REQ_DSH_VORG_03, REQ_DSH_VORG_04, REQ_DSH_VORG_06, REQ_DSH_VORG_10, REQ_DSH_SICHER_01
 
    Als Entscheider sehe ich jeden an mich gerichteten Vorgang nach demselben
    Muster -- Art, Antragsteller, Bezug, Zeitpunkt -- und entscheide ihn mit

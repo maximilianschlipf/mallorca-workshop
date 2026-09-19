@@ -120,7 +120,7 @@ public class TerminService {
                     felder.kundenfirma(), terminId);
         }
         nachrichten.forEach(text -> benachrichtigeBeteiligte(terminId, administratorId,
-                "TERMIN_GEAENDERT", text));
+                Benachrichtigungsanlass.TERMIN_GEAENDERT, text));
         return details(administratorId, terminId);
     }
 
@@ -146,9 +146,11 @@ public class TerminService {
         jdbc.update("UPDATE termin SET trainer_id=?, trainer_name_snapshot=NULL, version=version+1 WHERE termin_id=?",
                 trainerId, terminId);
         if (bisher != null && !bisher.equals(trainerId)) benachrichtige(bisher, administratorId,
-                "TRAINERZUWEISUNG_BEENDET", "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
+                Benachrichtigungsanlass.TRAINERZUWEISUNG_BEENDET,
+                "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
         benachrichtige(trainerId, administratorId,
-                istAssistent ? "ROLLENWECHSEL" : "TRAINERZUWEISUNG_GESETZT", istAssistent
+                istAssistent ? Benachrichtigungsanlass.ROLLENWECHSEL
+                        : Benachrichtigungsanlass.TRAINERZUWEISUNG_GESETZT, istAssistent
                 ? "Sie sind für " + terminId + " nun ausführender Trainer statt Assistent."
                 : "Sie wurden " + terminId + " als Trainer zugewiesen.", terminId);
     }
@@ -161,7 +163,8 @@ public class TerminService {
         verlangeGeplant(termin);
         jdbc.update("UPDATE termin SET trainer_id=NULL, version=version+1 WHERE termin_id=?", terminId);
         if (termin.trainerId() != null) benachrichtige(termin.trainerId(), administratorId,
-                "TRAINERZUWEISUNG_BEENDET", "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
+                Benachrichtigungsanlass.TRAINERZUWEISUNG_BEENDET,
+                "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
     }
 
     @Transactional
@@ -188,8 +191,6 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "BEREITS_ZUGEWIESEN",
                     "Das Benutzerkonto ist diesem Termin bereits zugewiesen.");
         }
-        benachrichtige(trainerId, administratorId, "ASSISTENZZUWEISUNG_GESETZT",
-                "Sie wurden " + terminId + " als Assistent zugewiesen.", terminId);
     }
 
     @Transactional
@@ -239,7 +240,7 @@ public class TerminService {
                 UPDATE termin SET status='abgesagt', abgesagt_am=?, abgesagt_von=?,
                     absagegrund=?, online_zugang=NULL, version=version+1 WHERE termin_id=?
                 """, LocalDate.now(clock), administratorId, sauber, terminId);
-        benachrichtigeBeteiligte(terminId, administratorId, "TERMIN_ABGESAGT",
+        benachrichtigeBeteiligte(terminId, administratorId, Benachrichtigungsanlass.TERMIN_ABGESAGT,
                 "Der Termin " + terminId + " wurde abgesagt."
                         + (sauber == null ? "" : " Grund: " + sauber));
         return details(administratorId, terminId);
@@ -254,7 +255,7 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "TERMIN_NICHT_LOESCHBAR",
                     "Der Termin kann ab seinem Startdatum oder nach Abschluss nicht gelöscht werden.");
         }
-        benachrichtigeBeteiligte(terminId, administratorId, "TERMIN_GELOESCHT",
+        benachrichtigeBeteiligte(terminId, administratorId, Benachrichtigungsanlass.TERMIN_GELOESCHT,
                 "Der Termin " + terminId + " wurde gelöscht.");
         jdbc.update("DELETE FROM termin WHERE termin_id=?", terminId);
     }
@@ -469,7 +470,8 @@ public class TerminService {
                     """, stichtag, termin.terminId());
             if (termin.trainerId() != null
                     && !konten.laden(termin.trainerId()).rollen().contains(Rolle.ADMINISTRATOR)) {
-                benachrichtige(termin.trainerId(), null, "TERMIN_AUTOMATISCH_ABGESCHLOSSEN",
+                benachrichtige(termin.trainerId(), null,
+                        Benachrichtigungsanlass.TERMIN_AUTOMATISCH_ABGESCHLOSSEN,
                         "Der Termin " + termin.terminId()
                                 + " wurde automatisch abgeschlossen und zählt nicht in Teilnehmerauswertungen.",
                         termin.terminId());
@@ -685,14 +687,14 @@ public class TerminService {
     }
 
     private void benachrichtigeBeteiligte(String terminId, String ausloeserId,
-                                           String anlasstyp, String text) {
+                                           Benachrichtigungsanlass anlasstyp, String text) {
         TerminZeile termin = lade(terminId, false);
         Set<String> ids = new LinkedHashSet<>(beteiligteAssistentenIds(terminId));
         if (termin.trainerId() != null) ids.add(termin.trainerId());
         ids.forEach(id -> benachrichtige(id, ausloeserId, anlasstyp, text, terminId));
     }
 
-    private void benachrichtige(String kontoId, String ausloeserId, String anlasstyp,
+    private void benachrichtige(String kontoId, String ausloeserId, Benachrichtigungsanlass anlasstyp,
                                 String text, String terminId) {
         benachrichtigungen.persoenlich(kontoId, ausloeserId, anlasstyp, text, "TERMIN", terminId);
     }
@@ -704,7 +706,7 @@ public class TerminService {
         if (!Objects.equals(alt.ort(), neu.ort())) texte.add("Ort: " + alt.ort() + " → " + neu.ort());
         if (!Objects.equals(alt.durchfuehrungsart(), neu.durchfuehrungsart())) texte.add("Durchführungsart: " + alt.durchfuehrungsart() + " → " + neu.durchfuehrungsart());
         if (!Objects.equals(alt.kundenfirma(), neu.kundenfirma())) texte.add("Kundenfirma: " + alt.kundenfirma() + " → " + neu.kundenfirma());
-        if (!Objects.equals(alt.onlineZugang(), neu.onlineZugang())) texte.add("Online-Zugang: " + Objects.toString(neu.onlineZugang(), "entfernt"));
+        if (!Objects.equals(alt.onlineZugang(), neu.onlineZugang())) texte.add("Online-Zugang wurde geändert.");
         return texte;
     }
 

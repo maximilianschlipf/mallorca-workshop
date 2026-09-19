@@ -98,7 +98,7 @@ onMounted(() => laden().catch((error) => {
           <li v-for="termin in daten.pflichten" :key="termin.terminId" class="task-row">
             <div><strong>Durchführung bestätigen</strong><p>{{ termin.schulungTitel }}</p>
               <small>{{ termin.startdatum }} bis {{ termin.enddatum }}</small></div>
-            <RouterLink to="/planer#kalender">Termin öffnen</RouterLink>
+            <RouterLink :to="`/planer?termin=${encodeURIComponent(termin.terminId)}#kalender`">Termin öffnen</RouterLink>
           </li>
         </ul>
         <p v-else class="empty-copy">Keine eigenen Handlungspflichten.</p>

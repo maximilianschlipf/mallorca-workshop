@@ -452,7 +452,16 @@ async function trainerSuchen() {
   }
 }
 
-onMounted(ladeKalender);
+onMounted(async () => {
+  await ladeKalender();
+  const terminId = new URLSearchParams(window.location.search).get("termin");
+  if (!terminId) return;
+  const eintrag = kalenderTermine.value.find(({ termin }) => termin.terminId === terminId);
+  if (!eintrag) return;
+  kalenderMonat.value = new Date(Number(eintrag.termin.startdatum.slice(0, 4)),
+    Number(eintrag.termin.startdatum.slice(5, 7)) - 1, 1);
+  await terminAuswaehlen(eintrag);
+});
 </script>
 
 <template>

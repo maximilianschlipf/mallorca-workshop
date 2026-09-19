@@ -10,17 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class BenachrichtigungService {
-    private static final Set<String> ANLASSTYPEN = Set.of(
-            "QUALIFIKATION_GENEHMIGT", "QUALIFIKATION_ABGELEHNT", "QUALIFIKATION_DIREKT",
-            "QUALIFIKATION_ENTZOGEN", "QUALIFIKATION_ABGELEGT",
-            "QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN", "TERMIN_GEAENDERT",
-            "TRAINERZUWEISUNG_BEENDET", "TRAINERZUWEISUNG_GESETZT", "ROLLENWECHSEL",
-            "ASSISTENZZUWEISUNG_GESETZT", "TERMIN_ABGESAGT", "TERMIN_GELOESCHT",
-            "TERMIN_AUTOMATISCH_ABGESCHLOSSEN");
     private final JdbcTemplate jdbc;
     private final KontoService konten;
     private final Clock clock;
@@ -79,29 +71,22 @@ public class BenachrichtigungService {
                 "BENACHRICHTIGUNG_NICHT_GEFUNDEN", "Die Benachrichtigung wurde nicht gefunden.");
     }
 
-    public void persoenlich(String empfaengerId, String ausloeserId, String anlasstyp,
+    public void persoenlich(String empfaengerId, String ausloeserId, Benachrichtigungsanlass anlasstyp,
                             String text, String bezugArt, String bezugId) {
-        pruefeAnlasstyp(anlasstyp);
         if (empfaengerId.equals(ausloeserId)) return;
         jdbc.update("""
                 INSERT INTO benachrichtigung
                     (empfaenger_id, anlasstyp, anlass, bezug_art, bezug_id)
                 VALUES (?, ?, ?, ?, ?)
-                """, empfaengerId, anlasstyp, text, bezugArt, bezugId);
+                """, empfaengerId, anlasstyp.name(), text, bezugArt, bezugId);
     }
 
-    public void adminbereich(String anlasstyp, String text, String bezugArt, String bezugId) {
-        pruefeAnlasstyp(anlasstyp);
+    public void adminbereich(Benachrichtigungsanlass anlasstyp, String text, String bezugArt, String bezugId) {
         jdbc.update("""
                 INSERT INTO benachrichtigung
                     (empfaenger_rolle, anlasstyp, anlass, bezug_art, bezug_id)
                 VALUES ('ADMINISTRATOR', ?, ?, ?, ?)
-                """, anlasstyp, text, bezugArt, bezugId);
-    }
-
-    private void pruefeAnlasstyp(String anlasstyp) {
-        if (!ANLASSTYPEN.contains(anlasstyp)) throw new IllegalArgumentException(
-                "Unbekannter Benachrichtigungsanlass: " + anlasstyp);
+                """, anlasstyp.name(), text, bezugArt, bezugId);
     }
 
     private boolean bezugVorhanden(String art, String id) {

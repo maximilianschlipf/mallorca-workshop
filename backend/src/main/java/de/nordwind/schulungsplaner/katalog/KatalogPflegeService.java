@@ -6,6 +6,7 @@ import de.nordwind.schulungsplaner.katalog.ablage.KatalogRepository;
 import de.nordwind.schulungsplaner.katalog.ablage.KategorienRepository;
 import de.nordwind.schulungsplaner.katalog.zustand.SchulungszustandRepository;
 import de.nordwind.schulungsplaner.service.BenachrichtigungService;
+import de.nordwind.schulungsplaner.service.Benachrichtigungsanlass;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -145,7 +146,7 @@ public class KatalogPflegeService {
                 WHERE schulung_id = ? AND status = 'OFFEN'
                 """, id.wert());
         bewerber.forEach(kontoId -> benachrichtigungen.persoenlich(kontoId, null,
-                "QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN",
+                Benachrichtigungsanlass.QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN,
                 "Qualifikationsbewerbung für " + id + " abgelehnt", "SCHULUNG", id.wert()));
         return Katalogantwort.ohneWarnung(ansicht.findeSchulung(id).orElseThrow());
     }

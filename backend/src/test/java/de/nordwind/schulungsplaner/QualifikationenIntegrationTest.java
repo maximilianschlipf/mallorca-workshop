@@ -4,6 +4,7 @@ import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.service.KontoFehler;
 import de.nordwind.schulungsplaner.service.KontoService;
 import de.nordwind.schulungsplaner.service.BenachrichtigungService;
+import de.nordwind.schulungsplaner.service.Benachrichtigungsanlass;
 import de.nordwind.schulungsplaner.service.DashboardService;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
@@ -371,9 +372,10 @@ class QualifikationenIntegrationTest {
 
     @Test
     void anzeigenMarkiertPersoenlicheUndGemeinsameAdminMitteilungenAlsGelesen() {
-        benachrichtigungen.persoenlich(trainer.id(), admin.id(), "QUALIFIKATION_GENEHMIGT",
+        benachrichtigungen.persoenlich(trainer.id(), admin.id(),
+                Benachrichtigungsanlass.QUALIFIKATION_GENEHMIGT,
                 "Persönlich", "SCHULUNG", "SCH-001");
-        benachrichtigungen.adminbereich("QUALIFIKATION_ABGELEGT",
+        benachrichtigungen.adminbereich(Benachrichtigungsanlass.QUALIFIKATION_ABGELEGT,
                 "Gemeinsam", "SCHULUNG", "SCH-001");
         Benutzerkonto zweiterAdmin = konten.registrieren("Zweiter Admin", "admin2@example.de", "pw");
         konten.rolleErteilen(admin.id(), zweiterAdmin.id(), de.nordwind.schulungsplaner.domain.Rolle.ADMINISTRATOR,

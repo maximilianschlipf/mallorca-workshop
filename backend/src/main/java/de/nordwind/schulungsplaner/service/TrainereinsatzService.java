@@ -175,7 +175,7 @@ public class TrainereinsatzService {
                 SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL WHERE id=?
                 """, LocalDateTime.now(clock), bewerbungId);
         benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
-                "QUALIFIKATION_GENEHMIGT",
+                Benachrichtigungsanlass.QUALIFIKATION_GENEHMIGT,
                 "Ihre Qualifikationsbewerbung für " + bewerbung.schulungId() + " wurde genehmigt.",
                 "SCHULUNG", bewerbung.schulungId());
     }
@@ -194,7 +194,7 @@ public class TrainereinsatzService {
                 SET status='ABGELEHNT', entschieden_am=?, begruendung=? WHERE id=?
                 """, LocalDateTime.now(clock), grund, bewerbungId);
         benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
-                "QUALIFIKATION_ABGELEHNT", "Ihre Qualifikationsbewerbung für "
+                Benachrichtigungsanlass.QUALIFIKATION_ABGELEHNT, "Ihre Qualifikationsbewerbung für "
                 + bewerbung.schulungId() + " wurde abgelehnt: " + grund,
                 "SCHULUNG", bewerbung.schulungId());
     }
@@ -217,7 +217,8 @@ public class TrainereinsatzService {
                 WHERE benutzerkonto_id=? AND schulung_id=?
                 """, LocalDateTime.now(clock), trainerId, schulungId);
         benachrichtigungen.persoenlich(trainerId, administratorId,
-                "QUALIFIKATION_DIREKT", "Sie wurden direkt für " + schulungId + " qualifiziert.",
+                Benachrichtigungsanlass.QUALIFIKATION_DIREKT,
+                "Sie wurden direkt für " + schulungId + " qualifiziert.",
                 "SCHULUNG", schulungId);
     }
 
@@ -226,7 +227,8 @@ public class TrainereinsatzService {
         pruefeAdministrator(administratorId);
         qualifikationEntfernen(trainerId, schulungId);
         benachrichtigungen.persoenlich(trainerId, administratorId,
-                "QUALIFIKATION_ENTZOGEN", "Ihre Qualifikation für " + schulungId + " wurde entzogen.",
+                Benachrichtigungsanlass.QUALIFIKATION_ENTZOGEN,
+                "Ihre Qualifikation für " + schulungId + " wurde entzogen.",
                 "SCHULUNG", schulungId);
     }
 
@@ -234,7 +236,7 @@ public class TrainereinsatzService {
     public void eigeneQualifikationAblegen(String kontoId, String schulungId) {
         pruefeAktivenTrainer(kontoId);
         qualifikationEntfernen(kontoId, schulungId);
-        benachrichtigungen.adminbereich("QUALIFIKATION_ABGELEGT",
+        benachrichtigungen.adminbereich(Benachrichtigungsanlass.QUALIFIKATION_ABGELEGT,
                 konten.laden(kontoId).name() + " hat die Qualifikation für " + schulungId + " abgelegt.",
                 "SCHULUNG", schulungId);
     }

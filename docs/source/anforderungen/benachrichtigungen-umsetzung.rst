@@ -19,7 +19,7 @@ Anzeige und Lesezustand
    :id: STORY_NAC_ANZ_01
    :status: approved
    :priority: high
-   :implements: REQ_NAC_GRUND_01, REQ_NAC_GRUND_03, REQ_NAC_ANZ_02, REQ_NAC_ANZ_03
+   :implements: REQ_NAC_GRUND_01, REQ_NAC_GRUND_03, REQ_NAC_ANZ_02, REQ_NAC_ANZ_03, REQ_NAC_ANZ_06, REQ_NAC_SICHER_01
 
    Als angemeldeter Benutzer öffne ich von jeder Seite aus meine
    Benachrichtigungen und sehe meine Mitteilungen, die neueste zuerst, jede
@@ -160,7 +160,7 @@ Anlässe
    :id: STORY_NAC_ANL_01
    :status: approved
    :priority: high
-   :implements: REQ_NAC_ANL_01, REQ_NAC_ANL_03
+   :implements: REQ_NAC_ANL_01, REQ_NAC_ANL_02, REQ_NAC_ANL_03, REQ_NAC_ANL_05
 
    Als Trainer erhalte ich zu jedem Anlass aus dem Katalog eine Mitteilung
    mit den dort verlangten Pflichtinhalten -- bei einer Ablehnung

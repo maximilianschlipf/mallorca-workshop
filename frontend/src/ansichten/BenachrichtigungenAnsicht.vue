@@ -13,7 +13,7 @@ const inArbeit = ref(false);
 function ziel(eintrag: Benachrichtigung) {
   if (!eintrag.bezugVorhanden || !eintrag.bezugId) return null;
   if (eintrag.bezugArt === "SCHULUNG") return `/katalog/${eintrag.bezugId}`;
-  if (eintrag.bezugArt === "TERMIN") return "/planer#kalender";
+  if (eintrag.bezugArt === "TERMIN") return `/planer?termin=${encodeURIComponent(eintrag.bezugId)}#kalender`;
   return "/";
 }
 

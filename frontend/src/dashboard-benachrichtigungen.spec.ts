@@ -53,6 +53,8 @@ describe("Dashboard und Benachrichtigungen", () => {
         bezugId: "SCH-001", erstelltAm: "2026-09-19T11:00:00", gelesen: false, bezugVorhanden: true },
       { id: 1, anlasstyp: "TERMIN_GELOESCHT", anlass: "Gelöscht", bezugArt: "TERMIN",
         bezugId: "T-1", erstelltAm: "2026-09-19T10:00:00", gelesen: true, bezugVorhanden: false },
+      { id: 3, anlasstyp: "TERMIN_GEAENDERT", anlass: "Geändert", bezugArt: "TERMIN",
+        bezugId: "T 2", erstelltAm: "2026-09-19T09:00:00", gelesen: true, bezugVorhanden: true },
     ]);
     const wrapper = mount(BenachrichtigungenAnsicht, { attachTo: document.body, global: { plugins: [router] } });
     await flushPromises();
@@ -60,6 +62,8 @@ describe("Dashboard und Benachrichtigungen", () => {
     expect(wrapper.findAll(".notification-list li")[0].text()).toContain("Ungelesen");
     expect(wrapper.findAll(".notification-list li")[0].text()).toContain("Genehmigt");
     expect(wrapper.text()).toContain("Gegenstand nicht mehr vorhanden");
+    expect(wrapper.findAll("a").map(link => link.attributes("href")))
+      .toContain("/planer?termin=T%202#kalender");
     await wrapper.get("button").trigger("click");
     await flushPromises();
     expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledOnce();

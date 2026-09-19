@@ -1,6 +1,7 @@
 package de.nordwind.schulungsplaner;
 
 import de.nordwind.schulungsplaner.service.KontoFehler;
+import de.nordwind.schulungsplaner.service.DashboardService;
 import de.nordwind.schulungsplaner.service.TerminService;
 import de.nordwind.schulungsplaner.service.TrainereinsatzService;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ class TerminplanungIntegrationTest {
     static final LocalDate HEUTE = LocalDate.of(2026, 9, 17);
     static final String ADMIN = "TRN-001";
     @Autowired TerminService termine;
+    @Autowired DashboardService dashboard;
     @Autowired TrainereinsatzService trainereinsaetze;
     @Autowired JdbcTemplate jdbc;
 
@@ -409,7 +411,7 @@ class TerminplanungIntegrationTest {
                 .anyMatch(t -> t.contains("Ort: Köln") && t.contains("Berlin"))
                 .anyMatch(t -> t.contains("Durchführungsart: vor_ort") && t.contains("hybrid"))
                 .anyMatch(t -> t.contains("Zeitraum:") && t.contains("2028-12-05"))
-                .anyMatch(t -> t.equals("Online-Zugang: https://neu.example"));
+                .anyMatch(t -> t.equals("Online-Zugang wurde geändert."));
         int vorher = jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung", Integer.class);
         termine.aendern(ADMIN, termin.terminId(), form("SCH-001", d("2028-12-05"), d("2028-12-05"), null, "hybrid", "Berlin", null, "https://neu.example", false));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung", Integer.class)).isEqualTo(vorher);
@@ -417,15 +419,16 @@ class TerminplanungIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE anlass='Kundenfirma: null → Acme'", Integer.class)).isEqualTo(2);
     }
 
-    // verifies: TEST_TER_AEND_04, TEST_TER_AEND_05, TEST_TER_AEND_06, TEST_TER_AEND_07
+    // verifies: TEST_TER_AEND_04, TEST_TER_AEND_05, TEST_TER_AEND_06, TEST_TER_AEND_07, TEST_NAC_ANL_05
     @Test
     void absageIstEndgueltigErhaeltDatenWarntUndBenachrichtigtNurBeteiligte() {
         var termin = termine.anlegen(ADMIN, form("SCH-001", d("2028-12-04"), d("2028-12-04"), "oeffentlich", "remote", null, null, "https://example.org", false));
         termine.trainerZuweisen(ADMIN, termin.terminId(), "TRN-005", false);
         termine.assistentZuweisen(ADMIN, termin.terminId(), "TRN-003");
         termine.buchungAnlegen(ADMIN, termin.terminId(), buchung("Person", "Acme"));
+        termine.buchungAnlegen(ADMIN, termin.terminId(), buchung("Zweite Person", "Acme"));
         var warnung = termine.warnung(ADMIN, termin.terminId());
-        assertThat(warnung.anzahlBuchungen()).isEqualTo(1);
+        assertThat(warnung.anzahlBuchungen()).isEqualTo(2);
         assertThat(warnung.trainer()).isNotBlank();
         assertThat(warnung.assistenten()).hasSize(1);
         var abgesagt = termine.absagen(ADMIN, termin.terminId(), "Kunde verhindert");
@@ -434,7 +437,7 @@ class TerminplanungIntegrationTest {
         assertThat(abgesagt.absagegrund()).isEqualTo("Kunde verhindert");
         assertThat(abgesagt.onlineZugang()).isNull();
         assertThat(abgesagt.trainerId()).isEqualTo("TRN-005");
-        assertThat(abgesagt.teilnehmer()).hasSize(1);
+        assertThat(abgesagt.teilnehmer()).hasSize(2);
         assertFehler(() -> termine.aendern(ADMIN, termin.terminId(), minimal("SCH-001", "2028-12-04", "2028-12-04")));
         assertFehler(() -> termine.buchungAnlegen(ADMIN, termin.terminId(), buchung("Neu", "Acme")));
         assertFehler(() -> termine.buchungStatus(ADMIN, termin.terminId(),
@@ -443,6 +446,8 @@ class TerminplanungIntegrationTest {
                 abgesagt.teilnehmer().getFirst().id()));
         assertFehler(() -> termine.buchungLoeschen(ADMIN, termin.terminId(), abgesagt.teilnehmer().getFirst().id()));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE anlass LIKE '%Kunde verhindert%'", Integer.class)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE anlasstyp='TERMIN_ABGESAGT'",
+                Integer.class)).isEqualTo(2);
         var frei = termine.anlegen(ADMIN, minimal("SCH-006", "2028-12-04", "2028-12-04"));
         termine.trainerZuweisen(ADMIN, frei.terminId(), "TRN-005", false);
 
@@ -464,6 +469,38 @@ class TerminplanungIntegrationTest {
         });
         termine.loeschen(ADMIN, zuLoeschen.terminId());
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE anlass LIKE '%wurde gelöscht%'", Integer.class)).isEqualTo(2);
+    }
+
+    // verifies: TEST_NAC_ANL_02
+    @Test
+    void mehrfeldAenderungBenachrichtigtJeFeldOhneOnlineZugangPreiszugeben() {
+        var termin = termine.anlegen(ADMIN, form("SCH-001", d("2029-01-08"), d("2029-01-08"),
+                "exklusiv", "hybrid", "Köln", "Alt GmbH", "https://alt.example", false));
+        termine.trainerZuweisen(ADMIN, termin.terminId(), "TRN-005", false);
+        termine.assistentZuweisen(ADMIN, termin.terminId(), "TRN-003");
+        jdbc.update("DELETE FROM benachrichtigung");
+
+        termine.aendern(ADMIN, termin.terminId(), form("SCH-001", d("2029-01-09"), d("2029-01-09"),
+                "exklusiv", "beim_kunden", "Berlin", "Neu GmbH", null, true));
+
+        for (String empfaenger : List.of("TRN-005", "TRN-003")) {
+            var texte = jdbc.queryForList("""
+                    SELECT anlass FROM benachrichtigung
+                    WHERE empfaenger_id=? AND anlasstyp='TERMIN_GEAENDERT' ORDER BY id
+                    """, String.class, empfaenger);
+            assertThat(texte).hasSize(5)
+                    .anyMatch(t -> t.contains("Zeitraum:") && t.contains("2029-01-08") && t.contains("2029-01-09"))
+                    .anyMatch(t -> t.contains("Ort: Köln") && t.contains("Berlin"))
+                    .anyMatch(t -> t.contains("Durchführungsart: hybrid") && t.contains("beim_kunden"))
+                    .anyMatch(t -> t.contains("Kundenfirma: Alt GmbH") && t.contains("Neu GmbH"))
+                    .anyMatch(t -> t.equals("Online-Zugang wurde geändert."));
+            assertThat(texte).noneMatch(t -> t.contains("https://"));
+        }
+
+        termine.trainerAbziehen(ADMIN, termin.terminId());
+        jdbc.update("DELETE FROM termin_assistent WHERE termin_id=? AND benutzerkonto_id='TRN-003'", termin.terminId());
+        assertThat(termine.details("TRN-005", termin.terminId()).onlineZugang()).isNull();
+        assertThat(termine.details("TRN-003", termin.terminId()).onlineZugang()).isNull();
     }
 
     // verifies: TEST_TER_AEND_08, TEST_TER_AEND_09
@@ -655,6 +692,70 @@ class TerminplanungIntegrationTest {
         assertThat(termine.dashboard("TRN-005")).noneMatch(e -> e.terminId().equals(anstehend.terminId()));
     }
 
+    // verifies: TEST_DSH_DRIN_01
+    @Test
+    void adminDashboardSortiertAlleZukuenftigenTrainerlosenTermineUndMarkiertVierWochenGrenze() {
+        var inDreiWochen = termine.anlegen(ADMIN, minimal("SCH-001", HEUTE.plusWeeks(3).toString(), HEUTE.plusWeeks(3).toString()));
+        var inVierWochen = termine.anlegen(ADMIN, minimal("SCH-001", HEUTE.plusWeeks(4).toString(), HEUTE.plusWeeks(4).toString()));
+        var inSechsWochen = termine.anlegen(ADMIN, minimal("SCH-001", HEUTE.plusWeeks(6).toString(), HEUTE.plusWeeks(6).toString()));
+
+        var eintraege = dashboard.anzeigen(ADMIN).dringlichkeiten().stream()
+                .filter(e -> Set.of(inDreiWochen.terminId(), inVierWochen.terminId(), inSechsWochen.terminId())
+                        .contains(e.terminId())).toList();
+
+        assertThat(eintraege).extracting(TerminService.DashboardEintrag::terminId)
+                .containsExactly(inDreiWochen.terminId(), inVierWochen.terminId(), inSechsWochen.terminId());
+        assertThat(eintraege.get(0).dringend()).isTrue();
+        assertThat(eintraege.get(1).dringend()).isFalse();
+        assertThat(eintraege.get(2).dringend()).isFalse();
+    }
+
+    // verifies: TEST_DSH_DRIN_02
+    @Test
+    void adminDashboardStelltNurGeplanteUeberfaelligeVorAnstehendeTermine() {
+        var ueberfaellig = termine.anlegen(ADMIN, minimal("SCH-001", "2029-06-04", "2029-06-04"));
+        var abgesagt = termine.anlegen(ADMIN, minimal("SCH-001", "2029-06-04", "2029-06-04"));
+        var abgeschlossen = termine.anlegen(ADMIN, minimal("SCH-001", "2029-06-04", "2029-06-04"));
+        var anstehend = termine.anlegen(ADMIN, minimal("SCH-001", HEUTE.plusWeeks(2).toString(), HEUTE.plusWeeks(2).toString()));
+        jdbc.update("UPDATE termin SET startdatum=?, enddatum=? WHERE termin_id=?",
+                HEUTE.minusDays(4), HEUTE.minusDays(3), ueberfaellig.terminId());
+        jdbc.update("UPDATE termin SET startdatum=?, enddatum=?, status='abgesagt' WHERE termin_id=?",
+                HEUTE.minusDays(4), HEUTE.minusDays(3), abgesagt.terminId());
+        jdbc.update("UPDATE termin SET startdatum=?, enddatum=?, status='abgeschlossen', abschlussart='manuell', abgeschlossen_am=? WHERE termin_id=?",
+                HEUTE.minusDays(4), HEUTE.minusDays(3), HEUTE.minusDays(3), abgeschlossen.terminId());
+
+        var ids = dashboard.anzeigen(ADMIN).dringlichkeiten().stream()
+                .map(TerminService.DashboardEintrag::terminId).toList();
+
+        assertThat(ids).contains(ueberfaellig.terminId(), anstehend.terminId())
+                .doesNotContain(abgesagt.terminId(), abgeschlossen.terminId());
+        assertThat(ids.indexOf(ueberfaellig.terminId())).isLessThan(ids.indexOf(anstehend.terminId()));
+    }
+
+    // verifies: TEST_DSH_DRIN_03
+    @Test
+    void adminDashboardWarntExklusivUnterMinimumUndOeffentlichNurUeberMaximum() {
+        var exklusiv = terminMitTrainer("exklusiv", HEUTE.plusWeeks(3), "Acme");
+        var oeffentlichLeer = terminMitTrainer("oeffentlich", HEUTE.plusWeeks(3).plusDays(1), null);
+        var ohneZugang = terminMitTrainer(null, HEUTE.plusWeeks(3).plusDays(4), null);
+        var oeffentlichVoll = terminMitTrainer("oeffentlich", HEUTE.plusWeeks(3).plusDays(5), null);
+        var oeffentlichUeberbelegt = terminMitTrainer("oeffentlich", HEUTE.plusWeeks(3).plusDays(6), null);
+        for (int i = 0; i < 12; i++) {
+            termine.buchungAnlegen(ADMIN, oeffentlichVoll.terminId(), buchung("Voll " + i, "Acme"));
+            termine.buchungAnlegen(ADMIN, oeffentlichUeberbelegt.terminId(), buchung("Über " + i, "Acme"));
+        }
+        termine.buchungAnlegen(ADMIN, oeffentlichUeberbelegt.terminId(), buchung("Über 12", "Acme"));
+
+        var eintraege = dashboard.anzeigen(ADMIN).dringlichkeiten();
+
+        assertThat(eintraege).filteredOn(e -> e.terminId().equals(exklusiv.terminId())).singleElement()
+                .satisfies(e -> assertThat(e.mindestteilnehmerUnterschritten()).isTrue());
+        assertThat(eintraege).filteredOn(e -> e.terminId().equals(oeffentlichUeberbelegt.terminId())).singleElement()
+                .satisfies(e -> assertThat(e.hoechstteilnehmerUeberschritten()).isTrue());
+        assertThat(eintraege).noneMatch(e -> Set.of(oeffentlichLeer.terminId(), ohneZugang.terminId(),
+                oeffentlichVoll.terminId()).contains(e.terminId()));
+    }
+
     @Test
     void faelligeTermineWerdenVorJederMutationNachgezogen() {
         var termin = termine.anlegen(ADMIN, minimal("SCH-001", "2028-01-03", "2028-01-03"));
@@ -750,6 +851,13 @@ class TerminplanungIntegrationTest {
 
     private TerminService.BuchungEingabe buchung(String name, String firma) {
         return new TerminService.BuchungEingabe(name, firma, "Bemerkung", "offen");
+    }
+
+    private TerminService.TerminAnsicht terminMitTrainer(String zugang, LocalDate datum, String firma) {
+        var termin = termine.anlegen(ADMIN, form("SCH-001", datum, datum, zugang, "remote",
+                null, firma, null, false));
+        termine.trainerZuweisen(ADMIN, termin.terminId(), "TRN-005", false);
+        return termin;
     }
 
     private static LocalDate d(String text) { return LocalDate.parse(text); }
