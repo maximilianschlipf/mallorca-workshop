@@ -48,6 +48,19 @@ Backend: http://localhost:18081
 Beim ersten Start ist noch kein Benutzerkonto vorhanden. Über
 „Jetzt registrieren“ entsteht das Eigentümerkonto mit allen drei Rollen.
 
+### Workshop-Testkonten
+
+Für die Workshop-Vorbereitung startet `APP_DEMO_SEED=true ./start.sh` die
+Anwendung mit reproduzierbaren Demodaten. Dabei wird die lokale Datenbank bei
+jedem Start zurückgesetzt. Alle Testkonten verwenden das Passwort
+`test-passwort`:
+
+| Rolle | E-Mail-Adresse |
+| ----- | -------------- |
+| Eigentümer, Administrator, Trainer | `julia.hoffmann@simplytest-academy.de` |
+| Administrator | `admin@simplytest-academy.de` |
+| Trainer | `sophie.bauer@simplytest-academy.de` |
+
 ## Verifizieren
 
 Der vollständige Abschluss-Check wird aus dem Projektverzeichnis gestartet:

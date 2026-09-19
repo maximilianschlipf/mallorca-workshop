@@ -20,8 +20,8 @@ class SeedResourcesTest {
     }
 
     @Test
-    void shouldPackageTrainerSeedInClasspath() throws IOException {
-        assertSeedResource("seed/trainer.json", "trainer", 5);
+    void shouldPackageAccountSeedInClasspath() throws IOException {
+        assertSeedResource("seed/konten.json", "konten", 6);
     }
 
     private void assertSeedResource(String path, String arrayField, int expectedSize) throws IOException {

@@ -26,7 +26,8 @@ spring:
       path: /h2-console
 
 app:
-  demo-seed: false
+  demo-seed: ${APP_DEMO_SEED:false}
+  demo-trainer-seed: ${APP_DEMO_TRAINER_SEED:true}
 
 schulungsplaner:
   katalog:

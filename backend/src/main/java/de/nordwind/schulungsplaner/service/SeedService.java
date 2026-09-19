@@ -4,9 +4,9 @@ import de.nordwind.schulungsplaner.domain.Abwesenheit;
 import de.nordwind.schulungsplaner.katalog.SchulungId;
 import de.nordwind.schulungsplaner.katalog.ablage.KatalogRepository;
 import de.nordwind.schulungsplaner.katalog.zustand.SchulungszustandRepository;
+import de.nordwind.schulungsplaner.seed.KontoSeed;
+import de.nordwind.schulungsplaner.seed.KontoSeedRoot;
 import de.nordwind.schulungsplaner.seed.TermineSeedRoot;
-import de.nordwind.schulungsplaner.seed.TrainerSeed;
-import de.nordwind.schulungsplaner.seed.TrainerSeedRoot;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -61,14 +61,14 @@ public class SeedService {
             return;
         }
 
-        TrainerSeedRoot trainer = demoTrainerSeed
-                ? lesen("trainer.json", TrainerSeedRoot.class) : new TrainerSeedRoot(List.of());
+        KontoSeedRoot konten = demoTrainerSeed
+                ? lesen("konten.json", KontoSeedRoot.class) : new KontoSeedRoot(List.of());
         if (demoTrainerSeed) {
-            trainerImportieren(trainer);
+            kontenImportieren(konten);
         }
         termineImportieren(lesen("termine.json", TermineSeedRoot.class), demoTrainerSeed);
         if (demoTrainerSeed) {
-            qualifikationenImportieren(trainer);
+            qualifikationenImportieren(konten);
         }
     }
 
@@ -88,31 +88,31 @@ public class SeedService {
         jdbc.update("DELETE FROM benutzerkonto");
     }
 
-    private void trainerImportieren(TrainerSeedRoot wurzel) {
-        if (wurzel == null || wurzel.trainer() == null) {
+    private void kontenImportieren(KontoSeedRoot wurzel) {
+        if (wurzel == null || wurzel.konten() == null) {
             return;
         }
         boolean erster = true;
-        for (TrainerSeed trainer : wurzel.trainer()) {
+        for (KontoSeed konto : wurzel.konten()) {
             jdbc.update("""
                     INSERT INTO benutzerkonto (id, name, email, passwort_hash, aktiv)
                     VALUES (?, ?, ?, ?, TRUE)
-                    """, trainer.id(), trainer.name(), trainer.email().toLowerCase(),
+                    """, konto.id(), konto.name(), konto.email().toLowerCase(),
                     passwoerter.encode("test-passwort"));
-            jdbc.update("INSERT INTO benutzerkonto_rolle VALUES (?, 'TRAINER')", trainer.id());
+            konto.rollen().forEach(rolle -> jdbc.update(
+                    "INSERT INTO benutzerkonto_rolle VALUES (?, ?)", konto.id(), rolle.name()));
             if (erster) {
-                jdbc.update("INSERT INTO benutzerkonto_rolle VALUES (?, 'ADMINISTRATOR')", trainer.id());
-                jdbc.update("UPDATE instanz SET eigentuemer_id = ? WHERE id = 1", trainer.id());
+                jdbc.update("UPDATE instanz SET eigentuemer_id = ? WHERE id = 1", konto.id());
                 erster = false;
             }
-            if (trainer.abwesenheiten() == null) {
+            if (konto.abwesenheiten() == null) {
                 continue;
             }
-            for (Abwesenheit abwesenheit : trainer.abwesenheiten()) {
+            for (Abwesenheit abwesenheit : konto.abwesenheiten()) {
                 jdbc.update("""
                         INSERT INTO abwesenheit (benutzerkonto_id, von, bis, grund)
                         VALUES (?, ?, ?, ?)
-                        """, trainer.id(), LocalDate.parse(abwesenheit.von()),
+                        """, konto.id(), LocalDate.parse(abwesenheit.von()),
                         LocalDate.parse(abwesenheit.bis()), abwesenheit.grund());
             }
         }
@@ -196,17 +196,17 @@ public class SeedService {
         return tag;
     }
 
-    private void qualifikationenImportieren(TrainerSeedRoot wurzel) {
-        for (TrainerSeed trainer : wurzel.trainer()) {
-            if (trainer.qualifikationen() == null) {
+    private void qualifikationenImportieren(KontoSeedRoot wurzel) {
+        for (KontoSeed konto : wurzel.konten()) {
+            if (konto.qualifikationen() == null) {
                 continue;
             }
-            for (String schulungId : trainer.qualifikationen()) {
+            for (String schulungId : konto.qualifikationen()) {
                 if (zustaende.lade(SchulungId.von(schulungId)).isPresent()) {
                     jdbc.update("""
                             INSERT INTO trainer_qualifikation (benutzerkonto_id, schulung_id)
                             VALUES (?, ?)
-                            """, trainer.id(), schulungId);
+                            """, konto.id(), schulungId);
                 }
             }
         }
