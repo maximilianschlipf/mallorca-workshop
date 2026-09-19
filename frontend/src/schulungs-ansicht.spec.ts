@@ -63,6 +63,29 @@ describe("Schulungsansicht", () => {
     expect(adminAnsicht.text()).toContain("Bearbeiten");
   });
 
+  it("zeigt bei einem Termin ohne Ort keinen leeren Trenner", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ...schulung,
+        oeffentlicheTermine: [{
+          terminId: "SCH-001-T1",
+          startdatum: "2026-09-18",
+          enddatum: "2026-09-22",
+          ort: null,
+          status: "geplant",
+        }],
+      }),
+    } as Response);
+    const wrapper = montieren();
+    await flushPromises();
+
+    const termin = wrapper.get("[data-testid=termine] li").text();
+    expect(termin).toContain("geplant");
+    expect(termin.match(/·/g)).toHaveLength(1);
+  });
+
   // verifies: TEST_QUA_DIREKT_02
   it("bietet für bereits Qualifizierte keine Direktvergabe an", async () => {
     anmelden(["TRAINER", "ADMINISTRATOR"]);

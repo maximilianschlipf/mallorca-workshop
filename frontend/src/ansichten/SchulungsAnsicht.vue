@@ -195,7 +195,8 @@ onMounted(laden);
         <h2>Öffentliche Termine</h2>
         <ul v-if="schulung.oeffentlicheTermine.length" data-testid="termine">
           <li v-for="termin in schulung.oeffentlicheTermine" :key="termin.terminId">
-            {{ zeitraum(termin.startdatum, termin.enddatum) }} · {{ termin.ort }} ·
+            {{ zeitraum(termin.startdatum, termin.enddatum) }} ·
+            <template v-if="termin.ort">{{ termin.ort }} · </template>
             {{ termin.status }}
           </li>
         </ul>
