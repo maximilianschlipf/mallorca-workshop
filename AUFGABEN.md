@@ -16,15 +16,25 @@ Gemeinsame Grundlage aller Aufgaben:
 - Der bereits umgesetzte Schulungskatalog (`de.nordwind.schulungsplaner.katalog`
   im Backend, die Ansichten unter `frontend/src/ansichten`) als Beispiel für
   Stil und Zuschnitt: kleine, reine Klassen für Prüfregeln, Page-Object-Muster
-  in den E2E-Tests, ein Need pro Anforderung/Story/Test mit `:links:` zur
-  Nachverfolgung. [PLAN-schulungskatalog.md](PLAN-schulungskatalog.md)
-  zeigt, wie ein solcher Umsetzungsplan aussieht.
+  unter `frontend/tests/e2e/seiten` und ein Need pro
+  Anforderung/Story/Test mit nachvollziehbarem Testnachweis.
 
-**Ausgangslage:** Für jede Aufgabe ist der jeweilige Bereich vorab gezielt
-zurückgeschnitten worden, damit die Teilnehmer genau den Teil selbst
-erarbeiten, um den es in der Aufgabe geht -- vorhandene Tests, entworfene
-Test-Needs oder Stories wurden dafür entfernt. Was konkret vorhanden ist und
-was fehlt, steht bei jeder Aufgabe unter "Ausgangslage".
+**Ausgangslage:** Das vollständige Referenzsystem enthält inzwischen mehrere
+der hier behandelten Bereiche. Für jede Aufgabe wird deshalb ein eigener
+Aufgaben-Branch erstellt und gezielt zurückgeschnitten. Die folgenden
+Ausgangslagen beschreiben den vorgesehenen Stand dieser noch zu erstellenden
+Branches, nicht den aktuellen Referenzstand. Was erhalten bleibt und was
+entfernt wird, steht bei jeder Aufgabe unter "Ausgangslage".
+
+Die Aufgaben-Branches werden aus einem passenden historischen Produktstand
+aufgebaut und anschließend mit den aktuellen Prüfskripten versehen. Ihr
+`implemented-requirements.txt` enthält nur die Bereiche, die in diesem
+Ausgangsstand bereits vollständig umgesetzt und nachgewiesen sind; bestehende
+Einträge werden nicht entfernt. Eine branch-lokale `AGENTS.md` kennzeichnet
+den bearbeiteten Workshop-Ausschnitt ausdrücklich als unvollständige Übung:
+Er wird nicht als umgesetzter Fachbereich registriert, und die Teilnehmer
+melden keine Feature-Vollständigkeit. Erst eine spätere vollständige Umsetzung
+unterliegt wieder dem normalen kumulativen Abschluss-Gate.
 
 ---
 
@@ -34,17 +44,21 @@ was fehlt, steht bei jeder Aufgabe unter "Ausgangslage".
 
 ### Ausgangslage
 
-Benutzerkonten sind inzwischen umgesetzt -- viele andere Bereiche bauen
-darauf auf, deshalb ist er nicht mehr Gegenstand einer eigenen Aufgabe.
+Benutzerkonten, Katalog, Terminplanung und Qualifikationen bleiben als
+Voraussetzungen erhalten. Sie werden für diese Aufgabe nicht
+zurückgeschnitten.
 
-Für Abwesenheiten sind Anforderungen, User Stories und Tests bereits
-vollständig als Needs entworfen
+Für Abwesenheiten bleiben Anforderungen, User Stories und Testbeschreibungen
+als Needs erhalten
 (`docs/source/anforderungen/abwesenheiten.rst` und
-`abwesenheiten-umsetzung.rst`, Kürzel `ABW`). Es gibt noch keinen Code dafür
--- weder Entität noch Endpunkt noch Oberfläche; das vorhandene
-`Abwesenheit`-Record im Backend ist nur ein Platzhalter. Was eine
-Abwesenheit ist, und die Unterscheidung von Trainerzuweisung, Vormerkung und
-Übernahmeanfrage stehen in [CONTEXT.md](CONTEXT.md).
+`abwesenheiten-umsetzung.rst`, Kürzel `ABW`). Aus dem Aufgaben-Branch werden
+die Endpunkte, Bedienoberflächen und Abläufe zur Verwaltung von Abwesenheiten
+entfernt; ausführbare `TEST_ABW_...`-Nachweise gibt es im Referenzstand noch
+nicht. Das Datenbankschema, die lesende Konfliktprüfung der Terminplanung und
+das `Abwesenheit`-Record bleiben als Integrationsgrenze beziehungsweise
+fachlicher Platzhalter erhalten. Was eine Abwesenheit ist, und die
+Unterscheidung von Trainerzuweisung, Vormerkung und Übernahmeanfrage stehen
+in [CONTEXT.md](CONTEXT.md).
 
 ### Ziel
 
@@ -86,10 +100,10 @@ hinfällig werden.
 ### Abgrenzung
 
 Nicht Teil der Aufgabe: Was mit offenen Vormerkungen oder
-Übernahmeanfragen beim Eintreten einer Abwesenheit geschieht --
-`abwesenheiten.rst` verweist bewusst nicht mehr darauf, weil es diese
-Bereiche im Planer noch nicht gibt. Wer eine Schnittstelle dorthin offen
-halten möchte, soll sie nicht vorwegnehmen, sondern nur nicht verbauen.
+Übernahmeanfragen beim Eintreten einer Abwesenheit geschieht. Im
+Referenzsystem existieren dafür bereits gemeinsame technische Strukturen;
+sie erweitern den fachlichen Umfang dieser Aufgabe nicht. Maßgeblich sind die
+`implements`- und `verifies`-Beziehungen der `ABW`-Needs.
 
 ---
 
@@ -99,16 +113,21 @@ halten möchte, soll sie nicht vorwegnehmen, sondern nur nicht verbauen.
 
 ### Ausgangslage
 
-Für Qualifikationen liegen nur die reinen Anforderungen vor
-(`docs/source/anforderungen/qualifikationen.rst`, Kürzel `QUA`), keine
-Stories und keine Tests. Der Bereich ist im Code nicht vorhanden.
+Im Referenzsystem sind Qualifikationen bereits spezifiziert und umgesetzt.
+Der Aufgaben-Branch behält nur die Anforderungen in
+`docs/source/anforderungen/qualifikationen.rst` (Kürzel `QUA`). Die Datei
+`qualifikationen-umsetzung.rst`, die Verwaltungsabläufe für Qualifikationen
+und Freigabeanfragen sowie ihre ausführbaren Tests werden dort entfernt. Das
+Datenbankschema und die lesende Qualifikationsprüfung der Terminplanung
+bleiben als Integrationsgrenze erhalten. Benutzerkonten, Katalog und
+Terminplanung bleiben als Voraussetzungen erhalten.
 
 ### Ziel
 
 Erst User Stories und Tests als Needs entwerfen (nach dem Muster von
-`katalog-umsetzung.rst` oder `benutzerkonten-umsetzung.rst`: `:links:` auf
-die jeweilige Anforderung, Status im Lebenszyklus, `story::`- und
-`test::`-Needs), danach umsetzen. Im Mittelpunkt steht die bestätigte
+`katalog-umsetzung.rst` oder `benutzerkonten-umsetzung.rst`: Stories mit
+`:implements:`, Tests mit `:verifies:`, dazu Status im Lebenszyklus), danach
+umsetzen. Im Mittelpunkt steht die bestätigte
 Berechtigung eines Trainers, eine Schulung durchzuführen, und der Antrag
 darauf (Freigabeanfrage) -- beides ist in [CONTEXT.md](CONTEXT.md) definiert.
 
@@ -123,11 +142,9 @@ darauf (Freigabeanfrage) -- beides ist in [CONTEXT.md](CONTEXT.md) definiert.
 
 ### Abgrenzung
 
-Setzt Benutzerkonten voraus (Rolle Trainer, Administrator). Falls Aufgabe 1
-in der Schulung nicht parallel bearbeitet wird, reicht ein Platzhalter/Stub
-für die Rollenprüfung -- das ist hier kein Stubben eines Fremdbereichs im
-Sinne von `PLAN-schulungskatalog.md`, sondern eine bewusste Abgrenzung, die
-in der eigenen Umsetzung zu vermerken ist.
+Setzt die im Aufgaben-Branch vorhandenen Benutzerkonten mit den Rollen
+Trainer und Administrator voraus. Rollenprüfung, Katalog und Terminplanung
+werden wiederverwendet und nicht für diese Aufgabe neu implementiert.
 
 ---
 
@@ -137,34 +154,44 @@ in der eigenen Umsetzung zu vermerken ist.
 
 ### Ausgangslage
 
-Für die Terminplanung sind Anforderungen und Stories bereits als Needs
+Für die Terminplanung bleiben Anforderungen, Stories und Tests als Needs
 vorhanden (`docs/source/anforderungen/terminplanung.rst` und
-`terminplanung-umsetzung.rst`, Kürzel `TER`), ebenso die dort verlinkten
-Tests -- als Beschreibung, nicht als Code. Es existiert noch keine
-Implementierung und keine automatisierte Testsuite für diesen Bereich.
+`terminplanung-umsetzung.rst`, Kürzel `TER`). Datenbankschema, gemeinsame
+Typen, lesende Zugriffe und Integrationsmethoden bleiben erhalten, damit der
+Aufgaben-Branch von Beginn an baut. Die fachliche Schreiblogik der Abschnitte
+"Termine anlegen", "Zustände und Abschluss" sowie "Ändern, absagen,
+löschen" wird für `TEST_TER_ANL_01` bis `TEST_TER_ANL_08`,
+`TEST_TER_STAT_01` bis `TEST_TER_STAT_06` sowie `TEST_TER_AEND_04` und
+`TEST_TER_AEND_05` auf kompilierbare Platzhalter zurückgesetzt; die
+zugehörigen ausführbaren Testnachweise werden entfernt. Die Test-Needs bleiben
+als fachliche Testbeschreibungen erhalten.
 
 ### Ziel
 
 Nicht das Ergebnis steht im Vordergrund, sondern der Weg: Wie lässt sich mit
 KI-Unterstützung ein test-getriebener Prozess für die Terminerstellung
-aufbauen, der Rot-Grün-Zyklen konsequent einhält und pro Test-Need
-(`TEST_TER_...`) einen nachvollziehbaren Schritt erzeugt?
+aufbauen, der Rot-Grün-Zyklen konsequent einhält und pro ausgewähltem
+Test-Need (`TEST_TER_...`) einen nachvollziehbaren Schritt erzeugt?
 
 ### Vorgehen
 
-Je Test-Need aus `terminplanung-umsetzung.rst`: Test zuerst schreiben (mit
-KI-Unterstützung aus der Formulierung des Needs ableiten), scheitern lassen,
-Implementierung nachziehen, Traceability im Need vermerken
-(`Besteht als <methodenName>`, wie es die Katalog-Tests bereits vormachen).
-Bewusst dokumentieren, an welchen Stellen die KI-generierten Tests von Hand
-nachgeschärft werden mussten und warum.
+Je ausgewähltem Test-Need aus `TEST_TER_ANL_01` bis `TEST_TER_ANL_08`,
+`TEST_TER_STAT_01` bis `TEST_TER_STAT_06`, `TEST_TER_AEND_04` und
+`TEST_TER_AEND_05`: Test zuerst schreiben (mit KI-Unterstützung aus der
+Formulierung des Needs ableiten), scheitern lassen, Implementierung nachziehen
+und am vollständigen ausführbaren Szenario
+`// verifies: TEST_TER_...` ergänzen. Ein Test-Need darf erst dann auf
+`verified` gesetzt werden, wenn der Test das gesamte beschriebene Szenario
+nachweist. Bewusst dokumentieren, an welchen Stellen die KI-generierten
+Tests von Hand nachgeschärft werden mussten und warum.
 
 ### Abgrenzung
 
 Fokus auf die Terminerstellung (Anlegen, Zeitraum, Zustand geplant/
 abgeschlossen/abgesagt). Trainerzuweisung, Assistenzplätze und
-Teilnehmerbuchungen an Terminen sind eigene Bereiche und nicht Teil dieser
-Aufgabe.
+Teilnehmerbuchungen werden als vorhandene Integrationsgrenzen und, wo ein
+ausgewähltes Testszenario sie verlangt, als Test-Fixtures wiederverwendet.
+Ihre fachliche Erweiterung ist nicht Teil dieser Aufgabe.
 
 ---
 
@@ -174,13 +201,16 @@ Aufgabe.
 
 ### Ausgangslage
 
-Der Schulungskatalog ist vollständig umgesetzt (Backend und Oberfläche,
-siehe `de.nordwind.schulungsplaner.katalog` und
-`frontend/src/ansichten`) -- aber ohne die Testsuite, die ihn ursprünglich
-abgesichert hat. Die Anforderungen und die dazugehörigen Test-Needs bleiben
-als Spezifikation erhalten (`docs/source/anforderungen/katalog.rst` und
-`katalog-umsetzung.rst`, Kürzel `KAT`); es fehlt der ausführbare Test-Code
-dazu.
+Der Schulungskatalog bleibt im Aufgaben-Branch vollständig umgesetzt
+(Backend und Oberfläche, siehe `de.nordwind.schulungsplaner.katalog` und
+`frontend/src/ansichten`). Seine ausführbaren Backend-, Frontend- und
+E2E-Tests werden für die Aufgabe entfernt. Anforderungen und Test-Needs
+bleiben als Spezifikation erhalten; die Test-Needs werden von `verified` auf
+`approved` zurückgesetzt und ihre bisherigen ``Besteht als ...``-Nachweise
+entfernt. Auch die historische Einleitung von `katalog-umsetzung.rst` wird
+durch eine neutrale Beschreibung des testlosen Ausgangsstands ersetzt
+(`docs/source/anforderungen/katalog.rst` und
+`katalog-umsetzung.rst`, Kürzel `KAT`).
 
 ### Ziel
 
@@ -201,6 +231,10 @@ abdeckt.
 4. Am Ende einen kurzen Abgleich: Welche Test-Needs sind abgedeckt, welche
    nicht, und warum.
 
+Nur ein Test, der das gesamte beschriebene Szenario ausführt, erhält
+`// verifies: TEST_KAT_...`; erst dann darf der zugehörige Test-Need wieder
+den Status `verified` erhalten.
+
 ### Abgrenzung
 
 Die Implementierung selbst wird nicht verändert, außer es stellt sich ein
@@ -214,11 +248,13 @@ tatsächlicher Fehler heraus -- dann getrennt vom Testaufbau dokumentieren.
 
 ### Ausgangslage
 
-Zu Assistenzplätzen gibt es bislang nur eine knappe Sammlung von
-Anforderungen (`docs/source/anforderungen/assistenz.rst`, Kürzel `ASS`) --
-im Kern die Idee aus dem "Geplanten Ausbau" in [README.md](README.md):
-"Assistenzplätze an Terminen als Weg zum Anlernen". Es gibt weder Stories
-noch Tests noch Code dazu.
+Zu Assistenzplätzen gibt es eine knappe Sammlung von Anforderungen
+(`docs/source/anforderungen/assistenz.rst`, Kürzel `ASS`), überwiegend noch
+im Status `draft`. Im Referenzsystem existieren bereits technische
+Teilfunktionen für Assistenzzuweisung und -bewerbung, aber noch keine
+freigegebene, durch Stories und `TEST_ASS_...`-Nachweise vollständig
+beschriebene Umsetzung. Der Aufgaben-Branch behält diese Teilfunktionen als
+Anschauungsmaterial; sie sind keine Vorgabe für die fachliche Entscheidung.
 
 ### Ziel
 
@@ -250,42 +286,50 @@ konsistenter `assistenz.rst` (und ggf. eine begonnene
 
 ---
 
-## Aufgabe 6 -- Testfälle zu Vormerkungen ableiten (ohne Programmierung)
+## Aufgabe 6 -- Stories und Testfälle zu Vormerkungen ableiten (ohne Programmierung)
 
 **Schwerpunkt:** Testfallableitung / Anforderungsanalyse
 
 ### Ausgangslage
 
-Zu Vormerkungen liegen Anforderungen und User Stories bereits als Needs vor
-(`docs/source/anforderungen/vormerkungen.rst`, Kürzel `VOR`) -- aber ohne
-Test-Needs. Es geht um das unverbindliche Interesse eines Trainers an einem
-zukünftigen Termin (Definition in [CONTEXT.md](CONTEXT.md)); eine
-Vormerkung ist ausdrücklich keine Trainerzuweisung.
+Zu Vormerkungen liegen 14 Anforderungen als Needs vor
+(`docs/source/anforderungen/vormerkungen.rst`, Kürzel `VOR`), aber noch keine
+Stories und keine `TEST_VOR_...`-Needs. Im Referenzsystem existieren bereits
+gemeinsame technische Strukturen für Vorgänge und Vormerkungen, jedoch keine
+vollständig auf die `VOR`-Needs zurückgeführte Umsetzung. Es geht um das
+unverbindliche Interesse eines Trainers an einem zukünftigen Termin
+(Definition in [CONTEXT.md](CONTEXT.md)); eine Vormerkung ist ausdrücklich
+keine Trainerzuweisung.
 
 ### Ziel
 
-Aus den vorhandenen Stories mit KI-Unterstützung die passenden Testfälle
-ableiten und als `test::`-Needs formulieren -- ganz ohne Implementierung.
-Der Fokus liegt auf der Analyse: Welche Fälle deckt eine Story ab, welche
-Randfälle fehlen ihr noch, und wie lässt sich das in einem prüfbaren
-Testfall festhalten?
+Aus den vorhandenen Anforderungen mit KI-Unterstützung zunächst passende
+Stories und daraus prüfbare Testfälle als Needs ableiten -- ganz ohne
+Implementierung. Der Fokus liegt auf der Analyse: Welche Fälle deckt eine
+Story ab, welche Randfälle fehlen ihr noch, und wie lässt sich das in einem
+prüfbaren Testfall festhalten?
 
 ### Vorgehen
 
-1. Jede Story in `vormerkungen.rst` einzeln lesen und die darin enthaltenen
-   Verhaltenserwartungen herausarbeiten.
+1. Die Anforderungen in `vormerkungen.rst` lesen, zusammengehörige
+   Verhaltenserwartungen herausarbeiten und als `story::`-Needs mit
+   `:implements:` auf die Anforderungen formulieren.
 2. Je Story mindestens einen Testfall ableiten, dazu Randfälle suchen (leere
    Liste, doppelte Vormerkung, vormerken auf einen abgesagten Termin, ...).
-3. Testfälle als `test::`-Needs mit `:links:` auf die jeweilige Story
+3. Testfälle als `test::`-Needs mit `:verifies:` auf die jeweilige Story
    eintragen, Status und Automatisierbarkeit (`:automated:`) wie in den
-   bestehenden Bereichen (`katalog-umsetzung.rst`, `TEST_KAT_ABL_04` als
-   Beispiel für einen bewusst nicht automatisierten Test) einschätzen.
+   bestehenden Umsetzungsdateien einschätzen. `TEST_ABW_ERF_07` in
+   `abwesenheiten-umsetzung.rst` ist ein Beispiel für einen bewusst manuellen
+   Test. Da in dieser Aufgabe kein ausführbarer Nachweis entsteht, bleiben die
+   neuen Test-Needs `draft`, `review` oder `approved`, niemals `verified`;
+   `:automated:` beschreibt nur die geplante Automatisierbarkeit.
 4. Kurz begründen, warum ein Testfall so und nicht anders formuliert wurde --
    das ist hier der eigentliche Lernpunkt, nicht das Ergebnis allein.
 
 ### Abgrenzung
 
-Kein Code, keine Implementierung, kein `make html`-Zwang über die reine
-Needs-Konsistenz hinaus. Wird ein Fehler oder eine Lücke in einer
-bestehenden Story entdeckt, wird das als Anmerkung festgehalten statt die
-Story selbst umzuschreiben.
+Kein Code und keine Implementierung. Der Dokumentationsbuild muss mit `-W`
+durchlaufen; weitere ausführbare Produkt- oder E2E-Tests entstehen in dieser
+Aufgabe nicht. Wird ein Fehler oder eine Lücke in einer bestehenden
+Anforderung entdeckt, wird das als Anmerkung festgehalten statt die
+Anforderung selbst umzuschreiben.
