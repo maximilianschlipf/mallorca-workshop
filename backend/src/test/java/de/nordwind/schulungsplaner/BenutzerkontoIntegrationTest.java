@@ -532,7 +532,11 @@ class BenutzerkontoIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM assistenzbewerbung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vormerkung WHERE benutzerkonto_id=?", Integer.class, ziel.id())).isOne();
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?", Integer.class, ziel.id())).isOne();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?", Integer.class, ziel.id())).isEqualTo(3);
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?
+                AND anlasstyp='VORGANG_DURCH_KONTOENDE_ENTFALLEN'
+                """, Integer.class, ziel.id())).isEqualTo(2);
         konten.reaktivieren(chef.id(), ziel.id(),
                 konten.laden(ziel.id()).aenderungsstand());
         assertThat(jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id='ZUKUNFT'", String.class)).isNull();

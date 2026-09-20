@@ -71,10 +71,10 @@ public class TrainereinsatzService {
                 kontoId, schulungId);
         if (bestehend.isEmpty()) {
             einfuegenOderKonflikt("""
-                    INSERT INTO qualifikationsbewerbung (benutzerkonto_id, schulung_id)
-                    VALUES (?, ?)
+                    INSERT INTO qualifikationsbewerbung (benutzerkonto_id, schulung_id, antragsteller_name)
+                    VALUES (?, ?, ?)
                     """, "BEWERBUNG_BESTEHT", "Für diese Schulung besteht bereits eine Bewerbung.",
-                    kontoId, schulungId);
+                    kontoId, schulungId, konten.laden(kontoId).name());
             return;
         }
         Bewerbung bewerbung = bestehend.getFirst();

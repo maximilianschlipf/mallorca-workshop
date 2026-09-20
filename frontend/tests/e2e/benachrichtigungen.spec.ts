@@ -57,7 +57,7 @@ test("Benachrichtigungen sind erreichbar, sortiert, lesbar und konkret verlinkt"
   await expect(page.getByLabel(/ungelesene Benachrichtigungen/)).toHaveCount(0);
 });
 
-// verifies: TEST_NAC_ANZ_06
+// verifies: TEST_NAC_ANZ_06, TEST_DSH_GRUND_02
 test("Entscheidungen stehen nur im Dashboard", async ({ page }) => {
   await eigentuemerAnmelden(page);
   expect(await mutation(page, "/api/e2e/benachrichtigungen")).toBe(204);
@@ -65,10 +65,12 @@ test("Entscheidungen stehen nur im Dashboard", async ({ page }) => {
   await page.goto("/benachrichtigungen");
   await expect(page.getByRole("button", { name: /Annehmen|Ablehnen|Zurückziehen/ })).toHaveCount(0);
   await expect(page.getByText("Übernahmeanfrage")).toHaveCount(0);
+  await expect(page.getByText(/Termin E2E-NAC-TERMIN wurde geändert/)).toBeVisible();
 
   await page.goto("/");
   const vorgang = page.getByRole("listitem").filter({ hasText: "Übernahmeanfrage" });
   await expect(vorgang).toBeVisible();
   await expect(vorgang.getByRole("button", { name: "Annehmen" })).toBeVisible();
   await expect(vorgang.getByRole("button", { name: "Ablehnen" })).toBeVisible();
+  await expect(page.getByText(/Termin E2E-NAC-TERMIN wurde geändert/)).toHaveCount(0);
 });

@@ -34,6 +34,7 @@ public class DashboardService {
 
     @Transactional
     public Dashboard anzeigen(String kontoId) {
+        vorgaenge.nachziehen();
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
         boolean trainer = konto.rollen().contains(Rolle.TRAINER);
@@ -58,7 +59,7 @@ public class DashboardService {
     private List<Vorgang> bewerbungen(String bedingung, String kontoId, String richtung) {
         String sql = """
                 SELECT b.id, b.schulung_id, b.status, b.erstellt_am, b.entschieden_am,
-                       b.begruendung, k.name
+                       b.begruendung, COALESCE(k.name, b.antragsteller_name) AS name
                 FROM qualifikationsbewerbung b
                 LEFT JOIN benutzerkonto k ON k.id=b.benutzerkonto_id
                 WHERE %s ORDER BY b.erstellt_am DESC, b.id DESC

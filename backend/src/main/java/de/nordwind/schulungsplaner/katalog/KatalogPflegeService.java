@@ -142,7 +142,8 @@ public class KatalogPflegeService {
                 WHERE schulung_id = ? AND status = 'OFFEN'
                 """, String.class, id.wert());
         jdbcTemplate.update("""
-                UPDATE qualifikationsbewerbung SET status = 'ABGELEHNT'
+                UPDATE qualifikationsbewerbung SET status = 'ABGELEHNT',
+                    entschieden_am=CURRENT_TIMESTAMP, begruendung='Schulung archiviert'
                 WHERE schulung_id = ? AND status = 'OFFEN'
                 """, id.wert());
         bewerber.forEach(kontoId -> benachrichtigungen.persoenlich(kontoId, null,

@@ -3,6 +3,7 @@ package de.nordwind.schulungsplaner.service;
 import de.nordwind.schulungsplaner.domain.Benutzerkonto;
 import de.nordwind.schulungsplaner.domain.Rolle;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,11 +29,14 @@ public class KontoService {
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwoerter;
     private final Clock clock;
+    private final ApplicationEventPublisher ereignisse;
 
-    public KontoService(JdbcTemplate jdbc, PasswordEncoder passwoerter, Clock clock) {
+    public KontoService(JdbcTemplate jdbc, PasswordEncoder passwoerter, Clock clock,
+                        ApplicationEventPublisher ereignisse) {
         this.jdbc = jdbc;
         this.passwoerter = passwoerter;
         this.clock = clock;
+        this.ereignisse = ereignisse;
     }
 
     @Transactional
@@ -187,6 +191,8 @@ public class KontoService {
                 WHERE id = ? AND aenderungsstand = ?
                 """, zielId, aenderungsstand), zielId);
         entferneZukuenftigeZuweisungen(zielId);
+        ereignisse.publishEvent(new VorgangService.KontoBeendet(
+                zielId, akteurId, "Stilllegung des Benutzerkontos"));
     }
 
     @Transactional
@@ -239,6 +245,8 @@ public class KontoService {
                     (SELECT termin_id FROM termin WHERE status = 'abgeschlossen')
                 """, ziel.name(), zielId);
         jdbc.update("DELETE FROM termin_assistent WHERE benutzerkonto_id = ?", zielId);
+        ereignisse.publishEvent(new VorgangService.KontoBeendet(
+                zielId, akteurId, "Löschung des Benutzerkontos"));
         jdbc.update("DELETE FROM benutzerkonto WHERE id = ?", zielId);
     }
 

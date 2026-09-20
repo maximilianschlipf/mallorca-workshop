@@ -142,13 +142,26 @@ onMounted(() => laden().catch((error) => {
 
       <details class="completed-processes">
         <summary>Erledigte Vorgänge</summary>
-        <ul class="task-list">
-          <li v-for="vorgang in [...daten.erledigteVorgaenge, ...daten.erledigteEigeneVorgaenge]" :key="`${vorgang.richtung}-${vorgang.id}`" class="task-row">
+        <section aria-labelledby="erledigt-an-mich">
+          <h3 id="erledigt-an-mich">An mich gerichtet</h3>
+          <ul class="task-list">
+            <li v-for="vorgang in daten.erledigteVorgaenge" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
+              <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}</p>
+                <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
+            </li>
+          </ul>
+          <p v-if="!daten.erledigteVorgaenge.length" class="empty-copy">Keine erledigten Vorgänge an mich.</p>
+        </section>
+        <section aria-labelledby="erledigt-von-mir">
+          <h3 id="erledigt-von-mir">Von mir gestellt</h3>
+          <ul class="task-list">
+            <li v-for="vorgang in daten.erledigteEigeneVorgaenge" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
             <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}</p>
               <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
-          </li>
-        </ul>
-        <p v-if="!daten.erledigteVorgaenge.length && !daten.erledigteEigeneVorgaenge.length" class="empty-copy">Noch keine erledigten Vorgänge.</p>
+            </li>
+          </ul>
+          <p v-if="!daten.erledigteEigeneVorgaenge.length" class="empty-copy">Keine erledigten eigenen Vorgänge.</p>
+        </section>
       </details>
     </template>
   </main>

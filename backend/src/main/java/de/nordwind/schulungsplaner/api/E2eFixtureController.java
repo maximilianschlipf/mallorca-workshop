@@ -50,20 +50,12 @@ class E2eFixtureController {
                 """);
         nachricht(akteur.id(), "QUALIFIKATION_GENEHMIGT", "Älteste Mitteilung",
                 "SCHULUNG", "SCH-001", LocalDateTime.of(2026, 9, 17, 8, 0));
-        nachricht(akteur.id(), "TERMIN_GEAENDERT", "Mittlere Mitteilung",
+        nachricht(akteur.id(), "TERMIN_GEAENDERT",
+                "Mittlere Mitteilung: Termin E2E-NAC-TERMIN wurde geändert.",
                 "TERMIN", "E2E-NAC-TERMIN", LocalDateTime.of(2026, 9, 17, 9, 0));
         nachricht(akteur.id(), "QUALIFIKATION_ENTZOGEN", "Neueste Mitteilung",
                 null, null, LocalDateTime.of(2026, 9, 17, 10, 0));
-        jdbc.update("""
-                MERGE INTO benutzerkonto (id, email, name, passwort_hash, aktiv,
-                    aenderungsstand, passwort_version) KEY(id)
-                SELECT 'e2e-nac-antragsteller', 'e2e-nac@example.de', 'E2E Antragsteller',
-                    passwort_hash, TRUE, 0, 0 FROM benutzerkonto WHERE id=?
-                """, akteur.id());
-        jdbc.update("""
-                MERGE INTO benutzerkonto_rolle (benutzerkonto_id, rolle)
-                KEY(benutzerkonto_id, rolle) VALUES ('e2e-nac-antragsteller', 'TRAINER')
-                """);
+        e2eTrainerAnlegen(akteur);
         jdbc.update("""
                 INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_id,
                     bezug_art, bezug_id, bezug, erstellt_am)
@@ -71,6 +63,77 @@ class E2eFixtureController {
                     'E2E-NAC-TERMIN', 'Scrum Master Zertifizierung', '2026-09-17 11:00:00'
                 FROM benutzerkonto k WHERE k.id='e2e-nac-antragsteller'
                 """, akteur.id());
+    }
+
+    @PutMapping("/dashboard-vorgaenge")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void dashboardVorgaengeAnlegen(@AuthenticationPrincipal KontoPrincipal akteur) {
+        e2eTrainerAnlegen(akteur);
+        jdbc.update("DELETE FROM vorgang WHERE antragsteller_id=?", akteur.id());
+        jdbc.update("DELETE FROM qualifikationsbewerbung WHERE benutzerkonto_id=?", akteur.id());
+        jdbc.update("""
+                INSERT INTO qualifikationsbewerbung (benutzerkonto_id, schulung_id, status, erstellt_am)
+                VALUES (?, 'SCH-001', 'OFFEN', '2026-09-17 08:00:00')
+                """, akteur.id());
+        eigenerVorgang(akteur.id(), "ABWESENHEITSANTRAG", null, "ADMINISTRATOR",
+                "VORGANG", "E2E-ABW", "1. bis 2. Oktober", "2026-09-17 09:00:00");
+        eigenerVorgang(akteur.id(), "VORMERKUNG", null, "ADMINISTRATOR",
+                "TERMIN", "E2E-VOR", "Vormerkung", "2026-09-17 10:00:00");
+        eigenerVorgang(akteur.id(), "ASSISTENZBEWERBUNG", null, "ADMINISTRATOR",
+                "TERMIN", "E2E-ASS", "Assistenz", "2026-09-17 11:00:00");
+        eigenerVorgang(akteur.id(), "UEBERNAHMEANFRAGE", "e2e-nac-antragsteller", null,
+                "TERMIN", "E2E-UEB", "Übernahme", "2026-09-17 12:00:00");
+        eigenerVorgang(akteur.id(), "ERSATZTRAINER_ANFRAGE", "e2e-nac-antragsteller", null,
+                "VORGANG", "E2E-ERS", "Ersatz", "2026-09-17 13:00:00");
+    }
+
+    @PutMapping("/dashboard-historie")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void dashboardHistorieAnlegen(@AuthenticationPrincipal KontoPrincipal akteur) {
+        e2eTrainerAnlegen(akteur);
+        jdbc.update("DELETE FROM termin WHERE termin_id='E2E-HIST-DRINGEND'");
+        jdbc.update("DELETE FROM termin WHERE termin_id='E2E-HIST-AN'");
+        termin("E2E-HIST-DRINGEND", "2026-09-25", "geplant", null);
+        termin("E2E-HIST-AN", "2026-10-01", "geplant", akteur.id());
+        jdbc.update("DELETE FROM vorgang WHERE antragsteller_id=? OR zustaendig_id=?",
+                akteur.id(), akteur.id());
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_id,
+                    bezug_art, bezug_id, bezug, erstellt_am)
+                VALUES ('UEBERNAHMEANFRAGE', 'e2e-nac-antragsteller', 'E2E Antragsteller', ?,
+                    'TERMIN', 'E2E-HIST-AN', 'Annahme', '2026-09-17 08:00:00')
+                """, akteur.id());
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_id,
+                    bezug_art, bezug_id, bezug, erstellt_am)
+                VALUES ('ERSATZTRAINER_ANFRAGE', 'e2e-nac-antragsteller', 'E2E Antragsteller', ?,
+                    'VORGANG', 'E2E-HIST-AB', 'Ablehnung', '2026-09-17 09:00:00')
+                """, akteur.id());
+        eigenerVorgang(akteur.id(), "VORMERKUNG", "e2e-nac-antragsteller", null,
+                "TERMIN", "E2E-HIST-ZUR", "Zurückziehen", "2026-09-17 10:00:00");
+    }
+
+    @PutMapping("/dashboard-raenge")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void dashboardRaengeAnlegen(@AuthenticationPrincipal KontoPrincipal akteur) {
+        e2eTrainerAnlegen(akteur);
+        jdbc.update("DELETE FROM vorgang WHERE bezug_id LIKE 'E2E-RANG-%'");
+        jdbc.update("DELETE FROM termin WHERE termin_id LIKE 'E2E-RANG-%'");
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_rolle,
+                    bezug_art, bezug_id, bezug, erstellt_am)
+                VALUES ('ABWESENHEITSANTRAG', 'e2e-nac-antragsteller', 'E2E Antragsteller',
+                    'ADMINISTRATOR', 'VORGANG', 'E2E-RANG-ABW', '1. bis 2. Oktober', CURRENT_TIMESTAMP)
+                """);
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_id,
+                    bezug_art, bezug_id, bezug, erstellt_am)
+                VALUES ('UEBERNAHMEANFRAGE', ?, 'E2E Eigentümer', 'e2e-nac-antragsteller',
+                    'TERMIN', 'E2E-RANG-UEB', 'Übernahme', CURRENT_TIMESTAMP)
+                """, akteur.id());
+        termin("E2E-RANG-ADMIN-PFLICHT", "2026-09-16", "geplant", akteur.id());
+        termin("E2E-RANG-TRAINER-PFLICHT", "2026-09-16", "geplant", "e2e-nac-antragsteller");
+        termin("E2E-RANG-DRINGEND", "2026-09-25", "geplant", null);
     }
 
     @PutMapping("/dashboard-pflichten")
@@ -100,5 +163,28 @@ class E2eFixtureController {
                     (empfaenger_id, anlasstyp, anlass, bezug_art, bezug_id, erstellt_am)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """, kontoId, typ, text, bezugArt, bezugId, zeitpunkt);
+    }
+
+    private void e2eTrainerAnlegen(KontoPrincipal akteur) {
+        jdbc.update("""
+                MERGE INTO benutzerkonto (id, email, name, passwort_hash, aktiv,
+                    aenderungsstand, passwort_version) KEY(id)
+                SELECT 'e2e-nac-antragsteller', 'e2e-nac@example.de', 'E2E Antragsteller',
+                    passwort_hash, TRUE, 0, 0 FROM benutzerkonto WHERE id=?
+                """, akteur.id());
+        jdbc.update("""
+                MERGE INTO benutzerkonto_rolle (benutzerkonto_id, rolle)
+                KEY(benutzerkonto_id, rolle) VALUES ('e2e-nac-antragsteller', 'TRAINER')
+                """);
+    }
+
+    private void eigenerVorgang(String antragsteller, String art, String zustaendig,
+                                String rolle, String bezugArt, String bezugId,
+                                String bezug, String erstelltAm) {
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name,
+                    zustaendig_id, zustaendig_rolle, bezug_art, bezug_id, bezug, erstellt_am)
+                SELECT ?, id, name, ?, ?, ?, ?, ?, ? FROM benutzerkonto WHERE id=?
+                """, art, zustaendig, rolle, bezugArt, bezugId, bezug, erstelltAm, antragsteller);
     }
 }

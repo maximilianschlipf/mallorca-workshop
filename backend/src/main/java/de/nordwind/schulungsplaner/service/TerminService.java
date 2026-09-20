@@ -37,16 +37,18 @@ public class TerminService {
     private final SchulungszustandRepository zustaende;
     private final Clock clock;
     private final BenachrichtigungService benachrichtigungen;
+    private final VorgangService vorgaenge;
 
     public TerminService(JdbcTemplate jdbc, KontoService konten, KatalogRepository katalog,
                          SchulungszustandRepository zustaende, Clock clock,
-                         BenachrichtigungService benachrichtigungen) {
+                         BenachrichtigungService benachrichtigungen, VorgangService vorgaenge) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
         this.zustaende = zustaende;
         this.clock = clock;
         this.benachrichtigungen = benachrichtigungen;
+        this.vorgaenge = vorgaenge;
     }
 
     @Transactional
@@ -145,6 +147,7 @@ public class TerminService {
                 terminId, trainerId);
         jdbc.update("UPDATE termin SET trainer_id=?, trainer_name_snapshot=NULL, version=version+1 WHERE termin_id=?",
                 trainerId, terminId);
+        vorgaenge.trainerZugewiesen(terminId, null);
         if (bisher != null && !bisher.equals(trainerId)) benachrichtige(bisher, administratorId,
                 Benachrichtigungsanlass.TRAINERZUWEISUNG_BEENDET,
                 "Ihre Trainerzuweisung für " + terminId + " wurde beendet.", terminId);
@@ -243,6 +246,8 @@ public class TerminService {
         benachrichtigeBeteiligte(terminId, administratorId, Benachrichtigungsanlass.TERMIN_ABGESAGT,
                 "Der Termin " + terminId + " wurde abgesagt."
                         + (sauber == null ? "" : " Grund: " + sauber));
+        vorgaenge.terminBeendet(terminId, termin.trainerId(), termin.startdatum(), termin.enddatum(),
+                "Terminabsage" + (sauber == null ? "" : ": " + sauber));
         return details(administratorId, terminId);
     }
 
@@ -258,6 +263,8 @@ public class TerminService {
         benachrichtigeBeteiligte(terminId, administratorId, Benachrichtigungsanlass.TERMIN_GELOESCHT,
                 "Der Termin " + terminId + " wurde gelöscht.");
         jdbc.update("DELETE FROM termin WHERE termin_id=?", terminId);
+        vorgaenge.terminBeendet(terminId, termin.trainerId(), termin.startdatum(), termin.enddatum(),
+                "Terminlöschung");
     }
 
     @Transactional

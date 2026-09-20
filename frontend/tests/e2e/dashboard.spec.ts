@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { eigentuemerAnmelden } from "./anmeldung";
+import { eigentuemerAnmelden, eigentuemerPasswort } from "./anmeldung";
 
-async function fixture(page: Page) {
-  return page.evaluate(async () => {
+async function fixture(page: Page, name = "dashboard-pflichten") {
+  return page.evaluate(async (fixtureName) => {
     const { token } = await fetch("/api/auth/csrf").then((antwort) => antwort.json());
-    return (await fetch("/api/e2e/dashboard-pflichten", {
+    return (await fetch(`/api/e2e/${fixtureName}`, {
       method: "PUT", headers: { "X-XSRF-TOKEN": token },
     })).status;
-  });
+  }, name);
 }
 
 // verifies: TEST_DSH_PFLI_01
@@ -28,4 +28,122 @@ test("nur der eigene überfällige geplante Termin wird zur Handlungspflicht", a
   await expect(page.getByRole("status")).toContainText("Durchführung bestätigt");
   await page.goto("/");
   await expect(pflichten).toContainText("Keine eigenen Handlungspflichten");
+});
+
+// verifies: TEST_DSH_VORG_03
+test("eigene Vorgänge sind getrennt sichtbar und soweit erlaubt zurückziehbar", async ({ page }) => {
+  await eigentuemerAnmelden(page);
+  expect(await fixture(page, "dashboard-vorgaenge")).toBe(204);
+  const nachrichtenVorher = await page.evaluate(() =>
+    fetch("/api/ich/benachrichtigungen").then(antwort => antwort.json()).then(liste => liste.length));
+  await page.goto("/");
+
+  const eigene = page.getByRole("region", { name: "Von mir gestellt" });
+  await expect(eigene.locator("li")).toHaveCount(6);
+  for (const art of ["Freigabeanfrage", "Vormerkung", "Assistenzplatz",
+    "Abwesenheitsantrag", "Übernahmeanfrage", "Ersatztrainer-Anfrage"]) {
+    await expect(eigene.getByText(new RegExp(art)).first()).toBeVisible();
+  }
+
+  for (let i = 0; i < 5; i += 1) {
+    await eigene.getByRole("button", { name: "Zurückziehen" }).first().click();
+    await expect(page.getByRole("status")).toBeFocused();
+  }
+  await expect(eigene.locator("li")).toHaveCount(1);
+  await expect(eigene).toContainText("Ersatztrainer-Anfrage");
+  await expect(eigene.getByRole("button", { name: "Zurückziehen" })).toHaveCount(0);
+
+  const erledigt = page.locator("details.completed-processes");
+  await erledigt.locator("summary").click();
+  await expect(erledigt.getByRole("region", { name: "Von mir gestellt" })
+    .getByText("ZURUECKGEZOGEN")).toHaveCount(5);
+  await page.reload();
+  await expect(page.locator("details.completed-processes")).not.toHaveAttribute("open", "");
+  const nachrichtenNachher = await page.evaluate(() =>
+    fetch("/api/ich/benachrichtigungen").then(antwort => antwort.json()).then(liste => liste.length));
+  expect(nachrichtenNachher).toBe(nachrichtenVorher);
+});
+
+// verifies: TEST_DSH_VORG_06, TEST_DSH_GRUND_03
+test("erledigte Vorgänge bleiben getrennt und standardmäßig zugeklappt erhalten", async ({ page }) => {
+  await eigentuemerAnmelden(page);
+  expect(await fixture(page, "dashboard-historie")).toBe(204);
+  await page.goto("/");
+
+  await expect(page.getByRole("region", { name: "Vorgänge" })).toBeVisible();
+  expect(await page.locator(".dashboard-rank h2").allTextContents())
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
+  const dringlichkeit = page.getByRole("region", { name: "Dringlichkeiten" })
+    .getByRole("listitem").filter({ hasText: "2026-09-25 bis 2026-09-25" });
+  await expect(dringlichkeit).toBeVisible();
+  await expect(dringlichkeit).toHaveClass(/urgent/);
+
+  const anMich = page.getByRole("region", { name: "Vorgänge" });
+  const annehmen = anMich.getByRole("listitem").filter({ hasText: "Übernahmeanfrage" })
+    .getByRole("button", { name: "Annehmen" });
+  await annehmen.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toBeFocused();
+  const ablehnung = anMich.getByRole("listitem").filter({ hasText: "Ersatztrainer-Anfrage" });
+  await ablehnung.getByRole("button", { name: "Ablehnen" }).focus();
+  await page.keyboard.press("Enter");
+  await ablehnung.getByRole("button", { name: "Ablehnung bestätigen" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toBeFocused();
+  const zurueckziehen = page.getByRole("region", { name: "Von mir gestellt" })
+    .getByRole("button", { name: "Zurückziehen" });
+  await zurueckziehen.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toBeFocused();
+
+  const historie = page.locator("details.completed-processes");
+  await expect(historie).not.toHaveAttribute("open", "");
+  await historie.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(historie).toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await expect(historie).not.toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  const entschieden = historie.getByRole("region", { name: "An mich gerichtet" });
+  await expect(entschieden).toContainText("ANGENOMMEN");
+  await expect(entschieden).toContainText("ABGELEHNT");
+  await expect(entschieden).toContainText("durch");
+  const eigeneHistorie = historie.getByRole("region", { name: "Von mir gestellt" });
+  await expect(eigeneHistorie).toContainText("ZURUECKGEZOGEN");
+  await expect(eigeneHistorie).not.toContainText("durch");
+
+  await page.reload();
+  await expect(page.locator("details.completed-processes")).not.toHaveAttribute("open", "");
+  await page.locator("details.completed-processes summary").click();
+  await expect(page.locator("details.completed-processes")).toContainText("ANGENOMMEN");
+  await expect(page.locator("details.completed-processes")).toContainText("ABGELEHNT");
+  await expect(page.locator("details.completed-processes")).toContainText("ZURUECKGEZOGEN");
+});
+
+// verifies: TEST_DSH_GRUND_01
+test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolge", async ({ page }) => {
+  await eigentuemerAnmelden(page);
+  expect(await fixture(page, "dashboard-raenge")).toBe(204);
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Vorgänge" })).toContainText("Abwesenheitsantrag");
+  await expect(page.getByRole("region", { name: "Handlungspflichten" })
+    .getByRole("link", { name: "Termin öffnen" }))
+    .toHaveAttribute("href", /E2E-RANG-ADMIN-PFLICHT/);
+  await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
+    .toContainText("2026-09-25");
+  expect(await page.locator(".dashboard-rank h2").allTextContents())
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
+
+  await page.getByRole("button", { name: "Abmelden" }).click();
+  await page.getByLabel("E-Mail-Adresse").fill("e2e-nac@example.de");
+  await page.getByLabel("Passwort").fill(eigentuemerPasswort);
+  await page.getByRole("button", { name: "Anmelden" }).click();
+  await expect(page.getByRole("region", { name: "Vorgänge" })).toContainText("Übernahmeanfrage");
+  await expect(page.getByRole("region", { name: "Handlungspflichten" })
+    .getByRole("link", { name: "Termin öffnen" }))
+    .toHaveAttribute("href", /E2E-RANG-TRAINER-PFLICHT/);
+  await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
+    .toContainText("Keine Dringlichkeiten");
+  expect(await page.locator(".dashboard-rank h2").allTextContents())
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
 });
