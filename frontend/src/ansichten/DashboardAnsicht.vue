@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from "vue";
 import { fetchDashboard, qualifikationsbewerbungAblehnen,
-  qualifikationsbewerbungGenehmigen, qualifikationsbewerbungZurueckziehen } from "../api";
+  qualifikationsbewerbungGenehmigen, qualifikationsbewerbungZurueckziehen,
+  vorgangAblehnen, vorgangAnnehmen, vorgangZurueckziehen } from "../api";
 import type { Dashboard, DashboardVorgang } from "../types";
 
 const daten = ref<Dashboard | null>(null);
@@ -36,11 +37,21 @@ async function ausfuehren(aktion: () => Promise<void>, erfolg: string) {
 }
 
 const annehmen = (vorgang: DashboardVorgang) => ausfuehren(
-  () => qualifikationsbewerbungGenehmigen(vorgang.id), "Der Vorgang wurde angenommen.");
+  () => vorgang.quelle === "QUALIFIKATION" ? qualifikationsbewerbungGenehmigen(vorgang.id)
+    : vorgangAnnehmen(vorgang.id), "Der Vorgang wurde angenommen.");
 const ablehnen = (vorgang: DashboardVorgang) => ausfuehren(
-  () => qualifikationsbewerbungAblehnen(vorgang.id, begruendung.value), "Der Vorgang wurde abgelehnt.");
+  () => vorgang.quelle === "QUALIFIKATION"
+    ? qualifikationsbewerbungAblehnen(vorgang.id, begruendung.value)
+    : vorgangAblehnen(vorgang.id, begruendung.value), "Der Vorgang wurde abgelehnt.");
 const zurueckziehen = (vorgang: DashboardVorgang) => ausfuehren(
-  () => qualifikationsbewerbungZurueckziehen(vorgang.bezugId), "Der Vorgang wurde zurückgezogen.");
+  () => vorgang.quelle === "QUALIFIKATION" ? qualifikationsbewerbungZurueckziehen(vorgang.bezugId)
+    : vorgangZurueckziehen(vorgang.id), "Der Vorgang wurde zurückgezogen.");
+
+function sprung(vorgang: DashboardVorgang) {
+  if (vorgang.bezugArt === "TERMIN") return `/planer?termin=${encodeURIComponent(vorgang.bezugId)}#kalender`;
+  if (vorgang.bezugArt === "SCHULUNG") return `/katalog/${vorgang.bezugId}`;
+  return "/profil";
+}
 
 function datum(iso: string) {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
@@ -78,13 +89,14 @@ onMounted(() => laden().catch((error) => {
               <small>Gestellt {{ datum(vorgang.erstelltAm) }}</small>
             </div>
             <div class="task-actions">
-              <RouterLink :to="`/katalog/${vorgang.bezugId}`">Gegenstand öffnen</RouterLink>
+              <RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
               <button type="button" class="primary-action" :disabled="inArbeit" @click="annehmen(vorgang)">Annehmen</button>
               <button type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="ablehnung = vorgang.id">Ablehnen</button>
             </div>
             <form v-if="ablehnung === vorgang.id" class="rejection-form" @submit.prevent="ablehnen(vorgang)">
               <label :for="`grund-${vorgang.id}`">Begründung</label>
-              <textarea :id="`grund-${vorgang.id}`" v-model="begruendung" :disabled="inArbeit" required maxlength="1000" />
+              <textarea :id="`grund-${vorgang.id}`" v-model="begruendung" :disabled="inArbeit"
+                :required="vorgang.ablehnungsgrundPflicht" maxlength="1000" />
               <button class="sekundaer-aktion danger-action" type="submit" :disabled="inArbeit">{{ inArbeit ? "Wird ausgeführt …" : "Ablehnung bestätigen" }}</button>
             </form>
           </li>
@@ -133,7 +145,7 @@ onMounted(() => laden().catch((error) => {
         <ul class="task-list">
           <li v-for="vorgang in [...daten.erledigteVorgaenge, ...daten.erledigteEigeneVorgaenge]" :key="`${vorgang.richtung}-${vorgang.id}`" class="task-row">
             <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}</p>
-              <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}</small></div>
+              <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
           </li>
         </ul>
         <p v-if="!daten.erledigteVorgaenge.length && !daten.erledigteEigeneVorgaenge.length" class="empty-copy">Noch keine erledigten Vorgänge.</p>

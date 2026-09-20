@@ -56,3 +56,19 @@ test("Benachrichtigungen sind erreichbar, sortiert, lesbar und konkret verlinkt"
   await page.reload();
   await expect(page.getByLabel(/ungelesene Benachrichtigungen/)).toHaveCount(0);
 });
+
+// verifies: TEST_NAC_ANZ_06
+test("Entscheidungen stehen nur im Dashboard", async ({ page }) => {
+  await eigentuemerAnmelden(page);
+  expect(await mutation(page, "/api/e2e/benachrichtigungen")).toBe(204);
+
+  await page.goto("/benachrichtigungen");
+  await expect(page.getByRole("button", { name: /Annehmen|Ablehnen|Zurückziehen/ })).toHaveCount(0);
+  await expect(page.getByText("Übernahmeanfrage")).toHaveCount(0);
+
+  await page.goto("/");
+  const vorgang = page.getByRole("listitem").filter({ hasText: "Übernahmeanfrage" });
+  await expect(vorgang).toBeVisible();
+  await expect(vorgang.getByRole("button", { name: "Annehmen" })).toBeVisible();
+  await expect(vorgang.getByRole("button", { name: "Ablehnen" })).toBeVisible();
+});

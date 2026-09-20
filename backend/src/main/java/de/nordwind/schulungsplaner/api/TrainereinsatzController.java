@@ -104,6 +104,27 @@ public class TrainereinsatzController {
         einsaetze.aufAssistenzplatzBewerben(konto.id(), terminId);
     }
 
+    @PostMapping("/ich/vormerkungen/{terminId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void vormerken(@AuthenticationPrincipal KontoPrincipal konto, @PathVariable String terminId) {
+        einsaetze.vormerken(konto.id(), terminId);
+    }
+
+    @PostMapping("/ich/uebernahmeanfragen/{terminId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void uebernahmeAnfragen(@AuthenticationPrincipal KontoPrincipal konto,
+                                   @PathVariable String terminId) {
+        einsaetze.uebernahmeAnfragen(konto.id(), terminId);
+    }
+
+    @PostMapping("/ich/ersatztrainer-anfragen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ersatztrainerAnfragen(@AuthenticationPrincipal KontoPrincipal konto,
+                                      @Valid @RequestBody ErsatztrainerAnfrage anfrage) {
+        einsaetze.ersatztrainerAnfragen(konto.id(), anfrage.ersatztrainerId(),
+                anfrage.von(), anfrage.bis());
+    }
+
     @PostMapping("/ich/abwesenheiten")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void abwesenheitEintragen(@AuthenticationPrincipal KontoPrincipal konto,
@@ -146,4 +167,6 @@ public class TrainereinsatzController {
     }
 
     public record Ablehnung(@NotNull @Size(min = 1, max = 1000) String begruendung) {}
+    public record ErsatztrainerAnfrage(@NotNull String ersatztrainerId,
+                                       @NotNull LocalDate von, @NotNull LocalDate bis) {}
 }

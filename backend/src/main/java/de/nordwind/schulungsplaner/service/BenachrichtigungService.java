@@ -94,7 +94,7 @@ public class BenachrichtigungService {
         String tabelle = switch (art) {
             case "TERMIN" -> "termin";
             case "SCHULUNG" -> "schulung_zustand";
-            case "VORGANG" -> "qualifikationsbewerbung";
+            case "VORGANG" -> "vorgang";
             default -> null;
         };
         String spalte = switch (art) {

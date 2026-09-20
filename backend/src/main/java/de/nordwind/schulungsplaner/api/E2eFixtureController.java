@@ -43,6 +43,7 @@ class E2eFixtureController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void benachrichtigungenAnlegen(@AuthenticationPrincipal KontoPrincipal akteur) {
         jdbc.update("DELETE FROM benachrichtigung WHERE empfaenger_id=?", akteur.id());
+        jdbc.update("DELETE FROM vorgang WHERE zustaendig_id=?", akteur.id());
         jdbc.update("""
                 MERGE INTO termin (termin_id, schulung_id, startdatum, enddatum, status)
                 KEY (termin_id) VALUES ('E2E-NAC-TERMIN', 'SCH-001', '2026-09-18', '2026-09-18', 'geplant')
@@ -53,6 +54,23 @@ class E2eFixtureController {
                 "TERMIN", "E2E-NAC-TERMIN", LocalDateTime.of(2026, 9, 17, 9, 0));
         nachricht(akteur.id(), "QUALIFIKATION_ENTZOGEN", "Neueste Mitteilung",
                 null, null, LocalDateTime.of(2026, 9, 17, 10, 0));
+        jdbc.update("""
+                MERGE INTO benutzerkonto (id, email, name, passwort_hash, aktiv,
+                    aenderungsstand, passwort_version) KEY(id)
+                SELECT 'e2e-nac-antragsteller', 'e2e-nac@example.de', 'E2E Antragsteller',
+                    passwort_hash, TRUE, 0, 0 FROM benutzerkonto WHERE id=?
+                """, akteur.id());
+        jdbc.update("""
+                MERGE INTO benutzerkonto_rolle (benutzerkonto_id, rolle)
+                KEY(benutzerkonto_id, rolle) VALUES ('e2e-nac-antragsteller', 'TRAINER')
+                """);
+        jdbc.update("""
+                INSERT INTO vorgang (art, antragsteller_id, antragsteller_name, zustaendig_id,
+                    bezug_art, bezug_id, bezug, erstellt_am)
+                SELECT 'UEBERNAHMEANFRAGE', k.id, k.name, ?, 'TERMIN',
+                    'E2E-NAC-TERMIN', 'Scrum Master Zertifizierung', '2026-09-17 11:00:00'
+                FROM benutzerkonto k WHERE k.id='e2e-nac-antragsteller'
+                """, akteur.id());
     }
 
     @PutMapping("/dashboard-pflichten")

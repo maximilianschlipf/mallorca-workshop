@@ -13,6 +13,9 @@ vi.mock("./api", () => ({
   qualifikationsbewerbungGenehmigen: vi.fn(),
   qualifikationsbewerbungAblehnen: vi.fn(),
   qualifikationsbewerbungZurueckziehen: vi.fn(),
+  vorgangAnnehmen: vi.fn(),
+  vorgangAblehnen: vi.fn(),
+  vorgangZurueckziehen: vi.fn(),
 }));
 
 const router = createRouter({
@@ -24,10 +27,12 @@ describe("Dashboard und Benachrichtigungen", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("ordnet die drei Dashboard-Ränge und entscheidet einen Vorgang", async () => {
-    const vorgang = { id: 4, art: "Freigabeanfrage für eine Qualifikation", antragsteller: "Tara",
-      bezug: "Scrum", bezugId: "SCH-001", erstelltAm: "2026-09-19T10:00:00", status: "OFFEN",
-      entschiedenAm: null, begruendung: null, richtung: "AN_MICH", entscheidbar: true,
-      zurueckziehbar: false } as const;
+    const vorgang = { id: 4, quelle: "QUALIFIKATION", artCode: "QUALIFIKATION",
+      art: "Freigabeanfrage für eine Qualifikation", antragsteller: "Tara",
+      bezug: "Scrum", bezugArt: "SCHULUNG", bezugId: "SCH-001",
+      erstelltAm: "2026-09-19T10:00:00", status: "OFFEN", entschiedenAm: null,
+      begruendung: null, entschiedenVon: null, richtung: "AN_MICH", entscheidbar: true,
+      zurueckziehbar: false, ablehnungsgrundPflicht: true } as const;
     vi.mocked(fetchDashboard)
       .mockResolvedValueOnce({ vorgaenge: [vorgang], pflichten: [], dringlichkeiten: [],
         eigeneVorgaenge: [], erledigteVorgaenge: [], erledigteEigeneVorgaenge: [] })

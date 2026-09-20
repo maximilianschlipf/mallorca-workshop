@@ -174,6 +174,8 @@ export interface Benachrichtigung {
 
 export interface DashboardVorgang {
   id: number;
+  quelle: "QUALIFIKATION" | "VORGANG";
+  artCode: string;
   art: string;
   antragsteller: string;
   bezug: string;
@@ -182,9 +184,12 @@ export interface DashboardVorgang {
   status: string;
   entschiedenAm: string | null;
   begruendung: string | null;
+  entschiedenVon: string | null;
+  bezugArt: "TERMIN" | "SCHULUNG" | "VORGANG";
   richtung: "AN_MICH" | "VON_MIR";
   entscheidbar: boolean;
   zurueckziehbar: boolean;
+  ablehnungsgrundPflicht: boolean;
 }
 
 export interface Dashboard {

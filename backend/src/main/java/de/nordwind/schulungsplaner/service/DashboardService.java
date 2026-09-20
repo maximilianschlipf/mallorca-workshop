@@ -19,15 +19,17 @@ public class DashboardService {
     private final KontoService konten;
     private final KatalogRepository katalog;
     private final TerminService termine;
+    private final VorgangService vorgaenge;
     private final Clock clock;
 
     public DashboardService(JdbcTemplate jdbc, KontoService konten, KatalogRepository katalog,
-                            TerminService termine, Clock clock) {
+                            TerminService termine, Clock clock, VorgangService vorgaenge) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
         this.termine = termine;
         this.clock = clock;
+        this.vorgaenge = vorgaenge;
     }
 
     @Transactional
@@ -35,13 +37,18 @@ public class DashboardService {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
         boolean trainer = konto.rollen().contains(Rolle.TRAINER);
-        List<Vorgang> offenAnMich = admin ? bewerbungen("b.status='OFFEN'", null, "AN_MICH") : List.of();
-        List<Vorgang> offenVonMir = trainer
-                ? bewerbungen("b.status='OFFEN' AND b.benutzerkonto_id=?", kontoId, "VON_MIR") : List.of();
-        List<Vorgang> erledigtAnMich = admin
-                ? bewerbungen("b.status<>'OFFEN'", null, "AN_MICH") : List.of();
-        List<Vorgang> erledigtVonMir = trainer
-                ? bewerbungen("b.status<>'OFFEN' AND b.benutzerkonto_id=?", kontoId, "VON_MIR") : List.of();
+        List<Vorgang> offenAnMich = new java.util.ArrayList<>(
+                admin ? bewerbungen("b.status='OFFEN'", null, "AN_MICH") : List.of());
+        offenAnMich.addAll(vorgaenge.fuer(kontoId, true, false));
+        List<Vorgang> offenVonMir = new java.util.ArrayList<>(trainer
+                ? bewerbungen("b.status='OFFEN' AND b.benutzerkonto_id=?", kontoId, "VON_MIR") : List.of());
+        offenVonMir.addAll(vorgaenge.fuer(kontoId, true, true));
+        List<Vorgang> erledigtAnMich = new java.util.ArrayList<>(admin
+                ? bewerbungen("b.status<>'OFFEN'", null, "AN_MICH") : List.of());
+        erledigtAnMich.addAll(vorgaenge.fuer(kontoId, false, false));
+        List<Vorgang> erledigtVonMir = new java.util.ArrayList<>(trainer
+                ? bewerbungen("b.status<>'OFFEN' AND b.benutzerkonto_id=?", kontoId, "VON_MIR") : List.of());
+        erledigtVonMir.addAll(vorgaenge.fuer(kontoId, false, true));
         List<TerminService.DashboardEintrag> pflichten = trainer ? eigenePflichten(kontoId) : List.of();
         List<TerminService.DashboardEintrag> dringlichkeiten = admin ? termine.dashboard(kontoId) : List.of();
         return new Dashboard(offenAnMich, pflichten, dringlichkeiten, offenVonMir,
@@ -61,13 +68,14 @@ public class DashboardService {
             String schulungId = rs.getString("schulung_id");
             String titel = katalog.lade(SchulungId.von(schulungId))
                     .map(s -> s.titel()).orElse(schulungId);
-            return new Vorgang(rs.getLong("id"), "Freigabeanfrage für eine Qualifikation",
-                    rs.getString("name"), titel, schulungId,
+            return new Vorgang(rs.getLong("id"), "QUALIFIKATION", "QUALIFIKATION",
+                    "Freigabeanfrage für eine Qualifikation", rs.getString("name"), titel,
+                    "SCHULUNG", schulungId,
                     rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getString("status"),
                     rs.getTimestamp("entschieden_am") == null ? null
                             : rs.getTimestamp("entschieden_am").toLocalDateTime(),
-                    rs.getString("begruendung"), richtung,
-                    "AN_MICH".equals(richtung), "VON_MIR".equals(richtung));
+                    rs.getString("begruendung"), null, richtung,
+                    "AN_MICH".equals(richtung), "VON_MIR".equals(richtung), true);
         }, parameter);
     }
 
@@ -92,8 +100,10 @@ public class DashboardService {
                             List<Vorgang> eigeneVorgaenge, List<Vorgang> erledigteVorgaenge,
                             List<Vorgang> erledigteEigeneVorgaenge) {}
 
-    public record Vorgang(long id, String art, String antragsteller, String bezug, String bezugId,
+    public record Vorgang(long id, String quelle, String artCode, String art,
+                          String antragsteller, String bezug, String bezugArt, String bezugId,
                           LocalDateTime erstelltAm, String status, LocalDateTime entschiedenAm,
-                          String begruendung, String richtung, boolean entscheidbar,
-                          boolean zurueckziehbar) {}
+                          String begruendung, String entschiedenVon, String richtung,
+                          boolean entscheidbar, boolean zurueckziehbar,
+                          boolean ablehnungsgrundPflicht) {}
 }

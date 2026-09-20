@@ -25,11 +25,13 @@ public class TrainereinsatzService {
     private final Clock clock;
     private final TerminService termine;
     private final BenachrichtigungService benachrichtigungen;
+    private final VorgangService vorgaenge;
 
     public TrainereinsatzService(JdbcTemplate jdbc, KontoService konten,
                                  KatalogRepository katalog,
                                  SchulungszustandRepository zustaende, Clock clock,
-                                 TerminService termine, BenachrichtigungService benachrichtigungen) {
+                                 TerminService termine, BenachrichtigungService benachrichtigungen,
+                                 VorgangService vorgaenge) {
         this.jdbc = jdbc;
         this.konten = konten;
         this.katalog = katalog;
@@ -37,6 +39,7 @@ public class TrainereinsatzService {
         this.clock = clock;
         this.termine = termine;
         this.benachrichtigungen = benachrichtigungen;
+        this.vorgaenge = vorgaenge;
     }
 
     @Transactional
@@ -255,6 +258,65 @@ public class TrainereinsatzService {
                 VALUES (?, ?)
                 """, "BEWERBUNG_BESTEHT", "Für diesen Termin besteht bereits eine Bewerbung.",
                 terminId, kontoId);
+        String trainerId = jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id=?",
+                String.class, terminId);
+        vorgaenge.anlegen(Vorgangsart.ASSISTENZBEWERBUNG, kontoId, trainerId, true,
+                "TERMIN", terminId, terminId, null, null);
+    }
+
+    @Transactional
+    public void vormerken(String kontoId, String terminId) {
+        pruefeAktivenTrainer(kontoId);
+        TerminDaten termin = terminLaden(terminId, false);
+        if (!"geplant".equals(termin.status()) || !termin.enddatum().isAfter(LocalDate.now(clock))) {
+            throw fehler(HttpStatus.CONFLICT, "TERMIN_UNVERAENDERLICH", "Der Termin liegt nicht in der Zukunft.");
+        }
+        if (jdbc.queryForObject("SELECT trainer_id IS NULL FROM termin WHERE termin_id=?",
+                Boolean.class, terminId) != Boolean.TRUE) {
+            throw fehler(HttpStatus.CONFLICT, "TERMIN_BEREITS_BESETZT", "Der Termin hat bereits einen Trainer.");
+        }
+        if (!existiert("SELECT COUNT(*) FROM trainer_qualifikation WHERE benutzerkonto_id=? AND schulung_id=?",
+                kontoId, termin.schulungId())) {
+            throw fehler(HttpStatus.CONFLICT, "QUALIFIKATION_ERFORDERLICH", "Die Qualifikation fehlt.");
+        }
+        vorgaenge.anlegen(Vorgangsart.VORMERKUNG, kontoId, null, true,
+                "TERMIN", terminId, terminId, null, null);
+    }
+
+    @Transactional
+    public void uebernahmeAnfragen(String kontoId, String terminId) {
+        pruefeAktivenTrainer(kontoId);
+        TerminDaten termin = terminLaden(terminId, false);
+        String bisher = jdbc.queryForObject("SELECT trainer_id FROM termin WHERE termin_id=?",
+                String.class, terminId);
+        if (bisher == null || bisher.equals(kontoId) || !"geplant".equals(termin.status())) {
+            throw fehler(HttpStatus.CONFLICT, "UEBERNAHME_NICHT_MOEGLICH", "Der Termin kann nicht übernommen werden.");
+        }
+        if (!existiert("SELECT COUNT(*) FROM trainer_qualifikation WHERE benutzerkonto_id=? AND schulung_id=?",
+                kontoId, termin.schulungId())) {
+            throw fehler(HttpStatus.CONFLICT, "QUALIFIKATION_ERFORDERLICH", "Die Qualifikation fehlt.");
+        }
+        vorgaenge.anlegen(Vorgangsart.UEBERNAHMEANFRAGE, kontoId, bisher, false,
+                "TERMIN", terminId, terminId, null, null);
+    }
+
+    @Transactional
+    public void ersatztrainerAnfragen(String kontoId, String ersatztrainerId,
+                                      LocalDate von, LocalDate bis) {
+        pruefeAktivenTrainer(kontoId);
+        pruefeAktivenTrainer(ersatztrainerId);
+        if (von.isAfter(bis) || von.isBefore(LocalDate.now(clock).plusWeeks(2))) {
+            throw fehler(HttpStatus.BAD_REQUEST, "UNGUELTIGER_ZEITRAUM",
+                    "Eine Ersatztrainer-Anfrage braucht zwei Wochen Vorlauf.");
+        }
+        if (!existiert("""
+                SELECT COUNT(*) FROM termin WHERE trainer_id=? AND status='geplant'
+                AND startdatum<=? AND enddatum>=?
+                """, kontoId, bis, von)) {
+            throw fehler(HttpStatus.CONFLICT, "KEIN_ZUWEISUNGSKONFLIKT", "Es sind keine Termine betroffen.");
+        }
+        vorgaenge.anlegen(Vorgangsart.ERSATZTRAINER_ANFRAGE, kontoId, ersatztrainerId, false,
+                "VORGANG", von + "/" + bis, von + " bis " + bis, von, bis);
     }
 
     @Transactional
@@ -264,10 +326,29 @@ public class TrainereinsatzService {
             throw fehler(HttpStatus.BAD_REQUEST, "UNGUELTIGER_ZEITRAUM",
                     "Das Anfangsdatum darf nicht nach dem Enddatum liegen.");
         }
+        if (von.isBefore(LocalDate.now(clock).plusWeeks(1))) {
+            throw fehler(HttpStatus.BAD_REQUEST, "MINDESTVORLAUF_UNTERSCHRITTEN",
+                    "Eine Abwesenheit muss mindestens eine Woche vorher eingetragen werden.");
+        }
+        kontoSperren(kontoId);
+        boolean konflikt = existiert("""
+                SELECT COUNT(*) FROM termin t WHERE t.status='geplant'
+                AND t.startdatum<=? AND t.enddatum>=? AND
+                (t.trainer_id=? OR EXISTS (SELECT 1 FROM termin_assistent a
+                    WHERE a.termin_id=t.termin_id AND a.benutzerkonto_id=?))
+                """, bis, von, kontoId, kontoId);
         jdbc.update("""
-                INSERT INTO abwesenheit (benutzerkonto_id, von, bis, grund)
-                VALUES (?, ?, ?, ?)
-                """, kontoId, von, bis, grund);
+                INSERT INTO abwesenheit (benutzerkonto_id, von, bis, grund, status)
+                VALUES (?, ?, ?, ?, ?)
+                """, kontoId, von, bis, grund, konflikt ? "OFFEN" : "AKTIV");
+        if (konflikt) {
+            Long id = jdbc.queryForObject("""
+                    SELECT id FROM abwesenheit WHERE benutzerkonto_id=?
+                    ORDER BY id DESC LIMIT 1
+                    """, Long.class, kontoId);
+            vorgaenge.anlegen(Vorgangsart.ABWESENHEITSANTRAG, kontoId, null, true,
+                    "VORGANG", String.valueOf(id), von + " bis " + bis, von, bis);
+        }
     }
 
     @Transactional

@@ -201,6 +201,14 @@ export const qualifikationsbewerbungAblehnen = (bewerbungId: number, begruendung
   api<void>(`/api/qualifikationsbewerbungen/${bewerbungId}/ablehnung`, {
     method: "POST", body: JSON.stringify({ begruendung }),
   });
+export const vorgangAnnehmen = (id: number) =>
+  api<void>(`/api/dashboard/vorgaenge/${id}/annahme`, { method: "POST" });
+export const vorgangAblehnen = (id: number, begruendung: string) =>
+  api<void>(`/api/dashboard/vorgaenge/${id}/ablehnung`, {
+    method: "POST", body: JSON.stringify({ begruendung }),
+  });
+export const vorgangZurueckziehen = (id: number) =>
+  api<void>(`/api/dashboard/vorgaenge/${id}`, { method: "DELETE" });
 export const aufAssistenzplatzBewerben = (terminId: string) =>
   api<void>(`/api/ich/assistenzbewerbungen/${terminId}`, { method: "POST" });
 export const abwesenheitEintragen = (von: string, bis: string, grund: string) =>
