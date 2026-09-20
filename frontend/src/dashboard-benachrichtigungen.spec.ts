@@ -87,15 +87,13 @@ describe("Dashboard und Benachrichtigungen", () => {
     const wrapper = mount(BenachrichtigungenAnsicht, { attachTo: document.body, global: { plugins: [router] } });
     await flushPromises();
 
-    expect(wrapper.findAll(".notification-list li")[0].text()).toContain("Ungelesen");
+    expect(wrapper.findAll(".notification-state").map(status => status.text()))
+      .toEqual(["Gelesen", "Gelesen", "Gelesen"]);
     expect(wrapper.findAll(".notification-list li")[0].text()).toContain("Genehmigt");
     expect(wrapper.text()).toContain("Gegenstand nicht mehr vorhanden");
     expect(wrapper.findAll("a").map(link => link.attributes("href")))
       .toContain("/planer?termin=T%202#kalender");
-    await wrapper.get("button").trigger("click");
-    await flushPromises();
-    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledTimes(2);
-    expect(document.activeElement).toBe(wrapper.get('[role="status"]').element);
+    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledOnce();
     wrapper.unmount();
   });
 

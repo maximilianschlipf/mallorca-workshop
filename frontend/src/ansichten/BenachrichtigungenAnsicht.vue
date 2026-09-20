@@ -25,6 +25,7 @@ async function laden() {
   eintraege.value = await fetchBenachrichtigungen();
   if (eintraege.value.some(eintrag => !eintrag.gelesen)) {
     await markiereAlleBenachrichtigungenGelesen();
+    eintraege.value = eintraege.value.map(eintrag => ({ ...eintrag, gelesen: true }));
   }
   window.dispatchEvent(new Event("benachrichtigungen-gelesen"));
 }

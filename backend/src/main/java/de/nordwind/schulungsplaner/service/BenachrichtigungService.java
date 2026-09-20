@@ -28,15 +28,26 @@ public class BenachrichtigungService {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
         return jdbc.query("""
-                SELECT id, anlasstyp, anlass, bezug_art, bezug_id, erstellt_am, gelesen
-                FROM benachrichtigung
-                WHERE empfaenger_id=? OR (? AND empfaenger_rolle='ADMINISTRATOR')
-                ORDER BY erstellt_am DESC, id DESC
+                SELECT b.id, b.anlasstyp, b.anlass, b.bezug_art, b.bezug_id,
+                       b.erstellt_am, b.gelesen,
+                       CASE
+                           WHEN b.bezug_art IS NULL OR b.bezug_id IS NULL THEN TRUE
+                           WHEN b.bezug_art='TERMIN' THEN EXISTS (
+                               SELECT 1 FROM termin t WHERE t.termin_id=b.bezug_id)
+                           WHEN b.bezug_art='SCHULUNG' THEN EXISTS (
+                               SELECT 1 FROM schulung_zustand s WHERE s.schulung_id=b.bezug_id)
+                           WHEN b.bezug_art='VORGANG' THEN EXISTS (
+                               SELECT 1 FROM vorgang v WHERE CAST(v.id AS VARCHAR)=b.bezug_id)
+                           ELSE FALSE
+                       END AS bezug_vorhanden
+                FROM benachrichtigung b
+                WHERE b.empfaenger_id=? OR (? AND b.empfaenger_rolle='ADMINISTRATOR')
+                ORDER BY b.erstellt_am DESC, b.id DESC
                 """, (rs, row) -> new Benachrichtigung(
                 rs.getLong("id"), rs.getString("anlasstyp"), rs.getString("anlass"),
                 rs.getString("bezug_art"), rs.getString("bezug_id"),
                 rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getBoolean("gelesen"),
-                bezugVorhanden(rs.getString("bezug_art"), rs.getString("bezug_id"))), kontoId, admin);
+                rs.getBoolean("bezug_vorhanden")), kontoId, admin);
     }
 
     @Transactional(readOnly = true)
@@ -85,26 +96,6 @@ public class BenachrichtigungService {
                     (empfaenger_rolle, anlasstyp, anlass, bezug_art, bezug_id)
                 VALUES ('ADMINISTRATOR', ?, ?, ?, ?)
                 """, anlasstyp.name(), text, bezugArt, bezugId);
-    }
-
-    private boolean bezugVorhanden(String art, String id) {
-        if (art == null || id == null) return true;
-        String tabelle = switch (art) {
-            case "TERMIN" -> "termin";
-            case "SCHULUNG" -> "schulung_zustand";
-            case "VORGANG" -> "vorgang";
-            default -> null;
-        };
-        String spalte = switch (art) {
-            case "TERMIN" -> "termin_id";
-            case "SCHULUNG" -> "schulung_id";
-            case "VORGANG" -> "id";
-            default -> null;
-        };
-        if (tabelle == null) return false;
-        Integer anzahl = jdbc.queryForObject("SELECT COUNT(*) FROM " + tabelle + " WHERE " + spalte + "=?",
-                Integer.class, id);
-        return anzahl != null && anzahl > 0;
     }
 
     public record Benachrichtigung(long id, String anlasstyp, String anlass, String bezugArt,

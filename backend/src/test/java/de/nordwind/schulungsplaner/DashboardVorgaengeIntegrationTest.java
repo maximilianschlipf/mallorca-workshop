@@ -139,6 +139,11 @@ class DashboardVorgaengeIntegrationTest {
         assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).isEmpty();
         assertThatThrownBy(() -> vorgaenge.entscheiden(admin.id(), id, true, null))
                 .isInstanceOf(KontoFehler.class);
+        jdbc.update("UPDATE termin SET trainer_id=? WHERE termin_id='T-ASS'", ersatz.id());
+        assertThat(dashboard.anzeigen(trainer.id()).erledigteVorgaenge())
+                .extracting(DashboardService.Vorgang::id).contains(id);
+        assertThat(dashboard.anzeigen(ersatz.id()).erledigteVorgaenge())
+                .extracting(DashboardService.Vorgang::id).doesNotContain(id);
 
         long nurAdmin = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, null, true,
                 "TERMIN", "T-OHNE", "Scrum");

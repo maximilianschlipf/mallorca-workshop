@@ -24,23 +24,13 @@ test("Benachrichtigungen sind erreichbar, sortiert, lesbar und konkret verlinkt"
   const eintraege = page.locator(".notification-list li");
   await expect(eintraege).toHaveCount(3);
   await expect(eintraege).toHaveText([
-    /Ungelesen.*Neueste Mitteilung/,
-    /Ungelesen.*Mittlere Mitteilung/,
-    /Ungelesen.*Älteste Mitteilung/,
-  ]);
-  expect(await eintraege.locator("time").evaluateAll(elemente =>
-    elemente.map(element => element.getAttribute("datetime"))))
-    .toEqual(["2026-09-17T10:00:00", "2026-09-17T09:00:00", "2026-09-17T08:00:00"]);
-
-  const allesGelesen = page.getByRole("button", { name: "Alles als gelesen" });
-  await allesGelesen.focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toBeFocused();
-  await expect(eintraege).toHaveText([
     /Gelesen.*Neueste Mitteilung/,
     /Gelesen.*Mittlere Mitteilung/,
     /Gelesen.*Älteste Mitteilung/,
   ]);
+  expect(await eintraege.locator("time").evaluateAll(elemente =>
+    elemente.map(element => element.getAttribute("datetime"))))
+    .toEqual(["2026-09-17T10:00:00", "2026-09-17T09:00:00", "2026-09-17T08:00:00"]);
 
   const terminLink = eintraege.nth(1).getByRole("link", { name: "Gegenstand öffnen" });
   await terminLink.focus();

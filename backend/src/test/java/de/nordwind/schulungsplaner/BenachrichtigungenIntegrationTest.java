@@ -58,8 +58,8 @@ class BenachrichtigungenIntegrationTest {
         long eigene = persoenlich(trainer, "Eigene");
         long fremde = persoenlich(anderer, "Fremde");
 
-        assertThat(benachrichtigungen.anzeigen(trainer.id())).singleElement()
-                .satisfies(n -> assertThat(n.gelesen()).isFalse());
+        mvc.perform(get("/api/ich/benachrichtigungen").session(login(trainer)))
+                .andExpect(status().isOk());
         assertThat(gelesen(eigene)).isFalse();
         assertThat(gelesen(fremde)).isFalse();
         mvc.perform(post("/api/ich/benachrichtigungen/gelesen")

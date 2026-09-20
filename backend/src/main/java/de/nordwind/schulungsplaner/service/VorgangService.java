@@ -55,7 +55,7 @@ public class VorgangService {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
         String sicht = eigene ? "v.antragsteller_id=?" : """
-                ((CASE WHEN v.art='ASSISTENZBEWERBUNG' THEN t.trainer_id
+                ((CASE WHEN v.art='ASSISTENZBEWERBUNG' AND v.status='OFFEN' THEN t.trainer_id
                     ELSE v.zustaendig_id END)=?
                 OR (? AND v.zustaendig_rolle='ADMINISTRATOR'))
                 """;
@@ -102,9 +102,11 @@ public class VorgangService {
                 ? betroffeneTermine(vorgang) : List.of();
         int geaendert = jdbc.update("""
                 UPDATE vorgang SET status=?, entschieden_am=?, entschieden_von_id=?,
-                    entschieden_von_name=?, begruendung=? WHERE id=? AND status='OFFEN'
+                    entschieden_von_name=?, begruendung=?,
+                    zustaendig_id=CASE WHEN art='ASSISTENZBEWERBUNG' THEN ? ELSE zustaendig_id END
+                WHERE id=? AND status='OFFEN'
                 """, status, LocalDateTime.now(clock), kontoId, entscheider.name(),
-                grund.isEmpty() ? null : grund, id);
+                grund.isEmpty() ? null : grund, vorgang.zustaendigId(), id);
         if (geaendert == 0) throw nichtGefunden();
         if (angenommen) wendeAn(id, vorgang);
         else if (vorgang.art() == Vorgangsart.ERSATZTRAINER_ANFRAGE) {
@@ -371,6 +373,9 @@ public class VorgangService {
     private void entfallen(long id, Vorgangsart art, String grund,
                            Benachrichtigungsanlass anlass, String ausloeserId) {
         Eintrag vorgang = laden(id);
+        if (art == Vorgangsart.ASSISTENZBEWERBUNG) {
+            jdbc.update("UPDATE vorgang SET zustaendig_id=? WHERE id=?", vorgang.zustaendigId(), id);
+        }
         abschliessenOhneEntscheider(id, "ENTFALLEN", grund);
         if (vorgang.antragstellerId() != null) benachrichtigungen.persoenlich(
                 vorgang.antragstellerId(), ausloeserId, anlass,
