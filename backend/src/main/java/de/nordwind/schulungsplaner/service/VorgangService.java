@@ -55,7 +55,8 @@ public class VorgangService {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
         String sicht = eigene ? "v.antragsteller_id=?" : """
-                ((CASE WHEN v.art='ASSISTENZBEWERBUNG' AND v.status='OFFEN' THEN t.trainer_id
+                ((CASE WHEN v.art='ASSISTENZBEWERBUNG' AND v.status='OFFEN' THEN
+                    CASE WHEN t.termin_id IS NULL THEN v.zustaendig_id ELSE t.trainer_id END
                     ELSE v.zustaendig_id END)=?
                 OR (? AND v.zustaendig_rolle='ADMINISTRATOR'))
                 """;
@@ -211,7 +212,8 @@ public class VorgangService {
     public void kontoBeendet(KontoBeendet ereignis) {
         List<EintragMitId> betroffen = jdbc.query("""
                 SELECT id, art, antragsteller_id,
-                       CASE WHEN art='ASSISTENZBEWERBUNG' THEN
+                       CASE WHEN art='ASSISTENZBEWERBUNG' AND EXISTS (
+                           SELECT 1 FROM termin WHERE termin_id=vorgang.bezug_id) THEN
                            (SELECT trainer_id FROM termin WHERE termin_id=vorgang.bezug_id)
                            ELSE zustaendig_id END AS zustaendig_id,
                        zustaendig_rolle,
@@ -458,7 +460,8 @@ public class VorgangService {
     private Eintrag laden(long id) {
         List<Eintrag> treffer = jdbc.query("""
                 SELECT art, antragsteller_id,
-                       CASE WHEN art='ASSISTENZBEWERBUNG' THEN
+                       CASE WHEN art='ASSISTENZBEWERBUNG' AND EXISTS (
+                           SELECT 1 FROM termin WHERE termin_id=vorgang.bezug_id) THEN
                            (SELECT trainer_id FROM termin WHERE termin_id=vorgang.bezug_id)
                            ELSE zustaendig_id END AS aktueller_zustaendig,
                        zustaendig_rolle,

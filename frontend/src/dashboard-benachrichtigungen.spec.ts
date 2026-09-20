@@ -93,7 +93,10 @@ describe("Dashboard und Benachrichtigungen", () => {
     expect(wrapper.text()).toContain("Gegenstand nicht mehr vorhanden");
     expect(wrapper.findAll("a").map(link => link.attributes("href")))
       .toContain("/planer?termin=T%202#kalender");
-    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledOnce();
+    await wrapper.get("button").trigger("click");
+    await flushPromises();
+    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledTimes(2);
+    expect(document.activeElement).toBe(wrapper.get('[role="status"]').element);
     wrapper.unmount();
   });
 

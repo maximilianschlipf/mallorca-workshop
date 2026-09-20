@@ -32,6 +32,11 @@ test("Benachrichtigungen sind erreichbar, sortiert, lesbar und konkret verlinkt"
     elemente.map(element => element.getAttribute("datetime"))))
     .toEqual(["2026-09-17T10:00:00", "2026-09-17T09:00:00", "2026-09-17T08:00:00"]);
 
+  const allesGelesen = page.getByRole("button", { name: "Alles als gelesen" });
+  await allesGelesen.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toBeFocused();
+
   const terminLink = eintraege.nth(1).getByRole("link", { name: "Gegenstand öffnen" });
   await terminLink.focus();
   await page.keyboard.press("Enter");

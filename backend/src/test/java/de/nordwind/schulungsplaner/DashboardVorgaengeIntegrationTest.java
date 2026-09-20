@@ -165,6 +165,13 @@ class DashboardVorgaengeIntegrationTest {
                 .doesNotContain(wechsel);
         assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).extracting(DashboardService.Vorgang::id)
                 .contains(wechsel);
+
+        termin("T-LOESCHUNG", trainer.id());
+        long loeschung = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true,
+                "TERMIN", "T-LOESCHUNG", "Scrum");
+        termine.loeschen(admin.id(), "T-LOESCHUNG");
+        assertThat(dashboard.anzeigen(trainer.id()).erledigteVorgaenge())
+                .extracting(DashboardService.Vorgang::id).contains(loeschung);
     }
 
     @Test

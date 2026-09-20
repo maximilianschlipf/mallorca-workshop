@@ -64,7 +64,7 @@ onMounted(async () => {
     <header class="section-heading compact-heading">
       <h1>Benachrichtigungen</h1>
       <p>Mitteilungen über Entscheidungen und Änderungen, neueste zuerst.</p>
-      <button v-if="eintraege.some(e => !e.gelesen)" class="sekundaer-aktion" type="button" :disabled="inArbeit" @click="allesGelesen">{{ inArbeit ? "Wird aktualisiert …" : "Alles als gelesen" }}</button>
+      <button v-if="eintraege.length" class="sekundaer-aktion" type="button" :disabled="inArbeit" @click="allesGelesen">{{ inArbeit ? "Wird aktualisiert …" : "Alles als gelesen" }}</button>
     </header>
     <p v-if="meldung" ref="statusmeldung" class="success" role="status" tabindex="-1">{{ meldung }}</p>
     <p v-if="fehler" class="form-error" role="alert">{{ fehler }}</p>
