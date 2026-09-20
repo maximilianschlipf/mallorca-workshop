@@ -262,7 +262,8 @@ onMounted(async () => {
             <td>{{ schulung.kategorie }}</td>
             <td><ZustandsSchild :zustand="schulung.zustand" /></td>
             <td>{{ schulung.oeffentlicheTermine.length }}</td>
-            <td class="zeilen-aktionen">
+            <td>
+              <div class="zeilen-aktionen">
               <button
                 v-if="istTrainer && schulung.zustand === 'AKTIV' && !qualifikationen.get(schulung.id)"
                 type="button"
@@ -307,6 +308,7 @@ onMounted(async () => {
                   Löschen
                 </button>
               </template>
+              </div>
             </td>
           </tr>
         </tbody>

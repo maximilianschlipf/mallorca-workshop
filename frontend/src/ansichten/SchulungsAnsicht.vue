@@ -165,7 +165,8 @@ onMounted(laden);
             <tbody>
               <tr v-for="zeile in qualifikationen" :key="zeile.trainerId">
                 <td>{{ zeile.trainerName }}</td><td>{{ zeile.status }}</td>
-                <td class="zeilen-aktionen">
+                <td>
+                  <div class="zeilen-aktionen">
                   <template v-if="zeile.status === 'OFFEN' && zeile.bewerbungId != null">
                     <button type="button" :aria-label="`Bewerbung von ${zeile.trainerName} genehmigen`" @click="qualifikationsvorgang(
                       () => qualifikationsbewerbungGenehmigen(zeile.bewerbungId!),
@@ -178,6 +179,7 @@ onMounted(laden);
                   <button v-else type="button" :aria-label="`${zeile.trainerName} direkt qualifizieren`" @click="qualifikationsvorgang(
                     () => qualifikationDirektErteilen(props.id, zeile.trainerId),
                     'Die Qualifikation wurde erteilt.')">Direkt qualifizieren</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
