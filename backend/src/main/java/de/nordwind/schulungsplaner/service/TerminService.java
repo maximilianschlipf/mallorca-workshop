@@ -262,6 +262,7 @@ public class TerminService {
         }
         benachrichtigeBeteiligte(terminId, administratorId, Benachrichtigungsanlass.TERMIN_GELOESCHT,
                 "Der Termin " + terminId + " wurde gelöscht.");
+        vorgaenge.assistenzVorTerminloeschungSnapshotten(terminId, termin.trainerId());
         jdbc.update("DELETE FROM termin WHERE termin_id=?", terminId);
         vorgaenge.terminBeendet(terminId, termin.trainerId(), termin.startdatum(), termin.enddatum(),
                 "Terminlöschung");

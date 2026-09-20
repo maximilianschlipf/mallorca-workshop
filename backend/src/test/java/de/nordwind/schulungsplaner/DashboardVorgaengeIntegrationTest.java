@@ -173,9 +173,12 @@ class DashboardVorgaengeIntegrationTest {
         termin("T-LOESCHUNG", trainer.id());
         long loeschung = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true,
                 "TERMIN", "T-LOESCHUNG", "Scrum");
+        jdbc.update("UPDATE termin SET trainer_id=? WHERE termin_id='T-LOESCHUNG'", ersatz.id());
         termine.loeschen(admin.id(), "T-LOESCHUNG");
-        assertThat(dashboard.anzeigen(trainer.id()).erledigteVorgaenge())
+        assertThat(dashboard.anzeigen(ersatz.id()).erledigteVorgaenge())
                 .extracting(DashboardService.Vorgang::id).contains(loeschung);
+        assertThat(dashboard.anzeigen(trainer.id()).erledigteVorgaenge())
+                .extracting(DashboardService.Vorgang::id).doesNotContain(loeschung);
     }
 
     @Test

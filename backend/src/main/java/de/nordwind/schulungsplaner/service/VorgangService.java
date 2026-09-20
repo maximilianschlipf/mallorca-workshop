@@ -85,6 +85,7 @@ public class VorgangService {
 
     @Transactional
     public void entscheiden(String kontoId, long id, boolean angenommen, String begruendung) {
+        assistenzterminSperren(id);
         Eintrag vorgang = laden(id);
         pruefeZustaendigkeit(kontoId, vorgang);
         String ungueltig = angenommen && vorgang.art() == Vorgangsart.ERSATZTRAINER_ANFRAGE
@@ -295,6 +296,7 @@ public class VorgangService {
 
     @Transactional
     public void zurueckziehen(String kontoId, long id) {
+        assistenzterminSperren(id);
         Eintrag vorgang = laden(id);
         if (!kontoId.equals(vorgang.antragstellerId()) || !vorgang.art().zurueckziehbar()) {
             throw nichtGefunden();
@@ -311,6 +313,26 @@ public class VorgangService {
         boolean zustaendig = kontoId.equals(vorgang.zustaendigId())
                 || (vorgang.adminZustaendig() && konto.rollen().contains(Rolle.ADMINISTRATOR));
         if (!zustaendig) throw nichtGefunden();
+    }
+
+    @Transactional
+    public void assistenzVorTerminloeschungSnapshotten(String terminId, String trainerId) {
+        jdbc.update("""
+                UPDATE vorgang SET zustaendig_id=?
+                WHERE art='ASSISTENZBEWERBUNG' AND bezug_art='TERMIN'
+                    AND bezug_id=? AND status='OFFEN'
+                """, trainerId, terminId);
+    }
+
+    private void assistenzterminSperren(long vorgangId) {
+        List<String> terminIds = jdbc.queryForList("""
+                SELECT bezug_id FROM vorgang
+                WHERE id=? AND status='OFFEN' AND art='ASSISTENZBEWERBUNG'
+                """, String.class, vorgangId);
+        if (!terminIds.isEmpty()) {
+            jdbc.queryForList("SELECT termin_id FROM termin WHERE termin_id=? FOR UPDATE",
+                    String.class, terminIds.getFirst());
+        }
     }
 
     private void wendeAn(long id, Eintrag vorgang) {
