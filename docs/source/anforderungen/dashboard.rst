@@ -66,6 +66,16 @@ Grundsatz
    bedienbar; nach einer Aktion bleibt der Fokus am geänderten Vorgang oder
    wechselt nachvollziehbar zur zugehörigen Statusmeldung.
 
+.. req:: Termin aus dem Dashboard öffnen
+   :id: REQ_DSH_SPRUNG_01
+   :status: approved
+   :priority: high
+   :links: REQ_DSH_PFLI_01, REQ_DSH_DRIN_01, REQ_TER_SICHT_01, REQ_TER_SICHT_02
+
+   Die Aktion "Termin öffnen" bei einer Handlungspflicht oder Dringlichkeit
+   zeigt im Kalender den Monat des betroffenen Termins und öffnet dessen
+   Detaildialog.
+
 Vorgänge
 --------
 

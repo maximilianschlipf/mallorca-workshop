@@ -30,6 +30,26 @@ test("nur der eigene überfällige geplante Termin wird zur Handlungspflicht", a
   await expect(pflichten).toContainText("Keine eigenen Handlungspflichten");
 });
 
+// verifies: TEST_DSH_SPRUNG_01
+test("Termin öffnen zeigt aus Pflichten und Dringlichkeiten den Terminmonat und Details", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-07-17T12:00:00"));
+  await eigentuemerAnmelden(page);
+
+  for (const [fixtureName, rang, terminId, datum] of [
+    ["dashboard-pflichten", "Handlungspflichten", "E2E-DSH-PFLI-UEBERFAELLIG", "16.09.2026"],
+    ["dashboard-historie", "Dringlichkeiten", "E2E-HIST-DRINGEND", "25.09.2026"],
+  ]) {
+    expect(await fixture(page, fixtureName)).toBe(204);
+    await page.goto("/");
+    await page.getByRole("region", { name: rang })
+      .locator(`a[href*="${terminId}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`termin=${terminId}`));
+    await expect(page.getByRole("heading", { name: "September 2026" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Scrum Master Zertifizierung" }))
+      .toContainText(datum);
+  }
+});
+
 // verifies: TEST_DSH_VORG_03
 test("eigene Vorgänge sind getrennt sichtbar und soweit erlaubt zurückziehbar", async ({ page }) => {
   await eigentuemerAnmelden(page);
@@ -127,7 +147,7 @@ test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolg
   await page.goto("/");
   await expect(page.getByRole("region", { name: "Vorgänge" })).toContainText("Abwesenheitsantrag");
   await expect(page.getByRole("region", { name: "Handlungspflichten" })
-    .getByRole("link", { name: "Termin öffnen" }))
+    .locator('a[href*="E2E-RANG-ADMIN-PFLICHT"]'))
     .toHaveAttribute("href", /E2E-RANG-ADMIN-PFLICHT/);
   await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
     .toContainText("2026-09-25");
@@ -140,7 +160,7 @@ test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolg
   await page.getByRole("button", { name: "Anmelden" }).click();
   await expect(page.getByRole("region", { name: "Vorgänge" })).toContainText("Übernahmeanfrage");
   await expect(page.getByRole("region", { name: "Handlungspflichten" })
-    .getByRole("link", { name: "Termin öffnen" }))
+    .locator('a[href*="E2E-RANG-TRAINER-PFLICHT"]'))
     .toHaveAttribute("href", /E2E-RANG-TRAINER-PFLICHT/);
   await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
     .toContainText("Keine Dringlichkeiten");

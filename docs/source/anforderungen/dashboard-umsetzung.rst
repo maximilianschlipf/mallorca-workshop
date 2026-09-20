@@ -281,6 +281,25 @@ Vorgänge entscheiden
 Handlungspflichten und Dringlichkeiten
 --------------------------------------
 
+.. story:: Ich springe direkt zum betroffenen Termin
+   :id: STORY_DSH_SPRUNG_01
+   :status: approved
+   :priority: high
+   :implements: REQ_DSH_SPRUNG_01
+
+   Als Benutzer öffne ich einen Termin aus einer Handlungspflicht oder
+   Dringlichkeit und sehe unmittelbar seinen Monat und seine Details.
+
+.. test:: Termin öffnen zeigt Monat und Details
+   :id: TEST_DSH_SPRUNG_01
+   :status: approved
+   :automated: yes
+   :level: e2e
+   :verifies: STORY_DSH_SPRUNG_01, REQ_DSH_SPRUNG_01
+
+   Von einer Handlungspflicht und einer Dringlichkeit führt "Termin öffnen"
+   jeweils zum Monat des betroffenen Termins und öffnet dessen Detaildialog.
+
 .. story:: Meine überfälligen Termine gehen mir nicht verloren
    :id: STORY_DSH_PFLI_01
    :status: approved
