@@ -895,7 +895,7 @@ p {
 
 .section-heading h1,
 .section-heading h2 {
-  max-width: 13ch;
+  max-width: 20ch;
   margin-bottom: 24px;
   font-size: clamp(2.15rem, 4vw, 3.6rem);
   font-weight: 700;

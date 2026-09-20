@@ -213,7 +213,8 @@ und ruhig.
 ### Hierarchy
 
 - **Display** (700, `clamp(2.15rem, 4vw, 3.6rem)`, LH 1.02, LS -0.04em): Seitentitel
-  im `.section-heading`. Maximal 13ch breit, damit der Umbruch gesetzt wirkt.
+  im `.section-heading`. Maximal 20ch breit; kurze Titel bleiben einzeilig,
+  lange Titel und schmale Viewports brechen natürlich um.
 - **Headline** (700, `clamp(1.45rem, 2.2vw, 2rem)`, LH 1.08, LS -0.04em): Kartentitel,
   Kalenderüberschrift. Maximal 20ch.
 - **Title** (650, `clamp(1.35rem, 2.5vw, 1.75rem)`, LS -0.025em): Kartenköpfe im
