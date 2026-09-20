@@ -371,7 +371,7 @@ class QualifikationenIntegrationTest {
     }
 
     @Test
-    void anzeigenMarkiertPersoenlicheUndGemeinsameAdminMitteilungenAlsGelesen() {
+    void explizitesMarkierenErfasstPersoenlicheUndGemeinsameAdminMitteilungen() {
         benachrichtigungen.persoenlich(trainer.id(), admin.id(),
                 Benachrichtigungsanlass.QUALIFIKATION_GENEHMIGT,
                 "Persönlich", "SCHULUNG", "SCH-001");
@@ -385,6 +385,7 @@ class QualifikationenIntegrationTest {
         assertThat(benachrichtigungen.ungelesen(admin.id())).isEqualTo(1);
         assertThat(benachrichtigungen.anzeigen(admin.id())).singleElement()
                 .extracting(BenachrichtigungService.Benachrichtigung::anlass).isEqualTo("Gemeinsam");
+        benachrichtigungen.allesAlsGelesen(admin.id());
         assertThat(benachrichtigungen.ungelesen(admin.id())).isZero();
         assertThat(benachrichtigungen.ungelesen(zweiterAdmin.id())).isZero();
         assertThat(benachrichtigungen.ungelesen(trainer.id())).isEqualTo(1);

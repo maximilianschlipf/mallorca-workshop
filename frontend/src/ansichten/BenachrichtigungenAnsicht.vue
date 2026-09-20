@@ -23,6 +23,9 @@ function datum(iso: string) {
 
 async function laden() {
   eintraege.value = await fetchBenachrichtigungen();
+  if (eintraege.value.some(eintrag => !eintrag.gelesen)) {
+    await markiereAlleBenachrichtigungenGelesen();
+  }
   window.dispatchEvent(new Event("benachrichtigungen-gelesen"));
 }
 

@@ -2,6 +2,8 @@ package de.nordwind.schulungsplaner.api;
 
 import de.nordwind.schulungsplaner.config.KontoPrincipal;
 import de.nordwind.schulungsplaner.service.DashboardService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +41,7 @@ public class DashboardController {
     @PostMapping("/vorgaenge/{id}/ablehnung")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void ablehnen(@AuthenticationPrincipal KontoPrincipal konto, @PathVariable long id,
-                         @RequestBody(required = false) Ablehnung anfrage) {
+                         @Valid @RequestBody(required = false) Ablehnung anfrage) {
         vorgaenge.entscheiden(konto.id(), id, false, anfrage == null ? null : anfrage.begruendung());
     }
 
@@ -49,5 +51,5 @@ public class DashboardController {
         vorgaenge.zurueckziehen(konto.id(), id);
     }
 
-    public record Ablehnung(String begruendung) {}
+    public record Ablehnung(@Size(max = 1000) String begruendung) {}
 }

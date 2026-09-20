@@ -77,6 +77,7 @@ class DashboardVorgaengeIntegrationTest {
     @Test
     void alleSechsVorgangsartenErscheinenNurBeiIhrenZustaendigenMitPflichtangaben() {
         einsaetze.aufQualifikationBewerben(antragsteller.id(), "SCH-001");
+        termin("T-ASS", trainer.id());
         long abwesenheit = anlegen(Vorgangsart.ABWESENHEITSANTRAG, null, true, "VORGANG", "11", "1. bis 2. Oktober");
         long vormerkung = anlegen(Vorgangsart.VORMERKUNG, null, true, "TERMIN", "T-VOR", "Scrum am 1. Oktober");
         long assistenz = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true, "TERMIN", "T-ASS", "Scrum am 2. Oktober");
@@ -143,6 +144,61 @@ class DashboardVorgaengeIntegrationTest {
                 "TERMIN", "T-OHNE", "Scrum");
         assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).extracting(DashboardService.Vorgang::id).contains(nurAdmin);
         assertThat(dashboard.anzeigen(trainer.id()).vorgaenge()).extracting(DashboardService.Vorgang::id).doesNotContain(nurAdmin);
+
+        termin("T-WECHSEL", trainer.id());
+        long wechsel = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true,
+                "TERMIN", "T-WECHSEL", "Scrum");
+        jdbc.update("UPDATE termin SET trainer_id=? WHERE termin_id='T-WECHSEL'", ersatz.id());
+        assertThat(dashboard.anzeigen(trainer.id()).vorgaenge()).extracting(DashboardService.Vorgang::id)
+                .doesNotContain(wechsel);
+        assertThat(dashboard.anzeigen(ersatz.id()).vorgaenge()).extracting(DashboardService.Vorgang::id)
+                .contains(wechsel);
+        assertThatThrownBy(() -> vorgaenge.entscheiden(trainer.id(), wechsel, false, null))
+                .isInstanceOf(KontoFehler.class);
+        jdbc.update("UPDATE termin SET trainer_id=NULL WHERE termin_id='T-WECHSEL'");
+        assertThat(dashboard.anzeigen(ersatz.id()).vorgaenge()).extracting(DashboardService.Vorgang::id)
+                .doesNotContain(wechsel);
+        assertThat(dashboard.anzeigen(admin.id()).vorgaenge()).extracting(DashboardService.Vorgang::id)
+                .contains(wechsel);
+    }
+
+    @Test
+    void gleicherOffenerVorgangWirdNichtDoppeltAngelegt() {
+        long id = anlegen(Vorgangsart.VORMERKUNG, null, true,
+                "TERMIN", "DOPPELT", "Termin");
+
+        assertThatThrownBy(() -> anlegen(Vorgangsart.VORMERKUNG, null, true,
+                "TERMIN", "DOPPELT", "Termin"))
+                .isInstanceOf(KontoFehler.class)
+                .satisfies(fehler -> assertThat(((KontoFehler) fehler).status())
+                        .isEqualTo(org.springframework.http.HttpStatus.CONFLICT));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vorgang WHERE status='OFFEN'",
+                Integer.class)).isOne();
+
+        vorgaenge.entscheiden(admin.id(), id, false, "anderweitig geplant");
+        assertThat(anlegen(Vorgangsart.VORMERKUNG, null, true,
+                "TERMIN", "DOPPELT", "Termin")).isPositive();
+    }
+
+    @Test
+    void qualifikationshistorieBewahrtDenEntscheiderNachKontoloeschung() {
+        Benutzerkonto entscheider = konto("Entscheider", "entscheider@example.de", false);
+        konten.rolleErteilen(admin.id(), entscheider.id(), Rolle.ADMINISTRATOR,
+                entscheider.aenderungsstand());
+        entscheider = konten.laden(entscheider.id());
+        einsaetze.aufQualifikationBewerben(antragsteller.id(), "SCH-001");
+        long id = jdbc.queryForObject("SELECT id FROM qualifikationsbewerbung", Long.class);
+
+        einsaetze.bewerbungGenehmigen(entscheider.id(), id);
+        konten.loeschen(admin.id(), entscheider.id(), entscheider.aenderungsstand());
+
+        assertThat(dashboard.anzeigen(admin.id()).erledigteVorgaenge()).singleElement()
+                .satisfies(vorgang -> assertThat(vorgang.entschiedenVon()).isEqualTo("Entscheider"));
+        assertThat(jdbc.queryForMap("""
+                SELECT entschieden_von_id, entschieden_von_name
+                FROM qualifikationsbewerbung WHERE id=?
+                """, id)).containsEntry("ENTSCHIEDEN_VON_ID", null)
+                .containsEntry("ENTSCHIEDEN_VON_NAME", "Entscheider");
     }
 
     // verifies: TEST_DSH_VORG_04
@@ -547,6 +603,10 @@ class DashboardVorgaengeIntegrationTest {
         vorgaenge.nachziehen();
         assertNurAnlass(automatisch.id(), "ABWESENHEITSANTRAG_NACH_FRIST_GENEHMIGT");
         assertKeineAllgemeineZuweisung(automatisch.id());
+        int nachrichten = jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung", Integer.class);
+        vorgaenge.nachziehen();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung", Integer.class))
+                .isEqualTo(nachrichten);
 
         jdbc.update("DELETE FROM benachrichtigung");
         Benutzerkonto direktZugewiesen = konto("Direkt Zugewiesen", "direkt-zugewiesen@example.de", false);
@@ -640,6 +700,10 @@ class DashboardVorgaengeIntegrationTest {
         mvc.perform(post("/api/dashboard/vorgaenge/{id}/ablehnung", fremd)
                         .session(adminSitzung).contentType("application/json").content("{\"begruendung\":\"x\"}"))
                 .andExpect(status().isForbidden());
+        mvc.perform(post("/api/dashboard/vorgaenge/{id}/ablehnung", fremd)
+                        .session(adminSitzung).with(csrf()).contentType("application/json")
+                        .content("{\"begruendung\":\"" + "x".repeat(1001) + "\"}"))
+                .andExpect(status().isBadRequest());
         mvc.perform(delete("/api/dashboard/vorgaenge/{id}", fremd).session(antragstellerSitzung))
                 .andExpect(status().isForbidden());
         assertThat(jdbc.queryForObject("SELECT status FROM vorgang WHERE id=?", String.class, fremd))

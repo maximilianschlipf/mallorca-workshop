@@ -54,14 +54,18 @@ class BenachrichtigungenIntegrationTest {
 
     // verifies: TEST_NAC_ANZ_03
     @Test
-    void anzeigenMarkiertNurEigeneMitteilungenEndgueltigAlsGelesen() throws Exception {
+    void anzeigenUndGeschuetztesMarkierenBetreffenNurEigeneMitteilungen() throws Exception {
         long eigene = persoenlich(trainer, "Eigene");
         long fremde = persoenlich(anderer, "Fremde");
 
         assertThat(benachrichtigungen.anzeigen(trainer.id())).singleElement()
                 .satisfies(n -> assertThat(n.gelesen()).isFalse());
-        assertThat(gelesen(eigene)).isTrue();
+        assertThat(gelesen(eigene)).isFalse();
         assertThat(gelesen(fremde)).isFalse();
+        mvc.perform(post("/api/ich/benachrichtigungen/gelesen")
+                        .session(login(trainer)).with(csrf()))
+                .andExpect(status().isNoContent());
+        assertThat(gelesen(eigene)).isTrue();
         mvc.perform(put("/api/ich/benachrichtigungen/{id}/ungelesen", eigene)
                         .session(login(trainer)).with(csrf()))
                 .andExpect(status().is4xxClientError());
@@ -120,7 +124,7 @@ class BenachrichtigungenIntegrationTest {
                 "Gemeinsam", "SCHULUNG", "SCH-001");
         persoenlich(zweiterAdmin, "Persönlich");
 
-        benachrichtigungen.anzeigen(admin.id());
+        benachrichtigungen.allesAlsGelesen(admin.id());
 
         assertThat(benachrichtigungen.ungelesen(admin.id())).isZero();
         assertThat(benachrichtigungen.ungelesen(zweiterAdmin.id())).isEqualTo(1);
@@ -182,7 +186,7 @@ class BenachrichtigungenIntegrationTest {
         assertThat(benachrichtigungen.anzeigen(trainer.id()))
                 .extracting(BenachrichtigungService.Benachrichtigung::id)
                 .containsExactly(eigene);
-        jdbc.update("UPDATE benachrichtigung SET gelesen=FALSE, gelesen_am=NULL WHERE id=?", eigene);
+        assertThat(gelesen(eigene)).isFalse();
 
         mvc.perform(get("/api/ich/benachrichtigungen")).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/ich/benachrichtigungen/{id}/gelesen", fremde)

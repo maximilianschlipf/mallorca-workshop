@@ -52,6 +52,29 @@ describe("Dashboard und Benachrichtigungen", () => {
     wrapper.unmount();
   });
 
+  it("trennt gleich nummerierte Vorgänge und verlinkt eigene Gegenstände", async () => {
+    const basis = { id: 1, antragsteller: "Tara", bezug: "Scrum", bezugArt: "SCHULUNG",
+      bezugId: "SCH-001", erstelltAm: "2026-09-19T10:00:00", status: "OFFEN",
+      entschiedenAm: null, begruendung: null, entschiedenVon: null, richtung: "AN_MICH",
+      entscheidbar: true, zurueckziehbar: false, ablehnungsgrundPflicht: true } as const;
+    const qualifikation = { ...basis, quelle: "QUALIFIKATION", artCode: "QUALIFIKATION",
+      art: "Qualifikation" } as const;
+    const vormerkung = { ...basis, quelle: "VORGANG", artCode: "VORMERKUNG", art: "Vormerkung",
+      bezugArt: "TERMIN", bezugId: "T-1" } as const;
+    vi.mocked(fetchDashboard).mockResolvedValue({ vorgaenge: [qualifikation, vormerkung],
+      pflichten: [], dringlichkeiten: [], eigeneVorgaenge: [{ ...vormerkung, richtung: "VON_MIR",
+        entscheidbar: false, zurueckziehbar: true }], erledigteVorgaenge: [],
+      erledigteEigeneVorgaenge: [] });
+    const wrapper = mount(DashboardAnsicht, { global: { plugins: [router] } });
+    await flushPromises();
+
+    await wrapper.findAll("button.danger-action")[1].trigger("click");
+
+    expect(wrapper.findAll("form.rejection-form")).toHaveLength(1);
+    expect(wrapper.get("form.rejection-form textarea").attributes("id")).toBe("grund-VORGANG-1");
+    expect(wrapper.find(".own-processes a").attributes("href")).toBe("/planer?termin=T-1#kalender");
+  });
+
   it("zeigt Mitteilungen neueste zuerst mit Lesezustand und Bezug", async () => {
     vi.mocked(fetchBenachrichtigungen).mockResolvedValue([
       { id: 2, anlasstyp: "QUALIFIKATION_GENEHMIGT", anlass: "Genehmigt", bezugArt: "SCHULUNG",
@@ -71,7 +94,7 @@ describe("Dashboard und Benachrichtigungen", () => {
       .toContain("/planer?termin=T%202#kalender");
     await wrapper.get("button").trigger("click");
     await flushPromises();
-    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledOnce();
+    expect(markiereAlleBenachrichtigungenGelesen).toHaveBeenCalledTimes(2);
     expect(document.activeElement).toBe(wrapper.get('[role="status"]').element);
     wrapper.unmount();
   });

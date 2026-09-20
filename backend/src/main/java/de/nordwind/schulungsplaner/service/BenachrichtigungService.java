@@ -23,11 +23,11 @@ public class BenachrichtigungService {
         this.clock = clock;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Benachrichtigung> anzeigen(String kontoId) {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
-        List<Benachrichtigung> ergebnis = jdbc.query("""
+        return jdbc.query("""
                 SELECT id, anlasstyp, anlass, bezug_art, bezug_id, erstellt_am, gelesen
                 FROM benachrichtigung
                 WHERE empfaenger_id=? OR (? AND empfaenger_rolle='ADMINISTRATOR')
@@ -37,8 +37,6 @@ public class BenachrichtigungService {
                 rs.getString("bezug_art"), rs.getString("bezug_id"),
                 rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getBoolean("gelesen"),
                 bezugVorhanden(rs.getString("bezug_art"), rs.getString("bezug_id"))), kontoId, admin);
-        allesAlsGelesen(kontoId);
-        return ergebnis;
     }
 
     @Transactional(readOnly = true)

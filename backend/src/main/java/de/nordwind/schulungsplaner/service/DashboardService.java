@@ -59,7 +59,8 @@ public class DashboardService {
     private List<Vorgang> bewerbungen(String bedingung, String kontoId, String richtung) {
         String sql = """
                 SELECT b.id, b.schulung_id, b.status, b.erstellt_am, b.entschieden_am,
-                       b.begruendung, COALESCE(k.name, b.antragsteller_name) AS name
+                       b.begruendung, b.entschieden_von_name,
+                       COALESCE(k.name, b.antragsteller_name) AS name
                 FROM qualifikationsbewerbung b
                 LEFT JOIN benutzerkonto k ON k.id=b.benutzerkonto_id
                 WHERE %s ORDER BY b.erstellt_am DESC, b.id DESC
@@ -75,7 +76,7 @@ public class DashboardService {
                     rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getString("status"),
                     rs.getTimestamp("entschieden_am") == null ? null
                             : rs.getTimestamp("entschieden_am").toLocalDateTime(),
-                    rs.getString("begruendung"), null, richtung,
+                    rs.getString("begruendung"), rs.getString("entschieden_von_name"), richtung,
                     "AN_MICH".equals(richtung), "VON_MIR".equals(richtung), true);
         }, parameter);
     }

@@ -10,7 +10,7 @@ const fehler = ref("");
 const meldung = ref("");
 const statusmeldung = ref<HTMLElement | null>(null);
 const inArbeit = ref(false);
-const ablehnung = ref<number | null>(null);
+const ablehnung = ref<string | null>(null);
 const begruendung = ref("");
 
 async function laden() {
@@ -47,6 +47,8 @@ const zurueckziehen = (vorgang: DashboardVorgang) => ausfuehren(
   () => vorgang.quelle === "QUALIFIKATION" ? qualifikationsbewerbungZurueckziehen(vorgang.bezugId)
     : vorgangZurueckziehen(vorgang.id), "Der Vorgang wurde zurückgezogen.");
 
+const vorgangSchluessel = (vorgang: DashboardVorgang) => `${vorgang.quelle}-${vorgang.id}`;
+
 function sprung(vorgang: DashboardVorgang) {
   if (vorgang.bezugArt === "TERMIN") return `/planer?termin=${encodeURIComponent(vorgang.bezugId)}#kalender`;
   if (vorgang.bezugArt === "SCHULUNG") return `/katalog/${vorgang.bezugId}`;
@@ -82,7 +84,7 @@ onMounted(() => laden().catch((error) => {
       <section class="dashboard-rank" aria-labelledby="vorgaenge-heading">
         <header><span class="rank-label">Rang 1</span><h2 id="vorgaenge-heading">Vorgänge</h2></header>
         <ul v-if="daten.vorgaenge.length" class="task-list">
-          <li v-for="vorgang in daten.vorgaenge" :key="vorgang.id" class="task-row">
+          <li v-for="vorgang in daten.vorgaenge" :key="vorgangSchluessel(vorgang)" class="task-row">
             <div>
               <strong>{{ vorgang.art }}</strong>
               <p>{{ vorgang.antragsteller }} · {{ vorgang.bezug }}</p>
@@ -91,11 +93,11 @@ onMounted(() => laden().catch((error) => {
             <div class="task-actions">
               <RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
               <button type="button" class="primary-action" :disabled="inArbeit" @click="annehmen(vorgang)">Annehmen</button>
-              <button type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="ablehnung = vorgang.id">Ablehnen</button>
+              <button type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="ablehnung = vorgangSchluessel(vorgang)">Ablehnen</button>
             </div>
-            <form v-if="ablehnung === vorgang.id" class="rejection-form" @submit.prevent="ablehnen(vorgang)">
-              <label :for="`grund-${vorgang.id}`">Begründung</label>
-              <textarea :id="`grund-${vorgang.id}`" v-model="begruendung" :disabled="inArbeit"
+            <form v-if="ablehnung === vorgangSchluessel(vorgang)" class="rejection-form" @submit.prevent="ablehnen(vorgang)">
+              <label :for="`grund-${vorgangSchluessel(vorgang)}`">Begründung</label>
+              <textarea :id="`grund-${vorgangSchluessel(vorgang)}`" v-model="begruendung" :disabled="inArbeit"
                 :required="vorgang.ablehnungsgrundPflicht" maxlength="1000" />
               <button class="sekundaer-aktion danger-action" type="submit" :disabled="inArbeit">{{ inArbeit ? "Wird ausgeführt …" : "Ablehnung bestätigen" }}</button>
             </form>
@@ -132,9 +134,10 @@ onMounted(() => laden().catch((error) => {
       <section class="dashboard-rank own-processes" aria-labelledby="eigene-heading">
         <header><h2 id="eigene-heading">Von mir gestellt</h2></header>
         <ul v-if="daten.eigeneVorgaenge.length" class="task-list">
-          <li v-for="vorgang in daten.eigeneVorgaenge" :key="vorgang.id" class="task-row">
+          <li v-for="vorgang in daten.eigeneVorgaenge" :key="vorgangSchluessel(vorgang)" class="task-row">
             <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }}</p><small>Offen seit {{ datum(vorgang.erstelltAm) }}</small></div>
-            <button v-if="vorgang.zurueckziehbar" type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="zurueckziehen(vorgang)">Zurückziehen</button>
+            <div class="task-actions"><RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
+              <button v-if="vorgang.zurueckziehbar" type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="zurueckziehen(vorgang)">Zurückziehen</button></div>
           </li>
         </ul>
         <p v-else class="empty-copy">Keine offenen eigenen Vorgänge.</p>
@@ -146,7 +149,7 @@ onMounted(() => laden().catch((error) => {
           <h3 id="erledigt-an-mich">An mich gerichtet</h3>
           <ul class="task-list">
             <li v-for="vorgang in daten.erledigteVorgaenge" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
-              <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}</p>
+              <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}<template v-if="vorgang.begruendung"> · {{ vorgang.begruendung }}</template></p>
                 <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
             </li>
           </ul>
@@ -156,7 +159,7 @@ onMounted(() => laden().catch((error) => {
           <h3 id="erledigt-von-mir">Von mir gestellt</h3>
           <ul class="task-list">
             <li v-for="vorgang in daten.erledigteEigeneVorgaenge" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
-            <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}</p>
+            <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}<template v-if="vorgang.begruendung"> · {{ vorgang.begruendung }}</template></p>
               <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
             </li>
           </ul>

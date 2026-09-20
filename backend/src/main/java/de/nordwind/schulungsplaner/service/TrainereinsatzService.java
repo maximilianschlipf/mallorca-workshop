@@ -81,7 +81,8 @@ public class TrainereinsatzService {
         if ("ZURUECKGEZOGEN".equals(bewerbung.status())) {
             jdbc.update("""
                     UPDATE qualifikationsbewerbung
-                    SET status='OFFEN', erstellt_am=?, entschieden_am=NULL, begruendung=NULL
+                    SET status='OFFEN', erstellt_am=?, entschieden_am=NULL, begruendung=NULL,
+                        entschieden_von_id=NULL, entschieden_von_name=NULL
                     WHERE id=?
                     """, LocalDateTime.now(clock), bewerbung.id());
             return;
@@ -90,7 +91,8 @@ public class TrainereinsatzService {
                 && !bewerbung.entschiedenAm().plusDays(1).isAfter(LocalDateTime.now(clock))) {
             jdbc.update("""
                     UPDATE qualifikationsbewerbung
-                    SET status='OFFEN', erstellt_am=?, entschieden_am=NULL, begruendung=NULL
+                    SET status='OFFEN', erstellt_am=?, entschieden_am=NULL, begruendung=NULL,
+                        entschieden_von_id=NULL, entschieden_von_name=NULL
                     WHERE id=?
                     """, LocalDateTime.now(clock), bewerbung.id());
             return;
@@ -173,10 +175,12 @@ public class TrainereinsatzService {
         Entscheidungsdaten bewerbung = offeneBewerbung(bewerbungId);
         pruefeAktivenTrainer(bewerbung.kontoId());
         qualifikationEintragen(bewerbung.kontoId(), bewerbung.schulungId());
+        String administratorName = konten.laden(administratorId).name();
         jdbc.update("""
                 UPDATE qualifikationsbewerbung
-                SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL WHERE id=?
-                """, LocalDateTime.now(clock), bewerbungId);
+                SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL,
+                    entschieden_von_id=?, entschieden_von_name=? WHERE id=?
+                """, LocalDateTime.now(clock), administratorId, administratorName, bewerbungId);
         benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
                 Benachrichtigungsanlass.QUALIFIKATION_GENEHMIGT,
                 "Ihre Qualifikationsbewerbung für " + bewerbung.schulungId() + " wurde genehmigt.",
@@ -192,10 +196,12 @@ public class TrainereinsatzService {
                     "Für die Ablehnung ist eine Begründung erforderlich.");
         }
         Entscheidungsdaten bewerbung = offeneBewerbung(bewerbungId);
+        String administratorName = konten.laden(administratorId).name();
         jdbc.update("""
                 UPDATE qualifikationsbewerbung
-                SET status='ABGELEHNT', entschieden_am=?, begruendung=? WHERE id=?
-                """, LocalDateTime.now(clock), grund, bewerbungId);
+                SET status='ABGELEHNT', entschieden_am=?, begruendung=?,
+                    entschieden_von_id=?, entschieden_von_name=? WHERE id=?
+                """, LocalDateTime.now(clock), grund, administratorId, administratorName, bewerbungId);
         benachrichtigungen.persoenlich(bewerbung.kontoId(), administratorId,
                 Benachrichtigungsanlass.QUALIFIKATION_ABGELEHNT, "Ihre Qualifikationsbewerbung für "
                 + bewerbung.schulungId() + " wurde abgelehnt: " + grund,
@@ -214,11 +220,13 @@ public class TrainereinsatzService {
                     "Für diese Schulung besteht bereits eine Qualifikation.");
         }
         qualifikationEintragen(trainerId, schulungId);
+        String administratorName = konten.laden(administratorId).name();
         jdbc.update("""
                 UPDATE qualifikationsbewerbung
-                SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL
+                SET status='GENEHMIGT', entschieden_am=?, begruendung=NULL,
+                    entschieden_von_id=?, entschieden_von_name=?
                 WHERE benutzerkonto_id=? AND schulung_id=?
-                """, LocalDateTime.now(clock), trainerId, schulungId);
+                """, LocalDateTime.now(clock), administratorId, administratorName, trainerId, schulungId);
         benachrichtigungen.persoenlich(trainerId, administratorId,
                 Benachrichtigungsanlass.QUALIFIKATION_DIREKT,
                 "Sie wurden direkt für " + schulungId + " qualifiziert.",

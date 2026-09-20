@@ -33,6 +33,15 @@ public class VorgangService {
                         boolean adminZustaendig, String bezugArt, String bezugId,
                         String bezug, LocalDate von, LocalDate bis) {
         Benutzerkonto antragsteller = konten.laden(antragstellerId);
+        jdbc.queryForObject("SELECT id FROM benutzerkonto WHERE id=? FOR UPDATE",
+                String.class, antragstellerId);
+        if (jdbc.queryForObject("""
+                SELECT COUNT(*) FROM vorgang WHERE art=? AND antragsteller_id=?
+                AND bezug_art=? AND bezug_id=? AND status='OFFEN'
+                """, Integer.class, art.name(), antragstellerId, bezugArt, bezugId) > 0) {
+            throw fehler(HttpStatus.CONFLICT, "VORGANG_BESTEHT",
+                    "Ein entsprechender offener Vorgang besteht bereits.");
+        }
         jdbc.update("""
                 INSERT INTO vorgang (art, antragsteller_id, antragsteller_name,
                     zustaendig_id, zustaendig_rolle, bezug_art, bezug_id, bezug, von, bis)
@@ -45,13 +54,17 @@ public class VorgangService {
     public List<DashboardService.Vorgang> fuer(String kontoId, boolean offen, boolean eigene) {
         Benutzerkonto konto = konten.laden(kontoId);
         boolean admin = konto.rollen().contains(Rolle.ADMINISTRATOR);
-        String sicht = eigene ? "v.antragsteller_id=?" :
-                "(v.zustaendig_id=? OR (? AND v.zustaendig_rolle='ADMINISTRATOR'))";
+        String sicht = eigene ? "v.antragsteller_id=?" : """
+                ((CASE WHEN v.art='ASSISTENZBEWERBUNG' THEN t.trainer_id
+                    ELSE v.zustaendig_id END)=?
+                OR (? AND v.zustaendig_rolle='ADMINISTRATOR'))
+                """;
         String status = offen ? "v.status='OFFEN'" : "v.status<>'OFFEN'";
         Object[] parameter = eigene ? new Object[]{kontoId} : new Object[]{kontoId, admin};
         return jdbc.query("""
                 SELECT v.*, e.name aktueller_entscheider FROM vorgang v
                 LEFT JOIN benutzerkonto e ON e.id=v.entschieden_von_id
+                LEFT JOIN termin t ON v.art='ASSISTENZBEWERBUNG' AND t.termin_id=v.bezug_id
                 WHERE %s AND %s ORDER BY v.erstellt_am DESC, v.id DESC
                 """.formatted(sicht, status), (rs, row) -> {
             Vorgangsart art = Vorgangsart.valueOf(rs.getString("art"));
@@ -136,10 +149,10 @@ public class VorgangService {
 
     private void ersatztrainerUngueltig(long id, Eintrag vorgang, String grund) {
         LocalDateTime jetzt = LocalDateTime.now(clock);
-        jdbc.update("""
+        if (jdbc.update("""
                 UPDATE vorgang SET status='UNGUELTIG', entschieden_am=?, begruendung=?
                 WHERE id=? AND status='OFFEN'
-                """, jetzt, grund, id);
+                """, jetzt, grund, id) != 1) throw nichtGefunden();
         regulärenAbwesenheitsantragAnlegen(vorgang, id);
         String text = "Ersatztrainer-Anfrage wurde fachlich ungültig: " + grund
                 + ". Ein Abwesenheitsantrag wurde angelegt.";
@@ -195,11 +208,18 @@ public class VorgangService {
     @Transactional
     public void kontoBeendet(KontoBeendet ereignis) {
         List<EintragMitId> betroffen = jdbc.query("""
-                SELECT id, art, antragsteller_id, zustaendig_id, zustaendig_rolle,
+                SELECT id, art, antragsteller_id,
+                       CASE WHEN art='ASSISTENZBEWERBUNG' THEN
+                           (SELECT trainer_id FROM termin WHERE termin_id=vorgang.bezug_id)
+                           ELSE zustaendig_id END AS zustaendig_id,
+                       zustaendig_rolle,
                        bezug_art, bezug_id, bezug, von, bis FROM vorgang
-                WHERE status='OFFEN' AND (antragsteller_id=? OR zustaendig_id=?)
+                WHERE status='OFFEN' AND (antragsteller_id=?
+                    OR (art<>'ASSISTENZBEWERBUNG' AND zustaendig_id=?)
+                    OR (art='ASSISTENZBEWERBUNG' AND EXISTS (
+                        SELECT 1 FROM termin WHERE termin_id=vorgang.bezug_id AND trainer_id=?)))
                 """, (rs, row) -> new EintragMitId(rs.getLong("id"), eintrag(rs)),
-                ereignis.kontoId(), ereignis.kontoId());
+                ereignis.kontoId(), ereignis.kontoId(), ereignis.kontoId());
         for (EintragMitId zeile : betroffen) {
             Eintrag vorgang = zeile.eintrag();
             boolean adressatEndet = ereignis.kontoId().equals(vorgang.zustaendigId())
@@ -236,6 +256,7 @@ public class VorgangService {
                 SELECT id, art, antragsteller_id, zustaendig_id, zustaendig_rolle,
                        bezug_art, bezug_id, bezug, von, bis FROM vorgang
                 WHERE status='OFFEN' AND art='ABWESENHEITSANTRAG' AND von<=?
+                FOR UPDATE
                 """, (rs, row) -> new EintragMitId(rs.getLong("id"), eintrag(rs)), heute.plusWeeks(1))) {
             Eintrag vorgang = zeile.eintrag();
             List<String> freiGewordeneTermine = betroffeneTermine(vorgang);
@@ -257,6 +278,7 @@ public class VorgangService {
                 SELECT id, art, antragsteller_id, zustaendig_id, zustaendig_rolle,
                        bezug_art, bezug_id, bezug, von, bis FROM vorgang
                 WHERE status='OFFEN' AND art='ERSATZTRAINER_ANFRAGE' AND erstellt_am<=?
+                FOR UPDATE
                 """, (rs, row) -> new EintragMitId(rs.getLong("id"), eintrag(rs)), grenze)) {
             entfallen(zeile.id(), zeile.eintrag().art(),
                     "Fristablauf; Abwesenheitsantrag angelegt",
@@ -357,11 +379,11 @@ public class VorgangService {
     }
 
     private void abschliessenOhneEntscheider(long id, String status, String grund) {
-        jdbc.update("""
+        if (jdbc.update("""
                 UPDATE vorgang SET status=?, entschieden_am=?, begruendung=?,
                     entschieden_von_id=NULL, entschieden_von_name=NULL
                 WHERE id=? AND status='OFFEN'
-                """, status, LocalDateTime.now(clock), grund, id);
+                """, status, LocalDateTime.now(clock), grund, id) != 1) throw nichtGefunden();
     }
 
     private void regulärenAbwesenheitsantragAnlegen(Eintrag vorgang, long ursprungId) {
@@ -430,11 +452,15 @@ public class VorgangService {
 
     private Eintrag laden(long id) {
         List<Eintrag> treffer = jdbc.query("""
-                SELECT art, antragsteller_id, zustaendig_id, zustaendig_rolle,
+                SELECT art, antragsteller_id,
+                       CASE WHEN art='ASSISTENZBEWERBUNG' THEN
+                           (SELECT trainer_id FROM termin WHERE termin_id=vorgang.bezug_id)
+                           ELSE zustaendig_id END AS aktueller_zustaendig,
+                       zustaendig_rolle,
                        bezug_art, bezug_id, bezug, von, bis FROM vorgang
                 WHERE id=? AND status='OFFEN' FOR UPDATE
                 """, (rs, row) -> new Eintrag(Vorgangsart.valueOf(rs.getString("art")),
-                rs.getString("antragsteller_id"), rs.getString("zustaendig_id"),
+                rs.getString("antragsteller_id"), rs.getString("aktueller_zustaendig"),
                 "ADMINISTRATOR".equals(rs.getString("zustaendig_rolle")),
                 rs.getString("bezug_art"), rs.getString("bezug_id"), rs.getString("bezug"),
                 rs.getDate("von") == null ? null : rs.getDate("von").toLocalDate(),
