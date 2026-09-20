@@ -24,7 +24,10 @@ const router = createRouter({
 });
 
 describe("Dashboard und Benachrichtigungen", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
 
   it("ordnet die drei Dashboard-Ränge und entscheidet einen Vorgang", async () => {
     const vorgang = { id: 4, quelle: "QUALIFIKATION", artCode: "QUALIFIKATION",
@@ -44,12 +47,54 @@ describe("Dashboard und Benachrichtigungen", () => {
 
     expect(wrapper.findAll(".dashboard-rank h2").map(h => h.text()).slice(0, 3))
       .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten"]);
+    expect(wrapper.findAll(".dashboard-worklist .rank-count").map(count => count.text()))
+      .toEqual(["1 offen", "0 offen", "0 offen"]);
+    expect(wrapper.findAll(".dashboard-rank")[0].classes()).toContain("is-priority");
     await wrapper.get("button.primary-action").trigger("click");
     await flushPromises();
     expect(qualifikationsbewerbungGenehmigen).toHaveBeenCalledWith(4);
     expect(wrapper.text()).toContain("Der Vorgang wurde angenommen.");
     expect(document.activeElement).toBe(wrapper.get('[role="status"]').element);
     wrapper.unmount();
+  });
+
+  it("zeigt alle Vorgangsarten mit Pflichtangaben, Aktionen und Sprungziel", async () => {
+    const basis = { antragsteller: "Tara", erstelltAm: "2026-09-19T10:00:00",
+      status: "OFFEN", entschiedenAm: null, begruendung: null, entschiedenVon: null,
+      richtung: "AN_MICH", entscheidbar: true, zurueckziehbar: false,
+      ablehnungsgrundPflicht: false } as const;
+    const vorgaenge = [
+      { ...basis, id: 1, quelle: "QUALIFIKATION", artCode: "QUALIFIKATION", art: "Freigabeanfrage",
+        bezug: "Scrum", bezugArt: "SCHULUNG", bezugId: "SCH-001" },
+      { ...basis, id: 2, quelle: "VORGANG", artCode: "ABWESENHEITSANTRAG", art: "Abwesenheitsantrag",
+        bezug: "1. bis 2. Oktober", bezugArt: "VORGANG", bezugId: "2", von: "2026-10-01" },
+      { ...basis, id: 3, quelle: "VORGANG", artCode: "VORMERKUNG", art: "Vormerkung",
+        bezug: "Scrum am 3. Oktober", bezugArt: "TERMIN", bezugId: "T-3" },
+      { ...basis, id: 4, quelle: "VORGANG", artCode: "ASSISTENZBEWERBUNG", art: "Assistenzplatz",
+        bezug: "Scrum am 4. Oktober", bezugArt: "TERMIN", bezugId: "T-4" },
+      { ...basis, id: 5, quelle: "VORGANG", artCode: "UEBERNAHMEANFRAGE", art: "Übernahmeanfrage",
+        bezug: "Scrum am 5. Oktober", bezugArt: "TERMIN", bezugId: "T-5" },
+      { ...basis, id: 6, quelle: "VORGANG", artCode: "ERSATZTRAINER_ANFRAGE", art: "Ersatztrainer-Anfrage",
+        bezug: "6. bis 7. Oktober", bezugArt: "VORGANG", bezugId: "6", von: "2026-10-06" },
+    ] as const;
+    vi.mocked(fetchDashboard).mockResolvedValue({ vorgaenge: [...vorgaenge], pflichten: [],
+      dringlichkeiten: [], eigeneVorgaenge: [], erledigteVorgaenge: [], erledigteEigeneVorgaenge: [] });
+    const wrapper = mount(DashboardAnsicht, { global: { plugins: [router] } });
+    await flushPromises();
+
+    const zeilen = wrapper.findAll(".dashboard-worklist .task-row");
+    const sprungziele = ["/katalog/SCH-001", "/planer?datum=2026-10-01#kalender",
+      "/planer?termin=T-3#kalender", "/planer?termin=T-4#kalender",
+      "/planer?termin=T-5#kalender", "/planer?datum=2026-10-06#kalender"];
+    expect(zeilen).toHaveLength(6);
+    for (const [index, vorgang] of vorgaenge.entries()) {
+      expect(zeilen[index].text()).toContain(vorgang.art);
+      expect(zeilen[index].text()).toContain(`Tara · ${vorgang.bezug}`);
+      expect(zeilen[index].text()).toContain("Gestellt");
+      expect(zeilen[index].findAll("button").map(button => button.text()))
+        .toEqual(["Annehmen", "Ablehnen"]);
+      expect(zeilen[index].get("a").attributes("href")).toBe(sprungziele[index]);
+    }
   });
 
   it("trennt gleich nummerierte Vorgänge und verlinkt eigene Gegenstände", async () => {
@@ -107,15 +152,27 @@ describe("Dashboard und Benachrichtigungen", () => {
   });
 
   it("benennt eine überschrittene Höchstteilnehmerzahl", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-20T12:00:00"));
     vi.mocked(fetchDashboard).mockResolvedValue({ vorgaenge: [], pflichten: [], eigeneVorgaenge: [],
       erledigteVorgaenge: [], erledigteEigeneVorgaenge: [], dringlichkeiten: [{
         terminId: "SCH-001-T0001", schulungTitel: "Scrum", startdatum: "2026-10-12",
         enddatum: "2026-10-12", ueberfaellig: false, ohneTrainer: true, dringend: true,
         mindestteilnehmerUnterschritten: false, hoechstteilnehmerUeberschritten: true,
+      }, {
+        terminId: "SCH-001-T0002", schulungTitel: "Scrum später", startdatum: "2026-10-18",
+        enddatum: "2026-10-18", ueberfaellig: false, ohneTrainer: true, dringend: false,
+        mindestteilnehmerUnterschritten: false, hoechstteilnehmerUeberschritten: false,
       }] });
     const wrapper = mount(DashboardAnsicht, { global: { plugins: [router] } });
     await flushPromises();
     expect(wrapper.text()).toContain("Trainerzuweisung fehlt");
     expect(wrapper.text()).toContain("Höchstteilnehmerzahl überschritten");
+    expect(wrapper.text()).toContain("Beginnt in 22 Tagen");
+    const dringlichkeiten = wrapper.findAll(".dashboard-worklist .dashboard-rank")[2].findAll(".task-row");
+    expect(dringlichkeiten[0].classes()).toContain("urgent");
+    expect(dringlichkeiten[0].text()).toContain("Dringend");
+    expect(dringlichkeiten[1].classes()).not.toContain("urgent");
+    expect(dringlichkeiten[1].text()).not.toContain("Dringend");
   });
 });

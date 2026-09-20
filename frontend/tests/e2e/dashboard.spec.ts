@@ -27,7 +27,7 @@ test("nur der eigene überfällige geplante Termin wird zur Handlungspflicht", a
   await dialog.getByRole("button", { name: "Durchführung bestätigen" }).click();
   await expect(page.getByRole("status")).toContainText("Durchführung bestätigt");
   await page.goto("/");
-  await expect(pflichten).toContainText("Keine eigenen Handlungspflichten");
+  await expect(pflichten).toContainText("Aktuell ist keine eigene Handlung erforderlich");
 });
 
 // verifies: TEST_DSH_SPRUNG_01
@@ -58,7 +58,7 @@ test("eigene Vorgänge sind getrennt sichtbar und soweit erlaubt zurückziehbar"
     fetch("/api/ich/benachrichtigungen").then(antwort => antwort.json()).then(liste => liste.length));
   await page.goto("/");
 
-  const eigene = page.getByRole("region", { name: "Von mir gestellt" });
+  const eigene = page.getByRole("region", { name: "Worauf ich warte" });
   await expect(eigene.locator("li")).toHaveCount(6);
   for (const art of ["Freigabeanfrage", "Vormerkung", "Assistenzplatz",
     "Abwesenheitsantrag", "Übernahmeanfrage", "Ersatztrainer-Anfrage"]) {
@@ -92,11 +92,12 @@ test("erledigte Vorgänge bleiben getrennt und standardmäßig zugeklappt erhalt
 
   await expect(page.getByRole("region", { name: "Vorgänge" })).toBeVisible();
   expect(await page.locator(".dashboard-rank h2").allTextContents())
-    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Worauf ich warte"]);
   const dringlichkeit = page.getByRole("region", { name: "Dringlichkeiten" })
     .getByRole("listitem").filter({ hasText: "2026-09-25 bis 2026-09-25" });
   await expect(dringlichkeit).toBeVisible();
   await expect(dringlichkeit).toHaveClass(/urgent/);
+  await expect(dringlichkeit.getByText("Dringend")).toBeVisible();
 
   const anMich = page.getByRole("region", { name: "Vorgänge" });
   const annehmen = anMich.getByRole("listitem").filter({ hasText: "Übernahmeanfrage" })
@@ -110,13 +111,15 @@ test("erledigte Vorgänge bleiben getrennt und standardmäßig zugeklappt erhalt
   await ablehnung.getByRole("button", { name: "Ablehnung bestätigen" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toBeFocused();
-  const zurueckziehen = page.getByRole("region", { name: "Von mir gestellt" })
+  const zurueckziehen = page.getByRole("region", { name: "Worauf ich warte" })
     .getByRole("button", { name: "Zurückziehen" });
   await zurueckziehen.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toBeFocused();
 
   const historie = page.locator("details.completed-processes");
+  await expect(anMich.getByText(/\d+ offen/)).toBeVisible();
+  await expect(historie.locator("summary")).toHaveAccessibleName(/Erledigte Vorgänge \d+/);
   await expect(historie).not.toHaveAttribute("open", "");
   await historie.locator("summary").focus();
   await page.keyboard.press("Enter");
@@ -152,7 +155,7 @@ test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolg
   await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
     .toContainText("2026-09-25");
   expect(await page.locator(".dashboard-rank h2").allTextContents())
-    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Worauf ich warte"]);
 
   await page.locator(".account-trigger").click();
   await page.getByRole("button", { name: "Abmelden" }).click();
@@ -164,7 +167,7 @@ test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolg
     .locator('a[href*="E2E-RANG-TRAINER-PFLICHT"]'))
     .toHaveAttribute("href", /E2E-RANG-TRAINER-PFLICHT/);
   await expect(page.getByRole("region", { name: "Dringlichkeiten" }))
-    .toContainText("Keine Dringlichkeiten");
+    .toContainText("Aktuell verlangt kein Termin besondere Aufmerksamkeit");
   expect(await page.locator(".dashboard-rank h2").allTextContents())
-    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
+    .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Worauf ich warte"]);
 });

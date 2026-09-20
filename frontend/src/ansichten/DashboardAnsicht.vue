@@ -71,6 +71,14 @@ function hinweise(termin: Dashboard["dringlichkeiten"][number]) {
     termin.hoechstteilnehmerUeberschritten && "Höchstteilnehmerzahl überschritten"].filter(Boolean).join(" · ");
 }
 
+function beginn(iso: string) {
+  const heute = new Date();
+  heute.setHours(12, 0, 0, 0);
+  const tage = Math.round((new Date(`${iso}T12:00:00`).getTime() - heute.getTime()) / 86_400_000);
+  const relativ = new Intl.RelativeTimeFormat("de-DE", { numeric: "auto" }).format(tage, "day");
+  return tage >= 0 ? `Beginnt ${relativ}` : `Begann ${relativ}`;
+}
+
 onMounted(() => laden().catch((error) => {
   fehler.value = error instanceof Error ? error.message : "Das Dashboard konnte nicht geladen werden.";
 }));
@@ -86,8 +94,10 @@ onMounted(() => laden().catch((error) => {
     <p v-if="fehler" class="form-error" role="alert">{{ fehler }}</p>
     <div v-if="!daten && !fehler" class="state" aria-busy="true">Dashboard wird geladen.</div>
     <template v-if="daten">
-      <section class="dashboard-rank" aria-labelledby="vorgaenge-heading">
-        <header><span class="rank-label">Rang 1</span><h2 id="vorgaenge-heading">Vorgänge</h2></header>
+      <div class="dashboard-worklist">
+      <section class="dashboard-rank" :class="{ 'is-empty': !daten.vorgaenge.length, 'is-priority': daten.vorgaenge.length }" aria-labelledby="vorgaenge-heading">
+        <header><span class="rank-label">Rang 1</span><h2 id="vorgaenge-heading">Vorgänge</h2>
+          <span class="rank-count">{{ daten.vorgaenge.length }} offen</span></header>
         <ul v-if="daten.vorgaenge.length" class="task-list">
           <li v-for="vorgang in daten.vorgaenge" :id="zeilenId(vorgang)" :key="vorgangSchluessel(vorgang)" class="task-row">
             <div>
@@ -96,8 +106,8 @@ onMounted(() => laden().catch((error) => {
               <small>Gestellt {{ datum(vorgang.erstelltAm) }}</small>
             </div>
             <div class="task-actions">
-              <RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
               <button type="button" class="primary-action" :disabled="inArbeit" @click="annehmen(vorgang)">Annehmen</button>
+              <RouterLink class="sekundaer-aktion" :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
               <button type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="ablehnung = vorgangSchluessel(vorgang)">Ablehnen</button>
             </div>
             <form v-if="ablehnung === vorgangSchluessel(vorgang)" class="rejection-form" @submit.prevent="ablehnen(vorgang)">
@@ -108,40 +118,47 @@ onMounted(() => laden().catch((error) => {
             </form>
           </li>
         </ul>
-        <p v-else class="empty-copy">Keine Vorgänge warten auf Ihre Entscheidung.</p>
+        <p v-else class="empty-copy">Aktuell wartet niemand auf Ihre Entscheidung.</p>
       </section>
 
-      <section class="dashboard-rank" aria-labelledby="pflichten-heading">
-        <header><span class="rank-label">Rang 2</span><h2 id="pflichten-heading">Handlungspflichten</h2></header>
+      <section class="dashboard-rank" :class="{ 'is-empty': !daten.pflichten.length,
+        'is-priority': !daten.vorgaenge.length && daten.pflichten.length }" aria-labelledby="pflichten-heading">
+        <header><span class="rank-label">Rang 2</span><h2 id="pflichten-heading">Handlungspflichten</h2>
+          <span class="rank-count">{{ daten.pflichten.length }} offen</span></header>
         <ul v-if="daten.pflichten.length" class="task-list">
           <li v-for="termin in daten.pflichten" :key="termin.terminId" class="task-row">
             <div><strong>Durchführung bestätigen</strong><p>{{ termin.schulungTitel }}</p>
               <small>{{ termin.startdatum }} bis {{ termin.enddatum }}</small></div>
-            <RouterLink :to="`/planer?termin=${encodeURIComponent(termin.terminId)}#kalender`">Termin öffnen</RouterLink>
+            <RouterLink class="sekundaer-aktion" :to="`/planer?termin=${encodeURIComponent(termin.terminId)}#kalender`">Termin öffnen</RouterLink>
           </li>
         </ul>
-        <p v-else class="empty-copy">Keine eigenen Handlungspflichten.</p>
+        <p v-else class="empty-copy">Aktuell ist keine eigene Handlung erforderlich.</p>
       </section>
 
-      <section class="dashboard-rank" aria-labelledby="dringend-heading">
-        <header><span class="rank-label">Rang 3</span><h2 id="dringend-heading">Dringlichkeiten</h2></header>
+      <section class="dashboard-rank" :class="{ 'is-empty': !daten.dringlichkeiten.length,
+        'is-priority': !daten.vorgaenge.length && !daten.pflichten.length && daten.dringlichkeiten.length }" aria-labelledby="dringend-heading">
+        <header><span class="rank-label">Rang 3</span><h2 id="dringend-heading">Dringlichkeiten</h2>
+          <span class="rank-count">{{ daten.dringlichkeiten.length }} offen</span></header>
         <ul v-if="daten.dringlichkeiten.length" class="task-list">
           <li v-for="termin in daten.dringlichkeiten" :key="termin.terminId" class="task-row" :class="{ urgent: termin.dringend || termin.ueberfaellig }">
-            <div><strong>{{ termin.schulungTitel }}</strong><p>
+            <div><span v-if="termin.dringend || termin.ueberfaellig" class="urgency-label">Dringend</span>
+              <strong>{{ termin.schulungTitel }}</strong><p>
               {{ hinweise(termin) }}
-            </p><small>{{ termin.startdatum }} bis {{ termin.enddatum }}</small></div>
-            <RouterLink :to="`/planer?termin=${encodeURIComponent(termin.terminId)}#kalender`">Termin öffnen</RouterLink>
+            </p><small>{{ beginn(termin.startdatum) }} · {{ termin.startdatum }} bis {{ termin.enddatum }}</small></div>
+            <RouterLink class="sekundaer-aktion" :to="`/planer?termin=${encodeURIComponent(termin.terminId)}#kalender`">Termin öffnen</RouterLink>
           </li>
         </ul>
-        <p v-else class="empty-copy">Keine Dringlichkeiten.</p>
+        <p v-else class="empty-copy">Aktuell verlangt kein Termin besondere Aufmerksamkeit.</p>
       </section>
+      </div>
 
       <section class="dashboard-rank own-processes" aria-labelledby="eigene-heading">
-        <header><h2 id="eigene-heading">Von mir gestellt</h2></header>
+        <header><h2 id="eigene-heading">Worauf ich warte</h2>
+          <span class="rank-count">{{ daten.eigeneVorgaenge.length }} offen</span></header>
         <ul v-if="daten.eigeneVorgaenge.length" class="task-list">
           <li v-for="vorgang in daten.eigeneVorgaenge" :id="zeilenId(vorgang)" :key="vorgangSchluessel(vorgang)" class="task-row">
             <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }}</p><small>Offen seit {{ datum(vorgang.erstelltAm) }}</small></div>
-            <div class="task-actions"><RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
+            <div class="task-actions"><RouterLink class="sekundaer-aktion" :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
               <button v-if="vorgang.zurueckziehbar" type="button" class="sekundaer-aktion danger-action" :disabled="inArbeit" @click="zurueckziehen(vorgang)">Zurückziehen</button></div>
           </li>
         </ul>
@@ -149,14 +166,14 @@ onMounted(() => laden().catch((error) => {
       </section>
 
       <details class="completed-processes">
-        <summary>Erledigte Vorgänge</summary>
+        <summary>Erledigte Vorgänge <span>{{ daten.erledigteVorgaenge.length + daten.erledigteEigeneVorgaenge.length }}</span></summary>
         <section aria-labelledby="erledigt-an-mich">
           <h3 id="erledigt-an-mich">An mich gerichtet</h3>
           <ul class="task-list">
             <li v-for="vorgang in daten.erledigteVorgaenge" :id="zeilenId(vorgang)" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
               <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}<template v-if="vorgang.begruendung"> · {{ vorgang.begruendung }}</template></p>
                 <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
-              <RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
+              <RouterLink class="sekundaer-aktion" :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
             </li>
           </ul>
           <p v-if="!daten.erledigteVorgaenge.length" class="empty-copy">Keine erledigten Vorgänge an mich.</p>
@@ -167,7 +184,7 @@ onMounted(() => laden().catch((error) => {
             <li v-for="vorgang in daten.erledigteEigeneVorgaenge" :id="zeilenId(vorgang)" :key="`${vorgang.quelle}-${vorgang.id}`" class="task-row">
             <div><strong>{{ vorgang.art }}</strong><p>{{ vorgang.bezug }} · {{ vorgang.status }}<template v-if="vorgang.begruendung"> · {{ vorgang.begruendung }}</template></p>
               <small v-if="vorgang.entschiedenAm">Erledigt {{ datum(vorgang.entschiedenAm) }}<template v-if="vorgang.entschiedenVon"> durch {{ vorgang.entschiedenVon }}</template></small></div>
-              <RouterLink :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
+              <RouterLink class="sekundaer-aktion" :to="sprung(vorgang)">Gegenstand öffnen</RouterLink>
             </li>
           </ul>
           <p v-if="!daten.erledigteEigeneVorgaenge.length" class="empty-copy">Keine erledigten eigenen Vorgänge.</p>

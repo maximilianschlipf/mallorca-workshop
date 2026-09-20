@@ -749,9 +749,15 @@ class TerminplanungIntegrationTest {
         var eintraege = dashboard.anzeigen(ADMIN).dringlichkeiten();
 
         assertThat(eintraege).filteredOn(e -> e.terminId().equals(exklusiv.terminId())).singleElement()
-                .satisfies(e -> assertThat(e.mindestteilnehmerUnterschritten()).isTrue());
+                .satisfies(e -> {
+                    assertThat(e.mindestteilnehmerUnterschritten()).isTrue();
+                    assertThat(e.dringend()).isTrue();
+                });
         assertThat(eintraege).filteredOn(e -> e.terminId().equals(oeffentlichUeberbelegt.terminId())).singleElement()
-                .satisfies(e -> assertThat(e.hoechstteilnehmerUeberschritten()).isTrue());
+                .satisfies(e -> {
+                    assertThat(e.hoechstteilnehmerUeberschritten()).isTrue();
+                    assertThat(e.dringend()).isFalse();
+                });
         assertThat(eintraege).noneMatch(e -> Set.of(oeffentlichLeer.terminId(), ohneZugang.terminId(),
                 oeffentlichVoll.terminId()).contains(e.terminId()));
     }
