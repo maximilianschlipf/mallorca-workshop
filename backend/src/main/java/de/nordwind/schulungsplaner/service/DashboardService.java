@@ -72,7 +72,7 @@ public class DashboardService {
                     .map(s -> s.titel()).orElse(schulungId);
             return new Vorgang(rs.getLong("id"), "QUALIFIKATION", "QUALIFIKATION",
                     "Freigabeanfrage für eine Qualifikation", rs.getString("name"), titel,
-                    "SCHULUNG", schulungId,
+                    "SCHULUNG", schulungId, null, null,
                     rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getString("status"),
                     rs.getTimestamp("entschieden_am") == null ? null
                             : rs.getTimestamp("entschieden_am").toLocalDateTime(),
@@ -104,6 +104,7 @@ public class DashboardService {
 
     public record Vorgang(long id, String quelle, String artCode, String art,
                           String antragsteller, String bezug, String bezugArt, String bezugId,
+                          LocalDate von, LocalDate bis,
                           LocalDateTime erstelltAm, String status, LocalDateTime entschiedenAm,
                           String begruendung, String entschiedenVon, String richtung,
                           boolean entscheidbar, boolean zurueckziehbar,

@@ -65,7 +65,18 @@ describe("Planer", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+    window.history.replaceState({}, "", "/");
     aktuellesKonto.value = null;
+  });
+
+  it("opens the month selected by a dashboard period link", async () => {
+    window.history.replaceState({}, "", "/planer?datum=2026-10-17#kalender");
+    mockFetch(() => [kalenderSchulung]);
+
+    const wrapper = mount(PlanerAnsicht);
+    await flushPromises();
+
+    expect(wrapper.find(".calendar-toolbar h3").text()).toBe("Oktober 2026");
   });
 
   it("renders a Monday-first calendar and navigates between months", async () => {

@@ -24,11 +24,16 @@ interface KalenderTermin {
   termin: Termin;
 }
 
+const datumParameter = new URLSearchParams(window.location.search).get("datum");
+const fokusDatum = datumParameter && /^\d{4}-\d{2}-\d{2}$/.test(datumParameter)
+  ? datumParameter.split("-").map(Number) : null;
+
 const kalenderSchulungen = ref<Schulung[]>([]);
 const kalenderLoading = ref(true);
 const kalenderError = ref<string | null>(null);
 const kalenderMonat = ref(
-  new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  fokusDatum ? new Date(fokusDatum[0], fokusDatum[1] - 1, 1)
+    : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 );
 const ausgewaehlterTermin = ref<KalenderTermin | null>(null);
 const terminDetail = ref<TerminDetail | null>(null);

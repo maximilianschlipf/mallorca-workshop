@@ -72,6 +72,8 @@ public class VorgangService {
             return new DashboardService.Vorgang(rs.getLong("id"), "VORGANG", art.name(),
                     art.bezeichnung(), rs.getString("antragsteller_name"), rs.getString("bezug"),
                     rs.getString("bezug_art"), rs.getString("bezug_id"),
+                    rs.getDate("von") == null ? null : rs.getDate("von").toLocalDate(),
+                    rs.getDate("bis") == null ? null : rs.getDate("bis").toLocalDate(),
                     rs.getTimestamp("erstellt_am").toLocalDateTime(), rs.getString("status"),
                     rs.getTimestamp("entschieden_am") == null ? null
                             : rs.getTimestamp("entschieden_am").toLocalDateTime(),
@@ -298,9 +300,10 @@ public class VorgangService {
             throw nichtGefunden();
         }
         if (jdbc.update("""
-                UPDATE vorgang SET status='ZURUECKGEZOGEN', entschieden_am=?
+                UPDATE vorgang SET status='ZURUECKGEZOGEN', entschieden_am=?,
+                    zustaendig_id=CASE WHEN art='ASSISTENZBEWERBUNG' THEN ? ELSE zustaendig_id END
                 WHERE id=? AND status='OFFEN'
-                """, LocalDateTime.now(clock), id) == 0) throw nichtGefunden();
+                """, LocalDateTime.now(clock), vorgang.zustaendigId(), id) == 0) throw nichtGefunden();
     }
 
     private void pruefeZustaendigkeit(String kontoId, Eintrag vorgang) {

@@ -180,6 +180,8 @@ export interface DashboardVorgang {
   antragsteller: string;
   bezug: string;
   bezugId: string;
+  von?: string | null;
+  bis?: string | null;
   erstelltAm: string;
   status: string;
   entschiedenAm: string | null;

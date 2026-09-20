@@ -52,6 +52,7 @@ const vorgangSchluessel = (vorgang: DashboardVorgang) => `${vorgang.quelle}-${vo
 function sprung(vorgang: DashboardVorgang) {
   if (vorgang.bezugArt === "TERMIN") return `/planer?termin=${encodeURIComponent(vorgang.bezugId)}#kalender`;
   if (vorgang.bezugArt === "SCHULUNG") return `/katalog/${vorgang.bezugId}`;
+  if (vorgang.von) return `/planer?datum=${encodeURIComponent(vorgang.von)}#kalender`;
   return `/#${zeilenId(vorgang)}`;
 }
 

@@ -61,9 +61,13 @@ describe("Dashboard und Benachrichtigungen", () => {
       art: "Qualifikation" } as const;
     const vormerkung = { ...basis, quelle: "VORGANG", artCode: "VORMERKUNG", art: "Vormerkung",
       bezugArt: "TERMIN", bezugId: "T-1" } as const;
+    const zeitraum = { ...vormerkung, id: 2, artCode: "ERSATZTRAINER_ANFRAGE",
+      art: "Ersatztrainer-Anfrage", bezugArt: "VORGANG", bezugId: "2026-10-01/2026-10-02",
+      von: "2026-10-01", bis: "2026-10-02" } as const;
     vi.mocked(fetchDashboard).mockResolvedValue({ vorgaenge: [qualifikation, vormerkung],
       pflichten: [], dringlichkeiten: [], eigeneVorgaenge: [{ ...vormerkung, richtung: "VON_MIR",
-        entscheidbar: false, zurueckziehbar: true }], erledigteVorgaenge: [],
+        entscheidbar: false, zurueckziehbar: true }, { ...zeitraum, richtung: "VON_MIR",
+        entscheidbar: false, zurueckziehbar: false }], erledigteVorgaenge: [],
       erledigteEigeneVorgaenge: [] });
     const wrapper = mount(DashboardAnsicht, { global: { plugins: [router] } });
     await flushPromises();
@@ -73,6 +77,8 @@ describe("Dashboard und Benachrichtigungen", () => {
     expect(wrapper.findAll("form.rejection-form")).toHaveLength(1);
     expect(wrapper.get("form.rejection-form textarea").attributes("id")).toBe("grund-VORGANG-1");
     expect(wrapper.find(".own-processes a").attributes("href")).toBe("/planer?termin=T-1#kalender");
+    expect(wrapper.findAll(".own-processes a").map(link => link.attributes("href")))
+      .toContain("/planer?datum=2026-10-01#kalender");
   });
 
   it("zeigt Mitteilungen neueste zuerst mit Lesezustand und Bezug", async () => {
