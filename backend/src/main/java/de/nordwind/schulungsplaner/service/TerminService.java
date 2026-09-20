@@ -480,7 +480,8 @@ public class TerminService {
                 benachrichtige(termin.trainerId(), null,
                         Benachrichtigungsanlass.TERMIN_AUTOMATISCH_ABGESCHLOSSEN,
                         "Der Termin " + termin.terminId()
-                                + " wurde automatisch abgeschlossen und zählt nicht in Teilnehmerauswertungen.",
+                                + " wurde automatisch abgeschlossen. Die Teilnehmerzahlen wurden nicht geprüft"
+                                + " und zählen nicht in Teilnehmerauswertungen.",
                         termin.terminId());
             }
         }

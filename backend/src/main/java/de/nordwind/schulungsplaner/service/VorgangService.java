@@ -84,6 +84,9 @@ public class VorgangService {
         }
         Benutzerkonto entscheider = konten.laden(kontoId);
         String status = angenommen ? "ANGENOMMEN" : "ABGELEHNT";
+        List<String> freiGewordeneTermine = angenommen
+                && vorgang.art() == Vorgangsart.ABWESENHEITSANTRAG
+                ? betroffeneTermine(vorgang) : List.of();
         int geaendert = jdbc.update("""
                 UPDATE vorgang SET status=?, entschieden_am=?, entschieden_von_id=?,
                     entschieden_von_name=?, begruendung=? WHERE id=? AND status='OFFEN'
@@ -98,10 +101,19 @@ public class VorgangService {
                 ? "VORGANG" : vorgang.bezugArt();
         String mitteilungsBezugId = vorgang.art() == Vorgangsart.ABWESENHEITSANTRAG
                 ? String.valueOf(id) : vorgang.bezugId();
+        String text = vorgang.art().bezeichnung() + " zu " + vorgang.bezug() + " wurde "
+                + status.toLowerCase() + (grund.isEmpty() ? "." : ": " + grund);
+        if (angenommen && vorgang.art() == Vorgangsart.ABWESENHEITSANTRAG) {
+            text += " Frei gewordene Termine: "
+                    + (freiGewordeneTermine.isEmpty() ? "keine" : String.join(", ", freiGewordeneTermine)) + ".";
+        } else if (angenommen && vorgang.art() == Vorgangsart.ASSISTENZBEWERBUNG) {
+            text += " Die Assistenzzuweisung wurde angelegt.";
+        } else if (!angenommen && vorgang.art() == Vorgangsart.ERSATZTRAINER_ANFRAGE) {
+            text += " Ein Abwesenheitsantrag wurde angelegt.";
+        }
         if (vorgang.antragstellerId() != null) benachrichtigungen.persoenlich(
                 vorgang.antragstellerId(), kontoId, anlass(vorgang.art(), angenommen),
-                vorgang.art().bezeichnung() + " zu " + vorgang.bezug() + " wurde "
-                        + status.toLowerCase() + (grund.isEmpty() ? "." : ": " + grund),
+                text,
                 mitteilungsBezugArt, mitteilungsBezugId);
     }
 
@@ -192,12 +204,14 @@ public class VorgangService {
             Eintrag vorgang = zeile.eintrag();
             boolean adressatEndet = ereignis.kontoId().equals(vorgang.zustaendigId())
                     && !ereignis.kontoId().equals(vorgang.antragstellerId());
-            entfallen(zeile.id(), vorgang.art(), ereignis.grund(),
-                    Benachrichtigungsanlass.VORGANG_DURCH_KONTOENDE_ENTFALLEN,
-                    ereignis.ausloeserId());
+            String grund = ereignis.grund();
             if (adressatEndet && vorgang.art() == Vorgangsart.ERSATZTRAINER_ANFRAGE) {
                 regulärenAbwesenheitsantragAnlegen(vorgang, zeile.id());
+                grund += "; Abwesenheitsantrag angelegt";
             }
+            entfallen(zeile.id(), vorgang.art(), grund,
+                    Benachrichtigungsanlass.VORGANG_DURCH_KONTOENDE_ENTFALLEN,
+                    ereignis.ausloeserId());
         }
         List<Long> freigaben = jdbc.queryForList("""
                 SELECT id FROM qualifikationsbewerbung
@@ -224,10 +238,13 @@ public class VorgangService {
                 WHERE status='OFFEN' AND art='ABWESENHEITSANTRAG' AND von<=?
                 """, (rs, row) -> new EintragMitId(rs.getLong("id"), eintrag(rs)), heute.plusWeeks(1))) {
             Eintrag vorgang = zeile.eintrag();
+            List<String> freiGewordeneTermine = betroffeneTermine(vorgang);
             abschliessenOhneEntscheider(zeile.id(), "ANGENOMMEN", "Fristablauf: automatisch genehmigt");
             wendeAn(zeile.id(), vorgang);
             String text = "Abwesenheitsantrag für " + vorgang.bezug()
-                    + " wurde nach Fristablauf genehmigt.";
+                    + " wurde nach Fristablauf genehmigt. Frei gewordene Termine: "
+                    + (freiGewordeneTermine.isEmpty() ? "keine"
+                    : String.join(", ", freiGewordeneTermine)) + ".";
             benachrichtigungen.persoenlich(vorgang.antragstellerId(), null,
                     Benachrichtigungsanlass.ABWESENHEITSANTRAG_NACH_FRIST_GENEHMIGT,
                     text, "VORGANG", String.valueOf(zeile.id()));
@@ -241,7 +258,8 @@ public class VorgangService {
                        bezug_art, bezug_id, bezug, von, bis FROM vorgang
                 WHERE status='OFFEN' AND art='ERSATZTRAINER_ANFRAGE' AND erstellt_am<=?
                 """, (rs, row) -> new EintragMitId(rs.getLong("id"), eintrag(rs)), grenze)) {
-            entfallen(zeile.id(), zeile.eintrag().art(), "Fristablauf",
+            entfallen(zeile.id(), zeile.eintrag().art(),
+                    "Fristablauf; Abwesenheitsantrag angelegt",
                     Benachrichtigungsanlass.ERSATZTRAINER_ANFRAGE_BEENDET, null);
             regulärenAbwesenheitsantragAnlegen(zeile.eintrag(), zeile.id());
         }
@@ -292,11 +310,21 @@ public class VorgangService {
                     SELECT ?, ?, COALESCE(MAX(platz), 0) + 1 FROM termin_assistent WHERE termin_id=?
                     """, vorgang.bezugId(), vorgang.antragstellerId(), vorgang.bezugId());
             case ABWESENHEITSANTRAG -> {
+                List<String> termine = jdbc.queryForList("""
+                        SELECT termin_id FROM termin WHERE trainer_id=? AND status='geplant'
+                        AND startdatum<=? AND enddatum>=? ORDER BY termin_id
+                        """, String.class, vorgang.antragstellerId(), vorgang.bis(), vorgang.von());
                 jdbc.update("UPDATE abwesenheit SET status='AKTIV' WHERE id=?", Long.valueOf(vorgang.bezugId()));
                 jdbc.update("""
                         UPDATE termin SET trainer_id=NULL, version=version+1
                         WHERE trainer_id=? AND status='geplant' AND startdatum<=? AND enddatum>=?
                         """, vorgang.antragstellerId(), vorgang.bis(), vorgang.von());
+                if (!termine.isEmpty()) benachrichtigungen.adminbereich(
+                        Benachrichtigungsanlass.VERFUEGBARKEITSKONFLIKT_DURCH_ABWESENHEIT,
+                        name(vorgang.antragstellerId()) + " ist von " + vorgang.von() + " bis "
+                                + vorgang.bis() + " abwesend. Frei gewordene Termine: "
+                                + String.join(", ", termine) + ".",
+                        "VORGANG", String.valueOf(id));
             }
             case ERSATZTRAINER_ANFRAGE -> {
                 jdbc.update("""
@@ -355,6 +383,13 @@ public class VorgangService {
                 INSERT INTO abwesenheit (benutzerkonto_id, von, bis, status)
                 VALUES (?, ?, ?, 'AKTIV')
                 """, vorgang.antragstellerId(), vorgang.von(), vorgang.bis());
+    }
+
+    private List<String> betroffeneTermine(Eintrag vorgang) {
+        return jdbc.queryForList("""
+                SELECT termin_id FROM termin WHERE trainer_id=? AND status='geplant'
+                AND startdatum<=? AND enddatum>=? ORDER BY termin_id
+                """, String.class, vorgang.antragstellerId(), vorgang.bis(), vorgang.von());
     }
 
     private List<EintragMitId> offeneZeitraumvorgaenge(String trainerId, LocalDate start, LocalDate ende) {

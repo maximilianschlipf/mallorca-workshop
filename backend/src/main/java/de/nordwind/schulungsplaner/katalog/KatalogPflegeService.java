@@ -148,7 +148,8 @@ public class KatalogPflegeService {
                 """, id.wert());
         bewerber.forEach(kontoId -> benachrichtigungen.persoenlich(kontoId, null,
                 Benachrichtigungsanlass.QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN,
-                "Qualifikationsbewerbung für " + id + " abgelehnt", "SCHULUNG", id.wert()));
+                "Qualifikationsbewerbung für " + id + " durch Archivierung abgelehnt.",
+                "SCHULUNG", id.wert()));
         return Katalogantwort.ohneWarnung(ansicht.findeSchulung(id).orElseThrow());
     }
 

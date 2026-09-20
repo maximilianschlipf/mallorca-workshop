@@ -271,9 +271,11 @@ class DashboardVorgaengeIntegrationTest {
                 """, String.class)).hasSize(2).allSatisfy(text -> assertThat(text).contains("Qualifikation fehlt"));
     }
 
-    // verifies: TEST_DSH_VORG_07
+    // verifies: TEST_DSH_VORG_07, TEST_DSH_VORG_08, TEST_NAC_ANL_01
     @Test
     void alleFachlichenEreignisseBeendenOderReduzierenOffeneVorgaengeNachvollziehbar() {
+        alleEntscheidungsmitteilungenPruefen();
+        restlicheKataloganlaessePruefen();
         jdbc.update("INSERT INTO trainer_qualifikation (benutzerkonto_id, schulung_id) VALUES (?, 'SCH-001')",
                 trainer.id());
         termin("T-ZUWEISUNG", null);
@@ -281,6 +283,8 @@ class DashboardVorgaengeIntegrationTest {
                 "TERMIN", "T-ZUWEISUNG", "Termin T-ZUWEISUNG");
         termine.trainerZuweisen(admin.id(), "T-ZUWEISUNG", trainer.id(), false);
         entfallenOhneEntscheider(vormerkung, "Zuweisung");
+        assertEineVorgangsmitteilung(vormerkung, antragsteller.id(),
+                "VORMERKUNG_DURCH_ZUWEISUNG_ENTFALLEN", "Zuweisung");
 
         termin("T-TAUSCH", trainer.id());
         long uebernahme = anlegen(Vorgangsart.UEBERNAHMEANFRAGE, trainer.id(), false,
@@ -290,6 +294,8 @@ class DashboardVorgaengeIntegrationTest {
                 trainer.id(), false, "TERMIN", "T-TAUSCH", "Termin T-TAUSCH");
         vorgaenge.entscheiden(trainer.id(), uebernahme, true, null);
         entfallenOhneEntscheider(andereUebernahme, "Tausch");
+        assertEineVorgangsmitteilung(andereUebernahme, anderer.id(),
+                "UEBERNAHMEANFRAGE_DURCH_TAUSCH_ENTFALLEN", "Tausch");
 
         Benutzerkonto fristTrainer = konto("Frist Trainer", "frist@example.de", false);
         jdbc.update("""
@@ -306,7 +312,11 @@ class DashboardVorgaengeIntegrationTest {
         vorgaenge.nachziehen();
         assertThat(jdbc.queryForObject("SELECT status FROM vorgang WHERE id=?", String.class, abwesenheit))
                 .isEqualTo("ANGENOMMEN");
+        assertEineVorgangsmitteilung(abwesenheit, fristTrainer.id(),
+                "ABWESENHEITSANTRAG_NACH_FRIST_GENEHMIGT", "Fristablauf");
         entfallenOhneEntscheider(ersatzFrist, "Fristablauf");
+        assertEineVorgangsmitteilung(ersatzFrist, fristTrainer.id(),
+                "ERSATZTRAINER_ANFRAGE_BEENDET", "Fristablauf");
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM vorgang WHERE art='ABWESENHEITSANTRAG'
                 AND antragsteller_id=? AND status='OFFEN'
@@ -321,20 +331,32 @@ class DashboardVorgaengeIntegrationTest {
                 fachlichUngueltig)).containsEntry("STATUS", "UNGUELTIG")
                 .satisfies(row -> assertThat(row.get("BEGRUENDUNG").toString()).contains("Qualifikation"))
                 .containsEntry("ENTSCHIEDEN_VON_ID", null);
+        assertEineVorgangsmitteilung(fachlichUngueltig, fristTrainer.id(),
+                "ERSATZTRAINER_ANFRAGE_BEENDET", "Qualifikation fehlt");
+        assertEineVorgangsmitteilung(fachlichUngueltig, ohneQualifikation.id(),
+                "ERSATZTRAINER_ANFRAGE_BEENDET", "Qualifikation fehlt");
 
         termin("T-ABSAGE-VORGAENGE", trainer.id());
         long v = anlegen(Vorgangsart.VORMERKUNG, null, true, "TERMIN", "T-ABSAGE-VORGAENGE", "Termin");
         long a = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true, "TERMIN", "T-ABSAGE-VORGAENGE", "Termin");
         long u = anlegen(Vorgangsart.UEBERNAHMEANFRAGE, trainer.id(), false, "TERMIN", "T-ABSAGE-VORGAENGE", "Termin");
         termine.absagen(admin.id(), "T-ABSAGE-VORGAENGE", "Kunde");
-        for (long id : new long[]{v, a, u}) entfallenOhneEntscheider(id, "Terminabsage");
+        for (long id : new long[]{v, a, u}) {
+            entfallenOhneEntscheider(id, "Terminabsage");
+            assertEineVorgangsmitteilung(id, antragsteller.id(),
+                    "VORGANG_DURCH_TERMINENDE_ANGEPASST_ODER_ENTFALLEN", "Terminabsage");
+        }
 
         termin("T-LOESCH-VORGAENGE", trainer.id());
         long lv = anlegen(Vorgangsart.VORMERKUNG, null, true, "TERMIN", "T-LOESCH-VORGAENGE", "Termin");
         long la = anlegen(Vorgangsart.ASSISTENZBEWERBUNG, trainer.id(), true, "TERMIN", "T-LOESCH-VORGAENGE", "Termin");
         long lu = anlegen(Vorgangsart.UEBERNAHMEANFRAGE, trainer.id(), false, "TERMIN", "T-LOESCH-VORGAENGE", "Termin");
         termine.loeschen(admin.id(), "T-LOESCH-VORGAENGE");
-        for (long id : new long[]{lv, la, lu}) entfallenOhneEntscheider(id, "Terminlöschung");
+        for (long id : new long[]{lv, la, lu}) {
+            entfallenOhneEntscheider(id, "Terminlöschung");
+            assertEineVorgangsmitteilung(id, antragsteller.id(),
+                    "VORGANG_DURCH_TERMINENDE_ANGEPASST_ODER_ENTFALLEN", "Terminlöschung");
+        }
 
         Benutzerkonto zeitraumTrainer = konto("Zeitraum Trainer", "zeitraum@example.de", false);
         terminFuer("T-ZEIT-1", zeitraumTrainer.id(), "2026-10-01", "2026-10-01");
@@ -350,6 +372,7 @@ class DashboardVorgaengeIntegrationTest {
         assertStatus(zeitraumAntrag, "OFFEN");
         termine.loeschen(admin.id(), "T-ZEIT-2");
         entfallenOhneEntscheider(zeitraumAntrag, "Terminlöschung");
+        assertZweiAnpassungsmitteilungen(zeitraumAntrag, zeitraumTrainer.id());
         assertThat(jdbc.queryForObject("SELECT status FROM abwesenheit WHERE id=?", String.class,
                 zeitraumAbwesenheitId)).isEqualTo("AKTIV");
 
@@ -362,6 +385,7 @@ class DashboardVorgaengeIntegrationTest {
         assertStatus(ersatzZeitraumAnfrage, "OFFEN");
         termine.loeschen(admin.id(), "T-ERS-Z-2");
         entfallenOhneEntscheider(ersatzZeitraumAnfrage, "Terminlöschung");
+        assertZweiAnpassungsmitteilungen(ersatzZeitraumAnfrage, ersatzZeitraum.id());
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=? AND status='AKTIV'
                 """, Integer.class, ersatzZeitraum.id())).isOne();
@@ -374,6 +398,10 @@ class DashboardVorgaengeIntegrationTest {
         konten.stilllegen(admin.id(), adressat.id(), adressat.aenderungsstand());
         entfallenOhneEntscheider(adressierteUebernahme, "Stilllegung");
         entfallenOhneEntscheider(adressierterErsatz, "Stilllegung");
+        assertEineVorgangsmitteilung(adressierteUebernahme, antragsteller.id(),
+                "VORGANG_DURCH_KONTOENDE_ENTFALLEN", "Stilllegung");
+        assertEineVorgangsmitteilung(adressierterErsatz, antragsteller.id(),
+                "VORGANG_DURCH_KONTOENDE_ENTFALLEN", "Stilllegung");
         assertThat(jdbc.queryForObject("""
                 SELECT COUNT(*) FROM vorgang WHERE art='ABWESENHEITSANTRAG'
                 AND antragsteller_id=? AND status='OFFEN'
@@ -383,6 +411,20 @@ class DashboardVorgaengeIntegrationTest {
         long[] stillgelegteVorgaenge = alleSechsVorgaenge(stillgelegt);
         konten.stilllegen(admin.id(), stillgelegt.id(), stillgelegt.aenderungsstand());
         assertAlleEntfallen(stillgelegteVorgaenge, "Stilllegung");
+        assertThat(jdbc.queryForList("""
+                SELECT anlasstyp FROM benachrichtigung WHERE empfaenger_id=?
+                """, String.class, stillgelegt.id())).hasSize(6)
+                .allMatch("VORGANG_DURCH_KONTOENDE_ENTFALLEN"::equals);
+
+        Benutzerkonto selbstStillgelegt = konto("Selbst Stillgelegt", "selbst-still@example.de", false);
+        konten.rolleErteilen(admin.id(), selbstStillgelegt.id(), Rolle.ADMINISTRATOR,
+                selbstStillgelegt.aenderungsstand());
+        selbstStillgelegt = konten.laden(selbstStillgelegt.id());
+        long[] selbstVorgaenge = alleSechsVorgaenge(selbstStillgelegt);
+        konten.stilllegen(selbstStillgelegt.id(), selbstStillgelegt.id(), selbstStillgelegt.aenderungsstand());
+        assertAlleEntfallen(selbstVorgaenge, "Stilllegung");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?",
+                Integer.class, selbstStillgelegt.id())).isZero();
 
         Benutzerkonto geloescht = konto("Gelöscht", "geloescht@example.de", false);
         long[] geloeschteVorgaenge = alleSechsVorgaenge(geloescht);
@@ -392,6 +434,21 @@ class DashboardVorgaengeIntegrationTest {
                 SELECT COUNT(*) FROM vorgang WHERE id IN (?,?,?,?,?) AND antragsteller_id IS NOT NULL
                 """, Integer.class, geloeschteVorgaenge[1], geloeschteVorgaenge[2],
                 geloeschteVorgaenge[3], geloeschteVorgaenge[4], geloeschteVorgaenge[5])).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?",
+                Integer.class, geloescht.id())).isZero();
+
+        Benutzerkonto geloeschterAdressat = konto("Gelöschter Adressat", "adressat-loesch@example.de", false);
+        long adressatLoeschUebernahme = anlegen(Vorgangsart.UEBERNAHMEANFRAGE,
+                geloeschterAdressat.id(), false, "TERMIN", "KONTO-LOE-UEB", "Termin");
+        long adressatLoeschErsatz = anlegen(Vorgangsart.ERSATZTRAINER_ANFRAGE,
+                geloeschterAdressat.id(), false, "VORGANG", "KONTO-LOE-ERS", "Zeitraum");
+        konten.loeschen(admin.id(), geloeschterAdressat.id(), geloeschterAdressat.aenderungsstand());
+        entfallenOhneEntscheider(adressatLoeschUebernahme, "Löschung");
+        entfallenOhneEntscheider(adressatLoeschErsatz, "Löschung");
+        assertEineVorgangsmitteilung(adressatLoeschUebernahme, antragsteller.id(),
+                "VORGANG_DURCH_KONTOENDE_ENTFALLEN", "Löschung");
+        assertEineVorgangsmitteilung(adressatLoeschErsatz, antragsteller.id(),
+                "VORGANG_DURCH_KONTOENDE_ENTFALLEN", "Löschung");
 
         Benutzerkonto archivBewerber = konto("Archiv Bewerber", "archiv@example.de", false);
         einsaetze.aufQualifikationBewerben(archivBewerber.id(), "SCH-001");
@@ -404,6 +461,15 @@ class DashboardVorgaengeIntegrationTest {
                 """, archivBewerbung)).containsEntry("STATUS", "ABGELEHNT")
                 .containsEntry("BEGRUENDUNG", "Schulung archiviert")
                 .satisfies(row -> assertThat(row.get("ENTSCHIEDEN_AM")).isNotNull());
+        assertNurAnlass(archivBewerber.id(), "QUALIFIKATION_DURCH_ARCHIVIERUNG_ENTFALLEN");
+        assertThat(jdbc.queryForObject("SELECT anlass FROM benachrichtigung WHERE empfaenger_id=?",
+                String.class, archivBewerber.id())).contains("SCH-001");
+        assertThat(jdbc.queryForList("SELECT DISTINCT anlasstyp FROM benachrichtigung", String.class))
+                .containsExactlyInAnyOrder(java.util.Arrays.stream(
+                        de.nordwind.schulungsplaner.service.Benachrichtigungsanlass.values())
+                        .map(Enum::name).toArray(String[]::new));
+        assertThat(jdbc.queryForList("SELECT anlass FROM benachrichtigung", String.class))
+                .allSatisfy(text -> assertThat(text).isNotBlank());
     }
 
     // verifies: TEST_NAC_ANL_06
@@ -654,6 +720,227 @@ class DashboardVorgaengeIntegrationTest {
                 SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?
                 AND anlasstyp IN ('TRAINERZUWEISUNG_GESETZT','TRAINERZUWEISUNG_BEENDET')
                 """, Integer.class, kontoId)).isZero();
+    }
+
+    private void assertEineVorgangsmitteilung(long vorgangId, String kontoId,
+                                              String anlass, String inhalt) {
+        assertThat(jdbc.queryForList("""
+                SELECT anlasstyp, anlass FROM benachrichtigung
+                WHERE empfaenger_id=? AND bezug_art='VORGANG' AND bezug_id=?
+                """, kontoId, String.valueOf(vorgangId))).singleElement().satisfies(zeile -> {
+            assertThat(zeile.get("ANLASSTYP")).isEqualTo(anlass);
+            assertThat(zeile.get("ANLASS").toString()).containsIgnoringCase(inhalt);
+        });
+    }
+
+    private void assertZweiAnpassungsmitteilungen(long vorgangId, String kontoId) {
+        assertThat(jdbc.queryForList("""
+                SELECT anlasstyp, anlass FROM benachrichtigung
+                WHERE empfaenger_id=? AND bezug_art='VORGANG' AND bezug_id=? ORDER BY id
+                """, kontoId, String.valueOf(vorgangId))).hasSize(2).allSatisfy(zeile ->
+                assertThat(zeile.get("ANLASSTYP"))
+                        .isEqualTo("VORGANG_DURCH_TERMINENDE_ANGEPASST_ODER_ENTFALLEN"))
+                .anySatisfy(zeile -> assertThat(zeile.get("ANLASS").toString()).contains("angepasst"))
+                .anySatisfy(zeile -> assertThat(zeile.get("ANLASS").toString()).contains("entfallen"));
+    }
+
+    private void alleEntscheidungsmitteilungenPruefen() {
+        for (boolean angenommen : new boolean[]{true, false}) {
+            Benutzerkonto bewerber = konto("Qualifikation " + angenommen,
+                    "qualifikation-" + angenommen + "@example.de", false);
+            einsaetze.aufQualifikationBewerben(bewerber.id(), "SCH-001");
+            long id = jdbc.queryForObject("""
+                    SELECT id FROM qualifikationsbewerbung WHERE benutzerkonto_id=?
+                    """, Long.class, bewerber.id());
+            if (angenommen) einsaetze.bewerbungGenehmigen(admin.id(), id);
+            else einsaetze.bewerbungAblehnen(admin.id(), id, "Praxisnachweis fehlt");
+            assertNurAnlass(bewerber.id(), angenommen
+                    ? "QUALIFIKATION_GENEHMIGT" : "QUALIFIKATION_ABGELEHNT");
+            assertThat(jdbc.queryForObject("""
+                    SELECT anlass FROM benachrichtigung WHERE empfaenger_id=?
+                    """, String.class, bewerber.id())).contains("SCH-001")
+                    .contains(angenommen ? "genehmigt" : "Praxisnachweis fehlt");
+            assertThat(jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?
+                    """, Integer.class, admin.id())).isZero();
+        }
+        int nummer = 0;
+        for (Vorgangsart art : Vorgangsart.values()) {
+            for (boolean angenommen : new boolean[]{true, false}) {
+                pruefeVorgangsentscheidung(art, angenommen, ++nummer);
+            }
+        }
+
+        jdbc.update("""
+                INSERT INTO abwesenheit (benutzerkonto_id, von, bis, status)
+                VALUES (?, '2026-10-01', '2026-10-02', 'OFFEN')
+                """, admin.id());
+        long abwesenheitId = jdbc.queryForObject("SELECT MAX(id) FROM abwesenheit", Long.class);
+        long eigenerAntrag = anlegenFuer(admin, Vorgangsart.ABWESENHEITSANTRAG, null, true,
+                "VORGANG", String.valueOf(abwesenheitId), "Eigene Abwesenheit");
+        vorgaenge.entscheiden(admin.id(), eigenerAntrag, true, null);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?",
+                Integer.class, admin.id())).isZero();
+        jdbc.update("DELETE FROM termin WHERE termin_id LIKE 'ENTSCHEIDUNG-%'");
+    }
+
+    private void pruefeVorgangsentscheidung(Vorgangsart art, boolean angenommen, int nummer) {
+        Benutzerkonto bewerber = konto("Vorgang " + nummer, "vorgang-" + nummer + "@example.de", false);
+        String bezugId = "ENTSCHEIDUNG-" + nummer;
+        String bezugArt = "TERMIN";
+        String zustaendig = null;
+        boolean adminZustaendig = true;
+        String akteur = admin.id();
+        if (art == Vorgangsart.ABWESENHEITSANTRAG) {
+            jdbc.update("""
+                    INSERT INTO abwesenheit (benutzerkonto_id, von, bis, status)
+                    VALUES (?, '2026-10-01', '2026-10-02', 'OFFEN')
+                    """, bewerber.id());
+            bezugId = String.valueOf(jdbc.queryForObject("SELECT MAX(id) FROM abwesenheit", Long.class));
+            bezugArt = "VORGANG";
+        } else if (art == Vorgangsart.VORMERKUNG) {
+            termin(bezugId, null);
+        } else if (art == Vorgangsart.ASSISTENZBEWERBUNG) {
+            termin(bezugId, trainer.id());
+            zustaendig = trainer.id();
+        } else if (art == Vorgangsart.UEBERNAHMEANFRAGE) {
+            termin(bezugId, trainer.id());
+            zustaendig = trainer.id();
+            adminZustaendig = false;
+            akteur = trainer.id();
+        } else if (art == Vorgangsart.ERSATZTRAINER_ANFRAGE) {
+            termin(bezugId, bewerber.id());
+            jdbc.update("""
+                    MERGE INTO trainer_qualifikation (benutzerkonto_id, schulung_id)
+                    KEY(benutzerkonto_id, schulung_id) VALUES (?, 'SCH-001')
+                    """, ersatz.id());
+            zustaendig = ersatz.id();
+            adminZustaendig = false;
+            akteur = ersatz.id();
+            bezugArt = "VORGANG";
+        }
+        long id = anlegenFuer(bewerber, art, zustaendig, adminZustaendig,
+                bezugArt, bezugId, "Bezug " + nummer);
+        String grund = !angenommen && art.ablehnungsgrundPflicht() ? "Fachlicher Grund" : null;
+        vorgaenge.entscheiden(akteur, id, angenommen, grund);
+
+        assertNurAnlass(bewerber.id(), switch (art) {
+            case ABWESENHEITSANTRAG -> angenommen
+                    ? "ABWESENHEITSANTRAG_MANUELL_GENEHMIGT" : "ABWESENHEITSANTRAG_ABGELEHNT";
+            case VORMERKUNG -> angenommen ? "VORMERKUNG_BESTAETIGT" : "VORMERKUNG_ABGELEHNT";
+            case ASSISTENZBEWERBUNG -> "ASSISTENZBEWERBUNG_ENTSCHIEDEN";
+            case UEBERNAHMEANFRAGE -> "UEBERNAHMEANFRAGE_ENTSCHIEDEN";
+            case ERSATZTRAINER_ANFRAGE -> "ERSATZTRAINER_ANFRAGE_BEENDET";
+        });
+        assertThat(jdbc.queryForObject("SELECT anlass FROM benachrichtigung WHERE empfaenger_id=?",
+                String.class, bewerber.id())).contains(angenommen ? "angenommen" : "abgelehnt");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM benachrichtigung WHERE empfaenger_id=?",
+                Integer.class, akteur)).isZero();
+    }
+
+    private void restlicheKataloganlaessePruefen() {
+        Benutzerkonto direkt = konto("Direktzuweisung", "katalog-direkt@example.de", false);
+        jdbc.update("INSERT INTO trainer_qualifikation (benutzerkonto_id, schulung_id) VALUES (?, 'SCH-001')",
+                direkt.id());
+        termin("KATALOG-ZUWEISUNG", null);
+        termine.trainerZuweisen(admin.id(), "KATALOG-ZUWEISUNG", direkt.id(), false);
+        assertPersoenlicherAnlass(direkt.id(), "TRAINERZUWEISUNG_GESETZT", "KATALOG-ZUWEISUNG");
+        termine.trainerAbziehen(admin.id(), "KATALOG-ZUWEISUNG");
+        assertPersoenlicherAnlass(direkt.id(), "TRAINERZUWEISUNG_BEENDET", "KATALOG-ZUWEISUNG");
+
+        Benutzerkonto rollenwechsler = konto("Katalog Rollenwechsel", "katalog-rolle@example.de", false);
+        jdbc.update("INSERT INTO trainer_qualifikation (benutzerkonto_id, schulung_id) VALUES (?, 'SCH-001')",
+                rollenwechsler.id());
+        termin("KATALOG-ROLLE", trainer.id());
+        jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)",
+                "KATALOG-ROLLE", rollenwechsler.id());
+        termine.trainerZuweisen(admin.id(), "KATALOG-ROLLE", rollenwechsler.id(), true);
+        assertNurAnlass(rollenwechsler.id(), "ROLLENWECHSEL");
+        assertThat(jdbc.queryForObject("SELECT anlass FROM benachrichtigung WHERE empfaenger_id=?",
+                String.class, rollenwechsler.id())).contains("KATALOG-ROLLE").contains("Assistent");
+
+        Benutzerkonto geaendertTrainer = konto("Geändert Trainer", "katalog-aenderung@example.de", false);
+        Benutzerkonto geaendertAssistent = konto("Geändert Assistenz", "katalog-assistenz@example.de", false);
+        termin("KATALOG-AENDERUNG", geaendertTrainer.id());
+        jdbc.update("""
+                UPDATE termin SET zugangsart='oeffentlich', durchfuehrungsart='vor_ort',
+                    ort='Altstadt' WHERE termin_id='KATALOG-AENDERUNG'
+                """);
+        jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)",
+                "KATALOG-AENDERUNG", geaendertAssistent.id());
+        termine.aendern(admin.id(), "KATALOG-AENDERUNG", new TerminService.TerminEingabe(
+                null, null, null, "oeffentlich", "vor_ort", "Berlin", null, null, null, false));
+        assertPersoenlicherAnlass(geaendertTrainer.id(), "TERMIN_GEAENDERT", "Berlin");
+        assertPersoenlicherAnlass(geaendertAssistent.id(), "TERMIN_GEAENDERT", "Berlin");
+
+        Benutzerkonto absageTrainer = konto("Absage Trainer", "katalog-absage@example.de", false);
+        Benutzerkonto absageAssistent = konto("Absage Assistenz", "katalog-absage-ass@example.de", false);
+        termin("KATALOG-ABSAGE", absageTrainer.id());
+        jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)",
+                "KATALOG-ABSAGE", absageAssistent.id());
+        termine.absagen(admin.id(), "KATALOG-ABSAGE", "Kunde verhindert");
+        assertPersoenlicherAnlass(absageTrainer.id(), "TERMIN_ABGESAGT", "Kunde verhindert");
+        assertPersoenlicherAnlass(absageAssistent.id(), "TERMIN_ABGESAGT", "Kunde verhindert");
+
+        Benutzerkonto loeschTrainer = konto("Lösch Trainer", "katalog-loesch@example.de", false);
+        Benutzerkonto loeschAssistent = konto("Lösch Assistenz", "katalog-loesch-ass@example.de", false);
+        termin("KATALOG-LOESCHUNG", loeschTrainer.id());
+        jdbc.update("INSERT INTO termin_assistent (termin_id, benutzerkonto_id, platz) VALUES (?, ?, 1)",
+                "KATALOG-LOESCHUNG", loeschAssistent.id());
+        termine.loeschen(admin.id(), "KATALOG-LOESCHUNG");
+        assertPersoenlicherAnlass(loeschTrainer.id(), "TERMIN_GELOESCHT", "KATALOG-LOESCHUNG");
+        assertPersoenlicherAnlass(loeschAssistent.id(), "TERMIN_GELOESCHT", "KATALOG-LOESCHUNG");
+
+        Benutzerkonto automatisch = konto("Automatisch abgeschlossen", "katalog-auto@example.de", false);
+        terminFuer("KATALOG-AUTO", automatisch.id(), "2026-07-01", "2026-07-01");
+        termine.nachziehen();
+        assertPersoenlicherAnlass(automatisch.id(), "TERMIN_AUTOMATISCH_ABGESCHLOSSEN",
+                "Teilnehmerauswertungen");
+
+        Benutzerkonto qualifiziert = konto("Direkt qualifiziert", "katalog-qual@example.de", false);
+        einsaetze.direktQualifizieren(admin.id(), "SCH-001", qualifiziert.id());
+        assertPersoenlicherAnlass(qualifiziert.id(), "QUALIFIKATION_DIREKT", "SCH-001");
+        einsaetze.qualifikationEntziehen(admin.id(), "SCH-001", qualifiziert.id());
+        assertPersoenlicherAnlass(qualifiziert.id(), "QUALIFIKATION_ENTZOGEN", "SCH-001");
+
+        Benutzerkonto ableger = konto("Qualifikation Ableger", "katalog-ableger@example.de", false);
+        jdbc.update("INSERT INTO trainer_qualifikation (benutzerkonto_id, schulung_id) VALUES (?, 'SCH-001')",
+                ableger.id());
+        einsaetze.eigeneQualifikationAblegen(ableger.id(), "SCH-001");
+        assertThat(jdbc.queryForList("""
+                SELECT anlass FROM benachrichtigung WHERE empfaenger_rolle='ADMINISTRATOR'
+                AND anlasstyp='QUALIFIKATION_ABGELEGT'
+                """, String.class)).singleElement().satisfies(text ->
+                assertThat(text).contains("Qualifikation Ableger").contains("SCH-001"));
+
+        Benutzerkonto konflikt = konto("Konflikt Trainer", "katalog-konflikt@example.de", false);
+        termin("KATALOG-KONFLIKT", konflikt.id());
+        jdbc.update("""
+                INSERT INTO abwesenheit (benutzerkonto_id, von, bis, status)
+                VALUES (?, '2026-10-01', '2026-10-02', 'OFFEN')
+                """, konflikt.id());
+        long abwesenheit = jdbc.queryForObject("SELECT MAX(id) FROM abwesenheit", Long.class);
+        long antrag = anlegenFuer(konflikt, Vorgangsart.ABWESENHEITSANTRAG, null, true,
+                "VORGANG", String.valueOf(abwesenheit), "1. bis 2. Oktober");
+        vorgaenge.entscheiden(admin.id(), antrag, true, null);
+        assertThat(jdbc.queryForList("""
+                SELECT anlass FROM benachrichtigung WHERE empfaenger_rolle='ADMINISTRATOR'
+                AND anlasstyp='VERFUEGBARKEITSKONFLIKT_DURCH_ABWESENHEIT'
+                """, String.class)).singleElement().satisfies(text -> assertThat(text)
+                .contains("Konflikt Trainer").contains("2026-10-01").contains("KATALOG-KONFLIKT"));
+
+        assertThat(jdbc.queryForList("""
+                SELECT anlass FROM benachrichtigung WHERE empfaenger_rolle='ADMINISTRATOR'
+                AND anlasstyp='TRAINERWECHSEL_DURCH_UEBERNAHME'
+                """, String.class)).isNotEmpty().allSatisfy(text ->
+                assertThat(text).contains("Trainerwechsel").contains("von").contains("zu"));
+    }
+
+    private void assertPersoenlicherAnlass(String kontoId, String anlass, String inhalt) {
+        assertThat(jdbc.queryForList("""
+                SELECT anlass FROM benachrichtigung WHERE empfaenger_id=? AND anlasstyp=?
+                """, String.class, kontoId, anlass)).singleElement()
+                .satisfies(text -> assertThat(text).containsIgnoringCase(inhalt));
     }
 
     private Benutzerkonto konto(String name, String email, boolean istAdmin) {
