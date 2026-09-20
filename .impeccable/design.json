@@ -81,6 +81,12 @@
           "#cfe8f5"
         ]
       },
+      "header-text": {
+        "role": "neutral",
+        "displayName": "Kopfzeilenweiß",
+        "canonical": "#ffffff",
+        "darkModeValue": "#ffffff"
+      },
       "text": {
         "role": "neutral",
         "displayName": "Marineschrift",
@@ -252,6 +258,14 @@
     ],
     "breakpoints": [
       {
+        "name": "navigation-offenlegung",
+        "value": "1200px"
+      },
+      {
+        "name": "navigation-verdichtung",
+        "value": "1300px"
+      },
+      {
         "name": "kontozeile",
         "value": "860px"
       },
@@ -322,9 +336,9 @@
       "name": "Hauptnavigation",
       "kind": "nav",
       "refersTo": "nav-link",
-      "description": "Dunkle Kopfzeile mit Signaturnaht, Wortmarke und blauem Aktivstrich.",
-      "html": "<header class=\"ds-header\"><nav class=\"ds-nav\"><span class=\"ds-brand\">SimplyTest<strong>Academy</strong></span><span class=\"ds-nav-links\"><a class=\"ds-nav-link is-active\" href=\"#\">Planer</a><a class=\"ds-nav-link\" href=\"#\">Katalog</a><a class=\"ds-nav-link\" href=\"#\">Profil</a></span></nav></header>",
-      "css": ".ds-header { background: linear-gradient(90deg, #ea6839, #1c85c3) top / 100% 3px no-repeat, radial-gradient(circle at 82% 0, rgba(28, 133, 195, 0.2), transparent 22rem), #171942; box-shadow: 0 8px 28px rgba(23, 25, 66, 0.18); font-family: Roboto, Arial, sans-serif; } .ds-nav { height: 78px; display: flex; align-items: center; justify-content: space-between; padding-inline: 24px; color: #fff; } .ds-brand { display: inline-flex; align-items: center; gap: 16px; font-size: 0.9rem; font-weight: 650; } .ds-brand strong { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, 0.3); font-size: 1.05rem; } .ds-nav-links { display: flex; gap: 24px; } .ds-nav-link { padding: 29px 0 25px; border-bottom: 2px solid transparent; color: rgba(255, 255, 255, 0.76); font-size: 0.86rem; text-decoration: none; transition: color 180ms ease; } .ds-nav-link:hover, .ds-nav-link.is-active { color: #fff; border-bottom-color: #1c85c3; } .ds-nav-link:focus-visible { outline: 3px solid rgba(0, 132, 202, 0.45); outline-offset: 4px; }"
+      "description": "Dunkle Kopfzeile mit getrennten Zonen für Arbeitsbereiche, rollenabhängige Verwaltung, Benachrichtigungen und persönliches Konto; kompakt bleiben Brand und Menüschalter in der festen ersten Zeile, während die Navigationsgruppen untereinander öffnen.",
+      "html": "<header class=\"ds-header\"><nav class=\"ds-nav\"><span class=\"ds-brand\">SimplyTest<strong>Academy</strong></span><button type=\"button\">Menü</button><span class=\"ds-navigation-content\"><span class=\"ds-work-nav\"><a class=\"ds-nav-link is-active\" href=\"#\">Dashboard</a><a class=\"ds-nav-link\" href=\"#\">Terminplaner</a><a class=\"ds-nav-link\" href=\"#\">Schulungskatalog</a></span><span class=\"ds-utility-nav\"><a href=\"#\">Benutzerkonten</a><a href=\"#\">Benachrichtigungen</a><button type=\"button\">Name · Rollen</button></span></span></nav></header>",
+      "css": ".ds-header { background: linear-gradient(90deg, #ea6839, #1c85c3) top / 100% 3px no-repeat, radial-gradient(circle at 82% 0, rgba(28, 133, 195, 0.2), transparent 22rem), #171942; box-shadow: 0 8px 28px rgba(23, 25, 66, 0.18); font-family: Roboto, Arial, sans-serif; } .ds-nav { min-height: 78px; display: flex; align-items: center; gap: 32px; padding-inline: 24px; color: #fff; } .ds-brand { display: inline-flex; align-items: center; gap: 16px; } .ds-navigation-content, .ds-work-nav, .ds-utility-nav { display: flex; align-items: center; } .ds-navigation-content { flex: 1; justify-content: space-between; gap: 24px; } .ds-work-nav { gap: 24px; } .ds-utility-nav { gap: 8px; padding-left: 16px; border-left: 1px solid rgba(255,255,255,.22); } .ds-nav-link { padding: 29px 0 25px; border-bottom: 2px solid transparent; color: rgba(255,255,255,.76); font-size: .86rem; text-decoration: none; } .ds-nav-link:hover, .ds-nav-link.is-active { color: #fff; border-bottom-color: #1c85c3; } @media (max-width: 1200px) { .ds-nav { display: grid; grid-template-columns: 1fr auto; grid-template-rows: 78px auto; row-gap: 0; } .ds-navigation-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; } }"
     },
     {
       "name": "Verwaltungstabelle",

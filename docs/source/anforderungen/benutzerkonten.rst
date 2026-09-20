@@ -382,6 +382,35 @@ Anmeldung
    Ein angemeldeter Benutzer kann sich abmelden, ohne den Browser zu
    schließen.
 
+Anwendungsnavigation
+--------------------
+
+.. req:: Navigation trennt Arbeit, Verwaltung und persönliches Konto
+   :id: REQ_USR_NAV_01
+   :status: approved
+   :priority: high
+   :component: frontend
+   :links: REQ_USR_ROLLE_10, REQ_USR_EIGT_04, REQ_USR_LOGIN_05
+
+   Jede angemeldete Person erreicht über die Hauptnavigation die drei
+   Arbeitsbereiche Dashboard, Terminplaner und Schulungskatalog sowie die
+   Benachrichtigungen. Name und Rollen des angemeldeten Kontos sind am
+   persönlichen Kontomenü erkennbar; dort liegen ausschließlich das eigene
+   Profil und das Abmelden.
+
+   Die Benutzerkonten stehen getrennt davon als Verwaltungsfunktion bereit
+   und sind nur für Administratoren sichtbar und erreichbar. Das schließt
+   den Eigentümer ein, weil er nach :need:`REQ_USR_EIGT_04` stets auch die
+   Administratorrolle trägt.
+
+   Auf ausreichend breiten Bildschirmen sind alle Navigationsziele dauerhaft
+   im Kopfbereich sichtbar. Nur wenn der verfügbare Platz nicht ausreicht,
+   werden dieselben Ziele mit denselben Berechtigungen über ein
+   tastaturbedienbares Navigationsmenü offengelegt; dessen Schalter behält
+   beim Öffnen seine Position. Alle Ziele besitzen verständliche Namen; der
+   aktuelle Arbeitsbereich und die Anzahl ungelesener Benachrichtigungen sind
+   erkennbar.
+
 .. req:: Anwendung ist standardmäßig nur lokal erreichbar
    :id: REQ_USR_SICHER_01
    :status: approved

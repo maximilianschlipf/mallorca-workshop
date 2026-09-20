@@ -154,6 +154,7 @@ test("die drei Ränge stehen für Administrator und Trainer in fester Reihenfolg
   expect(await page.locator(".dashboard-rank h2").allTextContents())
     .toEqual(["Vorgänge", "Handlungspflichten", "Dringlichkeiten", "Von mir gestellt"]);
 
+  await page.locator(".account-trigger").click();
   await page.getByRole("button", { name: "Abmelden" }).click();
   await page.getByLabel("E-Mail-Adresse").fill("e2e-nac@example.de");
   await page.getByLabel("Passwort").fill(eigentuemerPasswort);

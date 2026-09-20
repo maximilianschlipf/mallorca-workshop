@@ -249,6 +249,43 @@ Anmeldung
    Die Standardkonfiguration bindet den Server an die Loopback-Schnittstelle
    und schaltet die H2-Konsole ab.
 
+Navigation
+----------
+
+.. story:: Ich finde Arbeit, Verwaltung und mein Konto getrennt
+   :id: STORY_USR_NAV_01
+   :status: approved
+   :priority: high
+   :implements: REQ_USR_NAV_01
+
+   Als angemeldete Person wechsle ich über drei klar benannte Arbeitsbereiche
+   zwischen Dashboard, Terminplaner und Schulungskatalog. Benachrichtigungen
+   erkenne ich als Statusziel. Mein Profil und das Abmelden finde ich bei
+   meinem Namen; als Administrator erreiche ich die davon getrennte
+   Benutzerkontenverwaltung.
+
+.. test:: Hauptnavigation trennt Ziele und wahrt Rollen
+   :id: TEST_USR_NAV_01
+   :status: approved
+   :automated: yes
+   :level: e2e
+   :verifies: STORY_USR_NAV_01, REQ_USR_NAV_01
+
+   Ein Eigentümer sieht auf Desktop und Mobilgerät die Arbeitsbereiche
+   Dashboard, Terminplaner und Schulungskatalog, den von jeder Seite
+   erreichbaren Benachrichtigungseinstieg, die getrennte Verwaltung der
+   Benutzerkonten sowie Name und Rollen am persönlichen Kontomenü. Dieses
+   Menü enthält das eigene Profil und das Abmelden, aber nicht die
+   Benutzerkontenverwaltung. Die mobile Navigation und das Kontomenü lassen
+   sich mit der Tastatur öffnen und bedienen. Auf breiten Bildschirmen bleibt
+   die vollständige Navigation ohne Menüschalter sichtbar; beim Öffnen auf
+   schmalen Bildschirmen verändert der Menüschalter seine Position nicht.
+
+   Ein Konto ausschließlich mit Trainerrolle sieht dieselben Arbeitsbereiche,
+   Benachrichtigungen und persönlichen Kontoaktionen, aber weder in der
+   Hauptnavigation noch im Kontomenü einen Einstieg zur
+   Benutzerkontenverwaltung.
+
 Passwort
 --------
 

@@ -5,6 +5,7 @@ colors:
   accent: "#006fae"
   accent-hover: "#005d92"
   accent-contrast: "#ffffff"
+  header-text: "#ffffff"
   brand-highlight: "#ff6633"
   seam-orange: "#ea6839"
   seam-blue: "#1c85c3"
@@ -250,9 +251,11 @@ Raster: Katalogkarten und Profilkarten zweispaltig
 mit 1-px-Linien und mindestens 142 px Zellhöhe, Listenzeilen einspaltig mit
 Trennlinie.
 
-Breakpoints: **860 px** (Trainerformular und Kontozeile brechen auf),
-**680 px** (Kalender wechselt von Raster auf Liste, Karten werden einspaltig,
-Fußzeile stapelt), **520 px** (Navigation stapelt, Dialoge werden vollflächig).
+Breakpoints: **1200 px** (die vollständige Kopfzeile wechselt in ein
+tastaturbedienbares Offenlegungsmenü), **860 px** (Trainerformular und
+Kontozeile brechen auf), **680 px** (Kalender wechselt von Raster auf Liste,
+Karten werden einspaltig, Fußzeile stapelt), **520 px** (Navigation und
+Hilfsziele werden einspaltig, Dialoge werden vollflächig).
 Es gibt keinen `min-width`-Einstieg: das System ist Desktop-first und faltet
 nach unten.
 
@@ -349,11 +352,24 @@ System.
 - **Kopfzeile:** 78 px hoch, dunkles Marineblau mit Signaturnaht oben und
   radialem Blauschimmer rechts. Wortmarke links (142 px breit), dahinter ein
   senkrechter Trenner und das Wort „Academy".
-- **Links:** 0.86rem in 76 % Weiß, Hover/Aktiv auf volles Weiß mit 2 px blauem
-  Unterstrich (`#1c85c3`). Der Abmelden-Knopf trägt dieselbe Optik über
-  `.nav-button`.
-- **Mobil (≤520 px):** die Leiste stapelt auf zwei Zeilen, Links verteilen sich
-  über die volle Breite.
+- **Arbeitsbereiche:** Dashboard, Terminplaner und Schulungskatalog stehen als
+  eigene Gruppe zusammen. Links laufen in 0.86rem und 76 % Weiß; Hover und
+  Aktivzustand wechseln auf volles Weiß mit 2 px blauem Unterstrich.
+- **Hilfsziele:** Die rollenabhängige Benutzerkontenverwaltung und
+  Benachrichtigungen stehen rechts hinter einer Haarlinie. Verwaltung gehört
+  nie in das persönliche Kontomenü.
+- **Persönliches Konto:** Name und Rollen sind dauerhaft sichtbar. Das Menü
+  enthält ausschließlich „Mein Profil" und „Abmelden".
+- **Kompakt (≤1200 px):** Ein ortsfester Schalter „Menü" legt Arbeits- und
+  Utility-Navigation untereinander im Dokumentfluss unter einer konstant 78 px
+  hohen Kopfzeile offen. Zwischen
+  **1201 und 1300 px** bleibt die vollständige Navigation sichtbar und rückt
+  lediglich enger zusammen. Bei **680 px** werden die beiden Gruppen jeweils
+  dreispaltig, bei **520 px** werden
+  Arbeitsbereiche und Hilfsziele einspaltig. Alle Ziele bleiben mindestens
+  44 px, auf kleinen Mobilgeräten 48 px hoch. Nach der Tastaturauswahl wandert
+  der Fokus in den Inhalt; Katalog-Unterseiten weisen den Arbeitsbereich mit
+  `aria-current="location"` aus.
 
 ### Tabellen
 

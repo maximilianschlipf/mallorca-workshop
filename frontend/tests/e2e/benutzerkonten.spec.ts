@@ -33,7 +33,9 @@ async function registrieren(
 
 async function logout(page: import("@playwright/test").Page) {
   const antwort = page.waitForResponse(response => response.url().endsWith("/api/auth/abmelden"));
-  await page.getByRole("button", { name: "Abmelden" }).click();
+  const abmelden = page.getByRole("button", { name: "Abmelden" });
+  if (!await abmelden.isVisible()) await page.locator(".account-trigger").click();
+  await abmelden.click();
   expect((await antwort).status()).toBe(204);
   await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
 }
@@ -49,15 +51,16 @@ test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", as
   await registrieren(page, "E2E Trainer", trainerEmail, "trainer-startpasswort");
 
   await login(page, trainerEmail, "trainer-startpasswort");
-  await page.getByRole("link", { name: "Katalog" }).click();
+  await page.getByRole("link", { name: "Schulungskatalog" }).click();
   await page.getByRole("button", { name: "Auf Qualifikation bewerben" }).first().click();
   await expect(page.getByText("Die Bewerbung auf die Qualifikation wurde eingereicht.")).toBeVisible();
-  await page.getByRole("link", { name: "Planer" }).click();
+  await page.getByRole("link", { name: "Terminplaner" }).click();
   await page.getByRole("button", { name: /Kubernetes Grundlagen/ }).first().click();
   await page.getByRole("button", { name: "Als Assistenz bewerben" }).click();
   await expect(page.getByText("Die Bewerbung auf den Assistenzplatz wurde eingereicht.")).toBeVisible();
   await page.getByRole("button", { name: "Termindetails schließen" }).click();
-  await page.getByRole("link", { name: "Profil" }).click();
+  await page.locator(".account-trigger").click();
+  await page.getByRole("link", { name: "Mein Profil" }).click();
   await page.getByLabel("Name").fill("E2E Trainer Neu");
   await page.getByRole("button", { name: "Name speichern" }).click();
   await expect(page.getByText("Der Name wurde gespeichert.")).toBeVisible();
@@ -75,7 +78,7 @@ test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", as
   await logout(page);
 
   await login(page);
-  await page.getByRole("link", { name: "Konten" }).click();
+  await page.getByRole("link", { name: "Benutzerkonten" }).click();
   const eigentuemerKonto = page.locator(".verwaltetes-konto").filter({ hasText: eigentuemerEmail });
   await expect(eigentuemerKonto).toContainText("Trainer");
   await expect(eigentuemerKonto).toContainText("Administrator");
@@ -86,6 +89,189 @@ test("durchläuft den Benutzerkonten-Hauptablauf auf einer frischen Instanz", as
   await expect(page.getByText("Die Rollen wurden aktualisiert.")).toBeVisible();
   await expect(trainerKarte).toContainText("Administrator");
   await logout(page);
+});
+
+// verifies: TEST_USR_NAV_01
+test("trennt Arbeitsbereiche, Verwaltung und persönliches Konto rollenabhängig", async ({ page }) => {
+  const trainerEmail = "e2e-navigation-trainer@example.de";
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await eigentuemerAnmelden(page);
+  expect(await page.evaluate(async () => {
+    const { token } = await fetch("/api/auth/csrf").then(antwort => antwort.json());
+    return (await fetch("/api/e2e/benachrichtigungen", {
+      method: "PUT",
+      headers: { "X-XSRF-TOKEN": token },
+    })).status;
+  })).toBe(204);
+  await page.reload();
+
+  const navigation = page.getByRole("navigation", { name: "Hauptnavigation" });
+  const arbeitsbereiche = navigation.getByRole("list", { name: "Arbeitsbereiche" });
+  const menueschalter = navigation.getByRole("button", { name: "Menü" });
+  await expect(arbeitsbereiche.getByRole("link")).toHaveText([
+    "Dashboard",
+    "Terminplaner",
+    "Schulungskatalog",
+  ]);
+  await expect(arbeitsbereiche.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
+  await expect(navigation.getByRole("link", { name: "3 ungelesene Benachrichtigungen" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toBeVisible();
+  const kontoschalter = navigation.getByLabel(/^Kontomenü für/);
+  await expect(kontoschalter).toHaveAccessibleName(
+    "Kontomenü für E2E Eigentümer, Rollen: Eigentümer · Administrator · Trainer",
+  );
+  await kontoschalter.locator("strong").evaluate(element => element.textContent = "L".repeat(255));
+  await navigation.locator(".notification-count").evaluate(element => element.textContent = "9999");
+  await page.setViewportSize({ width: 1201, height: 800 });
+  await expect(menueschalter).toBeHidden();
+  for (const ziel of ["Dashboard", "Terminplaner", "Schulungskatalog"]) {
+    await expect(arbeitsbereiche.getByRole("link", { name: ziel })).toBeVisible();
+  }
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "3 ungelesene Benachrichtigungen" })).toBeVisible();
+  await expect(kontoschalter).toBeVisible();
+  expect(await page.locator(".nav").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  expect(await kontoschalter.locator("small").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  for (const breite of [1300, 1301]) {
+    await page.setViewportSize({ width: breite, height: 800 });
+    await expect(menueschalter).toBeHidden();
+    expect(await page.locator(".nav").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await kontoschalter.locator("small").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  }
+
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await expect(menueschalter).toBeVisible();
+  const positionGeschlossen = await menueschalter.boundingBox();
+  await menueschalter.click();
+  await expect(menueschalter).toHaveAttribute("aria-expanded", "true");
+  for (const ziel of ["Dashboard", "Terminplaner", "Schulungskatalog"]) {
+    await expect(arbeitsbereiche.getByRole("link", { name: ziel })).toBeVisible();
+  }
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "3 ungelesene Benachrichtigungen" })).toBeVisible();
+  await expect(kontoschalter).toBeVisible();
+  const positionOffen = await menueschalter.boundingBox();
+  expect(positionOffen?.y).toBeCloseTo(positionGeschlossen?.y ?? 0, 1);
+
+  await page.setViewportSize({ width: 900, height: 800 });
+  const verwaltungsbereich = navigation.locator(".utility-navigation");
+  const rollenanzeige = kontoschalter.locator("small");
+  await expect(arbeitsbereiche).toBeVisible();
+  await expect(verwaltungsbereich).toBeVisible();
+  await expect(rollenanzeige).toBeVisible();
+  const arbeitsbereichBox = await arbeitsbereiche.boundingBox();
+  const verwaltungsbereichBox = await verwaltungsbereich.boundingBox();
+  expect(arbeitsbereichBox).not.toBeNull();
+  expect(verwaltungsbereichBox).not.toBeNull();
+  expect(arbeitsbereichBox!.y + arbeitsbereichBox!.height).toBeLessThanOrEqual(verwaltungsbereichBox!.y);
+  expect(await rollenanzeige.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+
+  await menueschalter.click();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.reload();
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(kontoschalter.locator("strong")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(navigation.locator(".notification-count")).toHaveCSS("color", "rgb(17, 19, 40)");
+  await page.emulateMedia({ colorScheme: "light" });
+  await kontoschalter.click();
+  const kontomenue = navigation.getByRole("group", { name: "Persönliches Konto" });
+  await expect(kontomenue.getByRole("link")).toHaveText(["Mein Profil"]);
+  await expect(kontomenue.getByRole("button")).toHaveText(["Abmelden"]);
+  await kontomenue.getByRole("link", { name: "Mein Profil" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/profil$/);
+  await expect(page.locator("#hauptinhalt")).toBeFocused();
+
+  for (const pfad of ["/", "/planer", "/katalog", "/profil", "/benutzerkonten"]) {
+    await page.goto(pfad);
+    await expect(navigation.getByRole("link", { name: "3 ungelesene Benachrichtigungen" })).toBeVisible();
+  }
+  await page.goto("/kategorien");
+  await expect(page.locator('.work-navigation a[href="/katalog"]')).toHaveAttribute("aria-current", "location");
+  await page.goto("/");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await menueschalter.focus();
+  await page.keyboard.press("Enter");
+  await expect(arbeitsbereiche.getByRole("link")).toHaveText([
+    "Dashboard",
+    "Terminplaner",
+    "Schulungskatalog",
+  ]);
+  for (const ziel of ["Dashboard", "Terminplaner", "Schulungskatalog"]) {
+    await expect(arbeitsbereiche.getByRole("link", { name: ziel })).toBeVisible();
+  }
+  await expect(arbeitsbereiche.getByRole("link", { name: "Terminplaner" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "3 ungelesene Benachrichtigungen" })).toBeVisible();
+  await expect(kontoschalter).toHaveAccessibleName(
+    "Kontomenü für E2E Eigentümer, Rollen: Eigentümer · Administrator · Trainer",
+  );
+  await arbeitsbereiche.getByRole("link", { name: "Terminplaner" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/planer$/);
+  await expect(page.locator('.work-navigation a[href="/planer"]')).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("#hauptinhalt")).toBeFocused();
+  await menueschalter.focus();
+  await page.keyboard.press("Enter");
+  await kontoschalter.focus();
+  await page.keyboard.press("Enter");
+  await expect(kontomenue.getByRole("link")).toHaveText(["Mein Profil"]);
+  await expect(kontomenue.getByRole("button")).toHaveText(["Abmelden"]);
+  await kontomenue.getByRole("link", { name: "Mein Profil" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/profil$/);
+  await menueschalter.focus();
+  await page.keyboard.press("Enter");
+  await kontoschalter.focus();
+  await page.keyboard.press("Enter");
+  await kontomenue.getByRole("button", { name: "Abmelden" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
+
+  await registrieren(page, "Navigation Trainer", trainerEmail, "trainer-passwort");
+  await login(page, trainerEmail, "trainer-passwort");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(arbeitsbereiche.getByRole("link")).toHaveText([
+    "Dashboard",
+    "Terminplaner",
+    "Schulungskatalog",
+  ]);
+  for (const ziel of ["Dashboard", "Terminplaner", "Schulungskatalog"]) {
+    await expect(arbeitsbereiche.getByRole("link", { name: ziel })).toBeVisible();
+  }
+  await expect(navigation.getByRole("link", { name: "Benachrichtigungen" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toHaveCount(0);
+  await expect(kontoschalter).toHaveAccessibleName("Kontomenü für Navigation Trainer, Rollen: Trainer");
+  await kontoschalter.click();
+  await expect(kontomenue.getByRole("link")).toHaveText(["Mein Profil"]);
+  await expect(kontomenue.getByRole("button")).toHaveText(["Abmelden"]);
+  await kontoschalter.click();
+  await page.goto("/benutzerkonten");
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await menueschalter.focus();
+  await page.keyboard.press("Enter");
+  await expect(navigation.getByRole("link", { name: "Benutzerkonten" })).toHaveCount(0);
+  await expect(arbeitsbereiche.getByRole("link")).toHaveText([
+    "Dashboard",
+    "Terminplaner",
+    "Schulungskatalog",
+  ]);
+  for (const ziel of ["Dashboard", "Terminplaner", "Schulungskatalog"]) {
+    await expect(arbeitsbereiche.getByRole("link", { name: ziel })).toBeVisible();
+  }
+  await expect(navigation.getByRole("link", { name: "Benachrichtigungen" })).toBeVisible();
+  await expect(kontoschalter).toHaveAccessibleName("Kontomenü für Navigation Trainer, Rollen: Trainer");
+  await kontoschalter.focus();
+  await page.keyboard.press("Enter");
+  await expect(kontomenue.getByRole("link")).toHaveText(["Mein Profil"]);
+  await expect(kontomenue.getByRole("button")).toHaveText(["Abmelden"]);
+  await kontomenue.getByRole("button", { name: "Abmelden" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
 });
 
 // verifies: TEST_USR_LOGIN_02
