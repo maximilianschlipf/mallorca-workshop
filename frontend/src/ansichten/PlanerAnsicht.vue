@@ -792,22 +792,5 @@ onMounted(async () => {
     <p v-if="aktionsmeldung" class="success planer-rueckmeldung" role="status">{{ aktionsmeldung }}</p>
     <p v-if="aktionsfehler" class="form-error planer-rueckmeldung" role="alert">{{ aktionsfehler }}</p>
 
-    <footer class="footer">
-      <div class="footer-main">
-        <a
-          class="footer-brand"
-          href="#top"
-          aria-label="Zurück zum Seitenanfang"
-        >
-          <span class="footer-brand-copy">
-            <span class="brand-lockup" aria-hidden="true">
-              <img src="/simplytest-wordmark-white.svg" alt="" />
-              <strong>Academy</strong>
-            </span>
-          </span>
-        </a>
-      </div>
-      <p class="footer-meta">Ein Produkt von SimplyTest</p>
-    </footer>
   </div>
 </template>

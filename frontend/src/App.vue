@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import { abmelden, aktuellesKonto } from "./auth";
 import { fetchUngeleseneBenachrichtigungen } from "./api";
+import SeitenFooter from "./komponenten/SeitenFooter.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -162,8 +163,9 @@ function schliesseMenues() {
         </div>
       </nav>
     </header>
-    <div id="hauptinhalt" tabindex="-1">
+    <div id="hauptinhalt" class="site-content" tabindex="-1">
       <RouterView />
     </div>
+    <SeitenFooter />
   </div>
 </template>
