@@ -28,7 +28,7 @@ Bewerbung
 
 .. req:: Bewerbung auf eine Qualifikation
    :id: REQ_QUA_BEW_01
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_UMF_01
 
@@ -42,7 +42,7 @@ Bewerbung
 
 .. req:: Keine Bewerbung bei bestehender Qualifikation
    :id: REQ_QUA_BEW_05
-   :status: draft
+   :status: approved
    :links: REQ_QUA_BEW_01
 
    Für eine Schulung, für die ein Trainer bereits qualifiziert ist, wird
@@ -51,7 +51,7 @@ Bewerbung
 
 .. req:: Nur eine offene Bewerbung je Schulung
    :id: REQ_QUA_BEW_06
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_BEW_01
 
@@ -60,7 +60,7 @@ Bewerbung
 
 .. req:: Bewerbung zurückziehen
    :id: REQ_QUA_BEW_07
-   :status: draft
+   :status: approved
    :links: REQ_QUA_BEW_06
 
    Ein Trainer kann eine eigene offene Bewerbung zurückziehen. Danach kann
@@ -71,9 +71,9 @@ Entscheidung
 
 .. req:: Entscheidung über eine Freigabeanfrage
    :id: REQ_QUA_BEW_02
-   :status: draft
+   :status: approved
    :priority: high
-   :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01
+   :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01, REQ_DSH_VORG_01
 
    Ein Administrator genehmigt oder lehnt eine Freigabeanfrage ab. Bei
    Genehmigung entsteht eine Qualifikation des Trainers für diese Schulung,
@@ -81,7 +81,7 @@ Entscheidung
 
 .. req:: Ablehnung mit Begründung
    :id: REQ_QUA_BEW_08
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_BEW_02
 
@@ -90,15 +90,15 @@ Entscheidung
 
 .. req:: Benachrichtigung über die Entscheidung
    :id: REQ_QUA_BEW_03
-   :status: draft
-   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_08
+   :status: approved
+   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_08, REQ_NAC_ANL_01
 
-   Der Trainer wird über die Entscheidung zu seiner Freigabeanfrage
-   benachrichtigt. Bei einer Ablehnung erhält er die Begründung mit.
+   Der Trainer erhält eine Mitteilung über die Entscheidung zu seiner
+   Freigabeanfrage. Bei einer Ablehnung enthält sie die Begründung.
 
 .. req:: Sperrfrist nach einer Ablehnung
    :id: REQ_QUA_BEW_09
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_BEW_08
 
@@ -108,7 +108,7 @@ Entscheidung
 
 .. req:: Qualifikation schaltet Termine frei
    :id: REQ_QUA_BEW_04
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_BEW_02, REQ_TRA_UEBER_02
 
@@ -121,7 +121,7 @@ Entzug
 
 .. req:: Qualifikation entziehen
    :id: REQ_QUA_ENTZ_01
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_UMF_01
 
@@ -129,7 +129,7 @@ Entzug
 
 .. req:: Entzug löst zukünftige Zuweisungen
    :id: REQ_QUA_ENTZ_02
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_ENTZ_01
 
@@ -140,14 +140,15 @@ Entzug
 
 .. req:: Benachrichtigung über den Entzug
    :id: REQ_QUA_ENTZ_03
-   :status: draft
-   :links: REQ_QUA_ENTZ_01
+   :status: approved
+   :links: REQ_QUA_ENTZ_01, REQ_NAC_ANL_01
 
-   Der Trainer wird über den Entzug einer Qualifikation benachrichtigt.
+   Der Trainer erhält eine Mitteilung über den Entzug einer
+   Qualifikation.
 
 .. req:: Bewerbung nach einem Entzug
    :id: REQ_QUA_ENTZ_04
-   :status: draft
+   :status: approved
    :links: REQ_QUA_ENTZ_01, REQ_QUA_BEW_01
 
    Nach einem Entzug kann sich der Trainer für dieselbe Schulung erneut
@@ -158,7 +159,7 @@ Selbst-Ablegen
 
 .. req:: Qualifikation selbst ablegen
    :id: REQ_QUA_ABLEGEN_01
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_UMF_01
 
@@ -168,7 +169,7 @@ Selbst-Ablegen
 
 .. req:: Ablegen löst zukünftige Zuweisungen mit Warnung
    :id: REQ_QUA_ABLEGEN_02
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_ABLEGEN_01
 
@@ -179,7 +180,7 @@ Selbst-Ablegen
 
 .. req:: Bewerbung nach dem Ablegen ohne Sperrfrist
    :id: REQ_QUA_ABLEGEN_03
-   :status: draft
+   :status: approved
    :links: REQ_QUA_ABLEGEN_01, REQ_QUA_BEW_01
 
    Nach dem Ablegen kann sich der Trainer für dieselbe Schulung sofort
@@ -187,18 +188,18 @@ Selbst-Ablegen
 
 .. req:: Benachrichtigung des Adminbereichs über das Ablegen
    :id: REQ_QUA_ABLEGEN_04
-   :status: draft
-   :links: REQ_QUA_ABLEGEN_01
+   :status: approved
+   :links: REQ_QUA_ABLEGEN_01, REQ_NAC_ANL_01, REQ_NAC_ADM_01
 
-   Administratoren werden benachrichtigt, wenn ein Trainer eine
-   Qualifikation ablegt.
+   Der Adminbereich erhält eine Mitteilung, wenn ein Trainer eine
+   Qualifikation ablegt. Sie nennt den Trainer und die Schulung.
 
 Direktvergabe
 --------------
 
 .. decision:: Qualifikationsverwaltung liegt an der Schulung
    :id: DEC_QUA_VERWALTUNG_01
-   :status: draft
+   :status: approved
 
    Offene Freigabeanfragen entscheiden, bestätigte Qualifikationen
    entziehen und Trainer direkt qualifizieren laufen gebündelt in einer
@@ -208,7 +209,7 @@ Direktvergabe
 
 .. req:: Administrator qualifiziert einen Trainer direkt
    :id: REQ_QUA_DIREKT_01
-   :status: draft
+   :status: approved
    :priority: high
    :links: REQ_QUA_UMF_01, DEC_QUA_VERWALTUNG_01
 
@@ -217,7 +218,7 @@ Direktvergabe
 
 .. req:: Keine Direktvergabe bei bestehender Qualifikation
    :id: REQ_QUA_DIREKT_04
-   :status: draft
+   :status: approved
    :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_05
 
    Für eine Schulung, für die ein Trainer bereits qualifiziert ist, bietet
@@ -225,7 +226,7 @@ Direktvergabe
 
 .. req:: Direktvergabe schließt eine offene Bewerbung
    :id: REQ_QUA_DIREKT_02
-   :status: draft
+   :status: approved
    :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_06
 
    Hat der Trainer für dieselbe Schulung bereits eine offene
@@ -234,8 +235,8 @@ Direktvergabe
 
 .. req:: Benachrichtigung über die Direktvergabe
    :id: REQ_QUA_DIREKT_03
-   :status: draft
-   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_03
+   :status: approved
+   :links: REQ_QUA_DIREKT_01, REQ_QUA_BEW_03, REQ_NAC_ANL_01
 
-   Der Trainer wird über die Direktvergabe benachrichtigt, wie bei der
+   Der Trainer erhält eine Mitteilung über die Direktvergabe, wie bei der
    Genehmigung einer Bewerbung.

@@ -36,7 +36,7 @@ class RequirementsGateTest(unittest.TestCase):
         (self.root / "backend/src/test").mkdir(parents=True)
         (self.root / "docs/requirements.rst").write_text(REQUIREMENTS, encoding="utf-8")
         (self.root / "docs/acceptance.rst").write_text(ACCEPTANCE, encoding="utf-8")
-        (self.root / "requirements-scope.txt").write_text(
+        (self.root / "implemented-requirements.txt").write_text(
             "docs/requirements.rst | docs/acceptance.rst\n", encoding="utf-8"
         )
     def tearDown(self):

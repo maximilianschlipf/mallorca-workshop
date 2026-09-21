@@ -63,22 +63,23 @@ def active(needs: list[Need], kind: str) -> list[Need]:
     return [need for need in needs if need.kind == kind and need.options.get("status") in ACTIVE]
 
 
-def load_scopes(root: Path) -> list[tuple[Path, Path]]:
-    scopes: list[tuple[Path, Path]] = []
-    for number, raw in enumerate((root / "requirements-scope.txt").read_text(encoding="utf-8").splitlines(), 1):
+def load_register(root: Path) -> list[tuple[Path, Path]]:
+    entries: list[tuple[Path, Path]] = []
+    register = root / "implemented-requirements.txt"
+    for number, raw in enumerate(register.read_text(encoding="utf-8").splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         parts = [part.strip() for part in line.split("|")]
         if len(parts) != 2:
-            raise ValueError(f"requirements-scope.txt:{number}: erwartet 'requirements | umsetzung'")
+            raise ValueError(f"implemented-requirements.txt:{number}: erwartet 'requirements | umsetzung'")
         paths = tuple(root / part for part in parts)
         if not all(path.is_file() for path in paths):
-            raise ValueError(f"requirements-scope.txt:{number}: Datei nicht gefunden")
-        scopes.append(paths)  # type: ignore[arg-type]
-    if not scopes:
-        raise ValueError("requirements-scope.txt enthält keinen Scope")
-    return scopes
+            raise ValueError(f"implemented-requirements.txt:{number}: Datei nicht gefunden")
+        entries.append(paths)  # type: ignore[arg-type]
+    if not entries:
+        raise ValueError("implemented-requirements.txt enthält keine Einträge")
+    return entries
 
 
 def find_evidence(root: Path) -> dict[str, list[Path]]:
@@ -109,7 +110,7 @@ def audit(root: Path) -> tuple[list[tuple[str, str, str, str, str]], list[str]]:
     rows: list[tuple[str, str, str, str, str]] = []
     issues: list[str] = []
 
-    for requirements_path, acceptance_path in load_scopes(root):
+    for requirements_path, acceptance_path in load_register(root):
         requirements = active(parse_needs(requirements_path), "req")
         acceptance = parse_needs(acceptance_path)
         stories = active(acceptance, "story")

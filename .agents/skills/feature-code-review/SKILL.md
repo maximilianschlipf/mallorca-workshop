@@ -9,13 +9,14 @@ Review only; do not change code unless the user asks for fixes.
 
 ## Establish the review boundary
 
-1. Resolve a fixed base commit or merge-base. Never review only the latest commit when the feature spans several commits.
-2. Read `AGENTS.md`, `requirements-scope.txt`, every scoped requirements/acceptance file, and the originating issue or user plan in full.
-3. Inspect the complete `base...HEAD` diff and its commits. Treat requirements omitted from the implementation as findings, not as out of scope.
+1. Use the user-specified base, or otherwise the merge-base with the default branch. Never review only the latest commit when the feature spans several commits.
+2. Derive the feature scope from the originating issue or user request and the complete diff. Include every affected requirement, story, and acceptance test. `implemented-requirements.txt` is only the cumulative product register; never use it as the feature scope.
+3. Read `AGENTS.md`, the originating issue or user request, and every in-scope requirements/acceptance file in full. Active means status `approved`, `implemented`, or `verified`.
+4. Inspect all commits since the base plus staged, unstaged, and untracked changes. Treat in-scope requirements omitted from the implementation as findings.
 
 ## Build the acceptance matrix first
 
-Create one row for every approved `TEST_*` with:
+Create one row for every active in-scope `TEST_*` with:
 
 | ID | Complete scenario | Executable test | Product path/layer | Assertions cover all steps | Standalone/deterministic | Verdict |
 |---|---|---|---|---|---|---|
@@ -41,16 +42,16 @@ Use isolated reviewers in parallel when the host supports them; otherwise run th
 ### Test / QA
 
 - Require executable evidence for every acceptance row.
-- Reject shared-order E2E tests; each test must pass alone and one failure must not skip unrelated tests.
+- Reject shared-order E2E tests. Run every new or changed E2E test case alone; one failure must not skip unrelated tests.
 - Reject wall-clock-dependent fixtures unless time is explicitly fixed.
-- Require negative CSRF/auth tests for protected mutations.
-- Test production configuration directly, not a test override or fallback value.
+- Require negative CSRF/auth tests for protected mutations in scope.
+- When a requirement concerns configuration, test its production binding directly. Infrastructure-only E2E overrides such as ports, temporary data, and fixtures are allowed.
 - Check public/protected route behavior, role-specific UI actions, profile flows, and REST success/error contracts when in scope.
 - Reject assertions that prove only setup or stored data while missing the required behavior after a state change.
 
 ## Execute the gates
 
-Run `./verify.sh`. Also execute each changed E2E test independently when shared state could hide ordering dependencies. Record every command and result.
+After the review, run `./verify.sh` once against the exact reviewed tree. Record its result and the failing step; steps not reached are `NOT RUN`. After fixes, repeat the complete review and gate.
 
 ## Verdict
 
@@ -62,4 +63,4 @@ Never report `clean`, `complete`, or `all requirements implemented` if:
 - a required command failed or was not run;
 - an unresolved finding contradicts a requirement.
 
-After fixes, repeat all three lanes against the complete fixed-point diff. Do not merely recheck the edited lines.
+Do not merely recheck edited lines after fixes.

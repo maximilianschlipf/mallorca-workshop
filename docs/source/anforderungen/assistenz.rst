@@ -46,12 +46,12 @@ Bewerbung
    :id: REQ_ASS_BEW_02
    :status: draft
    :priority: high
-   :links: REQ_ASS_BEW_01
+   :links: REQ_ASS_BEW_01, REQ_NAC_ANL_01, REQ_DSH_VORG_06
 
    Über eine Bewerbung auf einen Assistenzplatz entscheidet der dem Termin
    zugewiesene Trainer oder ein Administrator. Wer zuerst entscheidet,
    entscheidet. Bei Annahme ist der Bewerber dem Termin als Assistent
-   zugewiesen; er wird über die Entscheidung benachrichtigt.
+   zugewiesen; er erhält eine Mitteilung über die Entscheidung.
 
    Der ausführende Trainer soll mitreden können, weil er die Person anlernt.
    Ist dem Termin noch kein Trainer zugewiesen, bleibt nur der
@@ -67,6 +67,15 @@ Bewerbung
    eine aktive Abwesenheit des Trainers liegt oder er bereits einem anderen
    Termin zugewiesen ist. Ein Assistent ist genauso gebunden wie der
    ausführende Trainer.
+
+.. req:: Assistenzbewerbung zurückziehen
+   :id: REQ_ASS_BEW_04
+   :status: draft
+   :links: REQ_ASS_BEW_01, REQ_DSH_VORG_07
+
+   Ein Trainer kann seine eigene offene Assistenzbewerbung zurückziehen,
+   solange sie nicht entschieden ist. Danach ist der Vorgang erledigt und
+   der Assistenzplatz bleibt frei.
 
 .. req:: Assistenz ist keine Qualifikation
    :id: REQ_ASS_PLATZ_03
