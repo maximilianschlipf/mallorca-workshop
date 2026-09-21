@@ -26,3 +26,11 @@ ausführen.
 
 Offene Findings, unvollständige Matrixzeilen oder ein fehlgeschlagenes Gate
 verhindern die Aussage „alle Anforderungen umgesetzt“.
+
+## Workshop-Ausnahme dieses Branches
+
+Dieser Branch ist der Ausgangspunkt für Aufgabe 6 aus `AUFGABEN.md`. Für einen
+ausgewählten Vormerkungs-Teilprozess werden höchstens zwei Stories und drei
+fachliche Test-Needs entworfen, aber nicht implementiert. Neue Test-Needs
+bleiben `draft`, `review` oder `approved` und erhalten ohne ausführbaren
+Nachweis niemals den Status `verified`; Produktcode ist nicht Teil der Aufgabe.
