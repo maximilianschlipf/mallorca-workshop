@@ -9,19 +9,31 @@ Review only; do not change code unless the user asks for fixes.
 
 ## Establish the review boundary
 
-1. Use the user-specified base, or otherwise the merge-base with the default branch. Never review only the latest commit when the feature spans several commits.
+1. Use the user-specified base or the review base named in `AGENTS.md`. Only fall back to the merge-base with the default branch when neither exists. Never review only the latest commit when the feature spans several commits.
 2. Derive the feature scope from the originating issue or user request and the complete diff. Include every affected requirement, story, and acceptance test. `implemented-requirements.txt` is only the cumulative product register; never use it as the feature scope.
-3. Read `AGENTS.md`, the originating issue or user request, and every in-scope requirements/acceptance file in full. Active means status `approved`, `implemented`, or `verified`.
-4. Inspect all commits since the base plus staged, unstaged, and untracked changes. Treat in-scope requirements omitted from the implementation as findings.
+3. Read `AGENTS.md`, the originating issue or user request, and every in-scope requirements/acceptance file in full. Also read every new or changed need, regardless of status. Active means status `approved`, `implemented`, or `verified`.
+4. Inspect all commits since the base plus staged, unstaged, and untracked changes. Treat in-scope requirements omitted from the implementation as findings only when implementation is part of the agreed scope.
 
 ## Build the acceptance matrix first
 
-Create one row for every active in-scope `TEST_*` with:
+For implementation work, create one row for every active or new/changed
+in-scope `TEST_*` with:
 
 | ID | Complete scenario | Executable test | Product path/layer | Assertions cover all steps | Standalone/deterministic | Verdict |
 |---|---|---|---|---|---|---|
 
 A `verifies:` comment is only a pointer. Read the test and product code. Mark a row incomplete when any scenario step, state transition, negative case, or observable result is missing. `unknown` fails the review.
+
+For requirements, refinement, or test-design work that explicitly excludes
+implementation, create one row for every new or changed in-scope need with:
+
+| ID | Type | Traceability | Complete and unambiguous | Status valid | Open questions/contradictions | Verdict |
+|---|---|---|---|---|---|---|
+
+For a designed test need, check preconditions, action, expected result, edge
+cases, and planned automation. `approved` accepts the test design and does not
+by itself require executable evidence. `verified` always requires complete
+executable evidence.
 
 ## Run three review lanes
 
@@ -35,13 +47,13 @@ Use isolated reviewers in parallel when the host supports them; otherwise run th
 
 ### Specification
 
-- Trace every requirement and story through API/UI, domain behavior, persistence, and cleanup effects.
-- Compare exact contracts: authorization, status codes, response fields, errors, concurrency, and historical data.
+- For implementation work, trace every requirement and story through API/UI, domain behavior, persistence, and cleanup effects, and compare exact contracts.
+- For documentation-only work, trace need relationships, decisions, terminology, statuses, contradictions, and explicitly unresolved questions.
 - Do not infer completion from green tests.
 
 ### Test / QA
 
-- Require executable evidence for every acceptance row.
+- Require executable evidence for every implementation row and every need marked `verified`. Do not require it for a documentation-only design row.
 - Reject shared-order E2E tests. Run every new or changed E2E test case alone; one failure must not skip unrelated tests.
 - Reject wall-clock-dependent fixtures unless time is explicitly fixed.
 - Require negative CSRF/auth tests for protected mutations in scope.
@@ -51,7 +63,7 @@ Use isolated reviewers in parallel when the host supports them; otherwise run th
 
 ## Execute the gates
 
-After the review, run `./verify.sh` once against the exact reviewed tree. Record its result and the failing step; steps not reached are `NOT RUN`. After fixes, repeat the complete review and gate.
+After the review, run the gate specified by `AGENTS.md` once against the exact reviewed tree; the default is `./verify.sh`. Record its result and the failing step; steps not reached are `NOT RUN`. After fixes, repeat the complete review and gate.
 
 ## Verdict
 

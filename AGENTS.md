@@ -32,6 +32,13 @@ verhindern die Aussage „alle Anforderungen umgesetzt“.
 Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 4
 aus `AUFGABEN.md`. Der Bereich Katalog wird nicht in
 `implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
-gemeldet. Im Workshop werden höchstens zwei zusammengehörige `TEST_KAT_*`
-bearbeitet; mindestens einer davon auf der fachlichen Backend-Grenze. Die
-vollständige Rekonstruktion der Testsuite ist nicht Teil der Übung.
+gemeldet. Vor der Umsetzung werden die ausgewählten `TEST_KAT_*`-IDs
+festgehalten. Im Workshop werden höchstens zwei zusammengehörige Test-Needs
+automatisiert; mindestens einer davon auf der fachlichen Backend-Grenze.
+Optional darf ein weiterer Test-Need nur analysiert werden. Die vollständige
+Rekonstruktion der Testsuite ist nicht Teil der Übung.
+
+Review-Basis ist der Tag `workshop/04-start`. Geprüft werden nur Änderungen
+danach sowie staged, unstaged und untracked Änderungen. Ein grünes
+`./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
+belegt die Acceptance-Matrix des Review-Skills.
