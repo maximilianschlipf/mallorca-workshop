@@ -34,3 +34,18 @@ ausgewählten Vormerkungs-Teilprozess werden höchstens zwei Stories und drei
 fachliche Test-Needs entworfen, aber nicht implementiert. Neue Test-Needs
 bleiben `draft`, `review` oder `approved` und erhalten ohne ausführbaren
 Nachweis niemals den Status `verified`; Produktcode ist nicht Teil der Aufgabe.
+Die Obergrenzen von zwei Stories und drei Test-Needs gelten insgesamt, auch
+wenn optional ein zweiter Teilprozess betrachtet wird.
+
+Review-Basis ist der Tag `workshop/06-start`. Geprüft werden nur Änderungen
+danach sowie staged, unstaged und untracked Änderungen. Für diese reine
+Dokumentationsaufgabe ersetzt folgendes Gate `./verify.sh`:
+
+1. `python3 -m unittest scripts.test_check_requirements`
+2. `python3 scripts/check_requirements.py`
+3. `make -C docs html`
+
+Produkt-, Frontend- und E2E-Tests sind nur erforderlich, wenn entgegen dem
+Aufgabenscope Produktcode verändert wurde. Die Dokumentationsmatrix des
+Review-Skills prüft alle neuen oder geänderten Needs unabhängig vom Status;
+`approved` verlangt hier keinen ausführbaren Nachweis.
