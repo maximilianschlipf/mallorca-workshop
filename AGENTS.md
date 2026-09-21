@@ -1,30 +1,36 @@
 # Arbeitsregeln
 
-## Abschluss-Gates für Anforderungen
+## Änderungen mit Anforderungen
 
 Bei Änderungen, die Requirements umsetzen oder verändern:
 
-1. Vor der Implementierung alle betroffenen freigegebenen Requirements,
-   Stories und Tests vollständig lesen.
-2. Den vollständigen fachlichen Umfang in `requirements-scope.txt` eintragen.
-   Eine Einschränkung oder Verschiebung ist nur mit ausdrücklicher Zustimmung
-   des Benutzers zulässig.
+1. Vor der Implementierung alle betroffenen Requirements, Stories und Tests
+   mit Status `approved`, `implemented` oder `verified` vollständig lesen.
+2. Neue Fachbereiche zusammen mit ihrer Umsetzung in
+   `implemented-requirements.txt` aufnehmen. Jeder Eintrag verpflichtet zum
+   vollständigen Nachweis vor der Fertigmeldung. Das Register ist kumulativ,
+   kein Task-Scope; bestehende Einträge nicht entfernen.
 3. Einen `TEST_*`-Nachweis erst dann mit `verifies: TEST_...` an einem
    ausführbaren Test ergänzen, wenn dieser das gesamte beschriebene Szenario
    prüft. Teilprüfungen zählen nicht.
-4. Vor einer Fertigmeldung muss `./verify.sh` vollständig erfolgreich sein.
-   Bei einem Fehler ist die Arbeit als unvollständig zu melden, einschließlich
-   der offenen IDs.
-5. Danach den gesamten Diff mit dem Repo-Skill `feature-code-review` prüfen.
-   Standards, Spezifikation und Test-/QA-Qualität sind getrennte Prüfspuren.
-   Für jeden freigegebenen `TEST_*` muss die Review-Matrix Szenario,
-   ausführbaren Test, Produktpfad und vollständige Assertions nachweisen.
-   Offene, partielle, nicht deterministische oder nicht einzeln ausführbare
-   Tests verhindern die Fertigmeldung auch bei grünen Builds.
-6. Der Abschlussbericht nennt für jeden Scope das Ergebnis des
-   Requirements-Gates und der vier Test-/Build-Befehle. „Alle Anforderungen
-   umgesetzt“ ist nur bei einem vollständig grünen Gate zulässig.
+4. Eine Einschränkung oder Verschiebung des vereinbarten Umfangs braucht die
+   ausdrückliche Zustimmung des Benutzers.
 
-Eine Review darf nur dann „ohne Findings“ melden, wenn alle Matrixzeilen
-vollständig sind und alle vorgeschriebenen Befehle erfolgreich liefen. Nach
-Korrekturen wird der vollständige Diff erneut mit frischem Blick geprüft.
+## Abschluss-Gate
+
+Vor jeder Fertigmeldung den gesamten Diff mit dem Repo-Skill
+`feature-code-review` prüfen. Der Skill bestimmt den Task-Scope, prüft Standards,
+Spezifikation und Test-/QA-Qualität getrennt und führt `./verify.sh` genau einmal
+aus. Nach Korrekturen den vollständigen Diff erneut prüfen und das Gate erneut
+ausführen.
+
+Offene Findings, unvollständige Matrixzeilen oder ein fehlgeschlagenes Gate
+verhindern die Aussage „alle Anforderungen umgesetzt“.
+
+## Workshop-Ausnahme dieses Branches
+
+Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 1
+aus `AUFGABEN.md`. Der Bereich Abwesenheiten wird nicht in
+`implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
+gemeldet. Im Workshop ist ausschließlich der dort genannte Kernumfang
+verbindlich; weitere `ABW`-Needs sind Folgearbeit.
