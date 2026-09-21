@@ -32,6 +32,13 @@ verhindern die Aussage „alle Anforderungen umgesetzt“.
 Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 2
 aus `AUFGABEN.md`. Der Bereich Qualifikationen wird nicht in
 `implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
-gemeldet. Im Workshop ist der Entscheidungsablauf aus `REQ_QUA_BEW_02`
-verbindlich; die Ablehnung mit Begründung aus `REQ_QUA_BEW_08` ist optional.
-Weitere `QUA`-Needs sind Folgearbeit.
+gemeldet. Verbindlich sind für `REQ_QUA_BEW_02` eine Story, ein bis zwei
+Test-Needs, der Backend-Entscheidungsablauf und vollständige ausführbare
+Testnachweise. Neue oder geänderte Test-Needs bleiben unabhängig von ihrem
+Status Teil der Acceptance-Matrix. Die Ablehnung mit Begründung aus
+`REQ_QUA_BEW_08` ist optional; weitere `QUA`-Needs sind Folgearbeit.
+
+Review-Basis ist der Tag `workshop/02-start`. Geprüft werden nur Änderungen
+danach sowie staged, unstaged und untracked Änderungen. Ein grünes
+`./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
+belegt die Acceptance-Matrix des Review-Skills.
