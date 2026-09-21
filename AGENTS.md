@@ -29,9 +29,9 @@ verhindern die Aussage „alle Anforderungen umgesetzt“.
 
 ## Workshop-Ausnahme dieses Branches
 
-Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 3
-aus `AUFGABEN.md`. Der Bereich Terminplanung wird nicht in
+Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 4
+aus `AUFGABEN.md`. Der Bereich Katalog wird nicht in
 `implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
-gemeldet. Im Workshop ist ausschließlich `TEST_TER_ANL_04` verbindlich;
-`TEST_TER_ANL_05` ist optional. Weitere `TER`-Needs sind nicht Teil der
-Übung.
+gemeldet. Im Workshop werden höchstens zwei zusammengehörige `TEST_KAT_*`
+bearbeitet; mindestens einer davon auf der fachlichen Backend-Grenze. Die
+vollständige Rekonstruktion der Testsuite ist nicht Teil der Übung.

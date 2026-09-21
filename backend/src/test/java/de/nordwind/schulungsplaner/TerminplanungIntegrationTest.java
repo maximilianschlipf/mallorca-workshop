@@ -75,9 +75,13 @@ class TerminplanungIntegrationTest {
                 .isEqualTo(LocalDate.of(2028, 1, 10));
     }
 
-    // verifies: TEST_TER_ANL_08
+    // verifies: TEST_TER_ANL_04, TEST_TER_ANL_05, TEST_TER_ANL_08
     @Test
-    void wochenendregelnGeltenBeimAnlegen() {
+    void zeitraumregelnGeltenBeimAnlegen() {
+        assertFehler(() -> termine.anlegen(ADMIN, minimal("SCH-001", "2028-01-04", "2028-01-03")));
+        assertThat(termine.anlegen(ADMIN, minimal("SCH-001", "2028-01-03", "2028-01-03"))).isNotNull();
+        assertFehler(() -> termine.anlegen(ADMIN, minimal("SCH-001", "2026-09-16", "2026-09-16")));
+        assertThat(termine.anlegen(ADMIN, minimal("SCH-001", "2026-09-17", "2026-09-17"))).isNotNull();
         assertFehler(() -> termine.anlegen(ADMIN, minimal("SCH-001", "2026-09-19", "2026-09-21")));
         assertFehler(() -> termine.anlegen(ADMIN, minimal("SCH-001", "2026-09-18", "2026-09-20")));
         assertThat(termine.anlegen(ADMIN, minimal("SCH-001", "2026-09-18", "2026-09-21")).schulungsTage()).isEqualTo(2);

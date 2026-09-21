@@ -46,23 +46,6 @@ describe("Schulungsansicht", () => {
     } as Response));
   });
 
-  // REQ_KAT_SICHT_01: Der Trainer sieht den Katalog, veraendert ihn aber nicht.
-  it("bietet die Bearbeitung nur Administratoren an", async () => {
-    anmelden(["TRAINER"]);
-    const trainerAnsicht = montieren();
-    await flushPromises();
-
-    expect(trainerAnsicht.text()).toContain("Scrum Master Zertifizierung");
-    expect(trainerAnsicht.text()).toContain("Zurück zum Katalog");
-    expect(trainerAnsicht.text()).not.toContain("Bearbeiten");
-
-    anmelden(["TRAINER", "ADMINISTRATOR"]);
-    const adminAnsicht = montieren();
-    await flushPromises();
-
-    expect(adminAnsicht.text()).toContain("Bearbeiten");
-  });
-
   // verifies: TEST_QUA_DIREKT_02
   it("bietet für bereits Qualifizierte keine Direktvergabe an", async () => {
     anmelden(["TRAINER", "ADMINISTRATOR"]);
