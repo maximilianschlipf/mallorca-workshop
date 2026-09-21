@@ -34,3 +34,15 @@ Assistenz-Needs werden hier fachlich weiterentwickelt, aber nicht implementiert
 oder als vollständig nachgewiesen gemeldet. Verbindlicher Workshop-Umfang sind
 höchstens drei offene Fragen, eine dokumentierte Entscheidung und ein bis zwei
 abgeleitete Stories; Test-Needs und Produktcode sind nicht Teil der Aufgabe.
+
+Review-Basis ist der Tag `workshop/05-start`. Geprüft werden nur Änderungen
+danach sowie staged, unstaged und untracked Änderungen. Für diese reine
+Dokumentationsaufgabe ersetzt folgendes Gate `./verify.sh`:
+
+1. `python3 -m unittest scripts.test_check_requirements`
+2. `python3 scripts/check_requirements.py`
+3. `make -C docs html`
+
+Produkt-, Frontend- und E2E-Tests sind nur erforderlich, wenn entgegen dem
+Aufgabenscope Produktcode verändert wurde. Die Dokumentationsmatrix des
+Review-Skills belegt die Erfüllung der Workshop-Aufgabe.
