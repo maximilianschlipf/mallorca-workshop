@@ -36,7 +36,10 @@ gemeldet. Im Workshop ist ausschließlich `TEST_TER_ANL_04` verbindlich;
 `TEST_TER_ANL_05` ist optional. Weitere `TER`-Needs sind nicht Teil der
 Übung.
 
-Review-Basis ist der Tag `workshop/03-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/03-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Ein grünes
 `./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
 belegt die Acceptance-Matrix des Review-Skills.
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.
