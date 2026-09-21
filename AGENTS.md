@@ -37,9 +37,12 @@ Nachweis niemals den Status `verified`; Produktcode ist nicht Teil der Aufgabe.
 Die Obergrenzen von zwei Stories und drei Test-Needs gelten insgesamt, auch
 wenn optional ein zweiter Teilprozess betrachtet wird.
 
-Review-Basis ist der Tag `workshop/06-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/06-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Für diese reine
 Dokumentationsaufgabe ersetzt folgendes Gate `./verify.sh`:
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.
 
 1. `python3 -m unittest scripts.test_check_requirements`
 2. `python3 scripts/check_requirements.py`
