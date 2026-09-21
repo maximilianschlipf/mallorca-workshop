@@ -35,9 +35,12 @@ oder als vollständig nachgewiesen gemeldet. Verbindlicher Workshop-Umfang sind
 höchstens drei offene Fragen, eine dokumentierte Entscheidung und ein bis zwei
 abgeleitete Stories; Test-Needs und Produktcode sind nicht Teil der Aufgabe.
 
-Review-Basis ist der Tag `workshop/05-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/05-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Für diese reine
 Dokumentationsaufgabe ersetzt folgendes Gate `./verify.sh`:
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.
 
 1. `python3 -m unittest scripts.test_check_requirements`
 2. `python3 scripts/check_requirements.py`
