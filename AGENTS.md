@@ -38,7 +38,10 @@ automatisiert; mindestens einer davon auf der fachlichen Backend-Grenze.
 Optional darf ein weiterer Test-Need nur analysiert werden. Die vollständige
 Rekonstruktion der Testsuite ist nicht Teil der Übung.
 
-Review-Basis ist der Tag `workshop/04-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/04-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Ein grünes
 `./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
 belegt die Acceptance-Matrix des Review-Skills.
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.
