@@ -68,9 +68,7 @@ Erfassung
    :priority: high
    :links: REQ_ABW_ERF_01
 
-   Ein Trainer kann eine eigene Abwesenheit ändern. Der geänderte Zeitraum
-   durchläuft die Konfliktprüfung erneut, als wäre er neu eingetragen
-   worden.
+   Ein Trainer kann Zeitraum und Grund einer eigenen Abwesenheit ändern.
 
 .. req:: Abwesenheit löschen
    :id: REQ_ABW_ERF_04
@@ -100,6 +98,15 @@ Erfassung
 
 Konfliktprüfung
 ---------------
+
+.. req:: Konfliktprüfung nach einer Änderung
+   :id: REQ_ABW_PRUEF_04
+   :status: approved
+   :priority: high
+   :links: REQ_ABW_ERF_03, REQ_ABW_PRUEF_01, REQ_ABW_PRUEF_03
+
+   Wird der Zeitraum einer Abwesenheit geändert, durchläuft der neue Zeitraum
+   dieselbe Konfliktprüfung wie beim Eintragen einer Abwesenheit.
 
 .. req:: Zuweisungskonflikt beim Eintragen erkannt
    :id: REQ_ABW_PRUEF_01

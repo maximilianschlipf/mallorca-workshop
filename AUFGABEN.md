@@ -70,13 +70,13 @@ Die vorhandene Erfassung um das Ändern einer eigenen Abwesenheit erweitern.
 ### Workshop-Scope
 
 **Kernumfang:** `STORY_ABW_ERF_02` mit `TEST_ABW_ERF_03`: Zeitraum oder Grund
-einer eigenen Abwesenheit über einen Backend-Endpunkt ändern und den
-Testnachweis herstellen. Eine Erweiterung der Oberfläche gehört nicht zum
-Kernumfang.
+einer eigenen Abwesenheit über einen Backend-Endpunkt ändern, den Zugriff auf
+fremde Abwesenheiten abweisen und den Testnachweis herstellen. Eine
+Erweiterung der Oberfläche gehört nicht zum Kernumfang.
 
 **Optionale Erweiterung:** `STORY_ABW_ERF_03` mit `TEST_ABW_ERF_04` zum
-Löschen einer eigenen Abwesenheit. Die erneute Konfliktprüfung beim Ändern und
-die übrigen Gruppen sind Folgeaufgaben nach dem Workshop.
+Löschen einer eigenen Abwesenheit. `REQ_ABW_PRUEF_04` und die übrigen
+Konfliktregeln sind Folgeaufgaben nach dem Workshop.
 
 ### Vorgehen
 

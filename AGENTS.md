@@ -34,9 +34,12 @@ aus `AUFGABEN.md`. Der Bereich Abwesenheiten wird nicht in
 `implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
 gemeldet. Im Workshop ist ausschließlich `STORY_ABW_ERF_02` mit
 `TEST_ABW_ERF_03` verbindlich; `STORY_ABW_ERF_03` mit `TEST_ABW_ERF_04` ist
-optional. Weitere `ABW`-Needs sind Folgearbeit.
+optional. `REQ_ABW_PRUEF_04` und weitere `ABW`-Needs sind Folgearbeit.
 
-Review-Basis ist der Tag `workshop/01-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/01-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Ein grünes
 `./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
 belegt die Acceptance-Matrix des Review-Skills.
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.

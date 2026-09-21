@@ -63,15 +63,16 @@ Grunderfassung
    Als Trainer ändere ich den Zeitraum oder den Grund einer eigenen
    Abwesenheit.
 
-.. test:: Ändern aktualisiert den Zeitraum
+.. test:: Nur die eigene Abwesenheit wird geändert
    :id: TEST_ABW_ERF_03
    :status: approved
    :automated: yes
    :level: integration
    :verifies: STORY_ABW_ERF_02, REQ_ABW_ERF_03
 
-   Nach dem Ändern einer Abwesenheit trägt sie den neuen Zeitraum; der alte
-   Zeitraum gilt nicht mehr.
+   Nach dem Ändern einer eigenen Abwesenheit trägt sie den neuen Zeitraum;
+   der alte Zeitraum gilt nicht mehr. Der Versuch, eine fremde Abwesenheit zu
+   ändern, wird abgewiesen und lässt deren Werte unverändert.
 
 .. story:: Ich lösche eine eigene Abwesenheit
    :id: STORY_ABW_ERF_03
