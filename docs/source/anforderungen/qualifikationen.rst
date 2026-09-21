@@ -69,21 +69,29 @@ Bewerbung
 Entscheidung
 ------------
 
-.. req:: Entscheidung über eine Freigabeanfrage
+.. req:: Freigabeanfrage genehmigen
    :id: REQ_QUA_BEW_02
    :status: approved
    :priority: high
    :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01, REQ_DSH_VORG_01
 
-   Ein Administrator genehmigt oder lehnt eine Freigabeanfrage ab. Bei
-   Genehmigung entsteht eine Qualifikation des Trainers für diese Schulung,
-   bei Ablehnung nicht.
+   Ein Administrator genehmigt eine Freigabeanfrage. Dadurch entsteht eine
+   Qualifikation des Trainers für diese Schulung.
+
+.. req:: Freigabeanfrage ablehnen
+   :id: REQ_QUA_BEW_10
+   :status: approved
+   :priority: high
+   :links: REQ_QUA_BEW_01, DEC_USR_SELBST_01, REQ_DSH_VORG_01
+
+   Ein Administrator lehnt eine Freigabeanfrage ab. Dadurch entsteht keine
+   Qualifikation des Trainers für diese Schulung.
 
 .. req:: Ablehnung mit Begründung
    :id: REQ_QUA_BEW_08
    :status: approved
    :priority: high
-   :links: REQ_QUA_BEW_02
+   :links: REQ_QUA_BEW_10
 
    Lehnt ein Administrator eine Freigabeanfrage ab, gibt er dazu eine
    Begründung an.
@@ -91,7 +99,7 @@ Entscheidung
 .. req:: Benachrichtigung über die Entscheidung
    :id: REQ_QUA_BEW_03
    :status: approved
-   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_08, REQ_NAC_ANL_01
+   :links: REQ_QUA_BEW_02, REQ_QUA_BEW_10, REQ_QUA_BEW_08, REQ_NAC_ANL_01
 
    Der Trainer erhält eine Mitteilung über die Entscheidung zu seiner
    Freigabeanfrage. Bei einer Ablehnung enthält sie die Begründung.

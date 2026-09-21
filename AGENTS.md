@@ -35,10 +35,14 @@ aus `AUFGABEN.md`. Der Bereich Qualifikationen wird nicht in
 gemeldet. Verbindlich sind für `REQ_QUA_BEW_02` eine Story, ein bis zwei
 Test-Needs, der Backend-Entscheidungsablauf und vollständige ausführbare
 Testnachweise. Neue oder geänderte Test-Needs bleiben unabhängig von ihrem
-Status Teil der Acceptance-Matrix. Die Ablehnung mit Begründung aus
-`REQ_QUA_BEW_08` ist optional; weitere `QUA`-Needs sind Folgearbeit.
+Status Teil der Acceptance-Matrix. Die Ablehnung aus `REQ_QUA_BEW_10` mit
+Begründung aus `REQ_QUA_BEW_08` ist optional; weitere `QUA`-Needs sind
+Folgearbeit.
 
-Review-Basis ist der Tag `workshop/02-start`. Geprüft werden nur Änderungen
+Review-Basis ist der Tag `workshop/02-start-v2`. Geprüft werden nur Änderungen
 danach sowie staged, unstaged und untracked Änderungen. Ein grünes
 `./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
 belegt die Acceptance-Matrix des Review-Skills.
+
+Commits vor dem Review-Basis-Tag und andere `workshop/*`-Branches dürfen vor
+Abschluss der eigenen Lösung nicht als Lösungsquelle untersucht werden.

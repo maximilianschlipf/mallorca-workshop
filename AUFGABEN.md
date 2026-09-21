@@ -74,8 +74,8 @@ entwerfen und anschließend den Backend-Ablauf zum Genehmigen einer
 Freigabeanfrage umsetzen. Die vollständige Qualifikationsverwaltung und eine
 neue Oberfläche gehören nicht zum Kernumfang.
 
-**Optionale Erweiterung:** Die Ablehnung mit Begründung aus
-`REQ_QUA_BEW_08` ergänzen oder nur Story und Tests dafür entwerfen. Die
+**Optionale Erweiterung:** Die Ablehnung aus `REQ_QUA_BEW_10` mit Begründung
+aus `REQ_QUA_BEW_08` ergänzen oder nur Story und Tests dafür entwerfen. Die
 übrigen Qualifikationsanforderungen bleiben Folgearbeit.
 
 ### Vorgehen
