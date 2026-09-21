@@ -35,3 +35,8 @@ aus `AUFGABEN.md`. Der Bereich Abwesenheiten wird nicht in
 gemeldet. Im Workshop ist ausschließlich `STORY_ABW_ERF_02` mit
 `TEST_ABW_ERF_03` verbindlich; `STORY_ABW_ERF_03` mit `TEST_ABW_ERF_04` ist
 optional. Weitere `ABW`-Needs sind Folgearbeit.
+
+Review-Basis ist der Tag `workshop/01-start`. Geprüft werden nur Änderungen
+danach sowie staged, unstaged und untracked Änderungen. Ein grünes
+`./verify.sh` ist nur das Regressionsgate; die Erfüllung der Workshop-Aufgabe
+belegt die Acceptance-Matrix des Review-Skills.
