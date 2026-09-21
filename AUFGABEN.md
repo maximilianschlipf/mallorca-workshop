@@ -50,7 +50,7 @@ nachvollziehbarer Agenten-Workflow mit einem überprüfbaren Ergebnis.
 
 ---
 
-## Aufgabe 1 -- Trainerabwesenheit umsetzen
+## Aufgabe 1 -- Trainerabwesenheit erweitern
 
 **Schwerpunkt:** Entwicklung
 
@@ -63,31 +63,30 @@ zurückgeschnitten.
 Für Abwesenheiten bleiben Anforderungen, User Stories und Testbeschreibungen
 als Needs erhalten
 (`docs/source/anforderungen/abwesenheiten.rst` und
-`abwesenheiten-umsetzung.rst`, Kürzel `ABW`). Aus dem Aufgaben-Branch werden
-die Endpunkte, Bedienoberflächen und Abläufe zur Verwaltung von Abwesenheiten
-entfernt; ausführbare `TEST_ABW_...`-Nachweise gibt es im Referenzstand noch
-nicht. Das Datenbankschema, die lesende Konfliktprüfung der Terminplanung und
-das `Abwesenheit`-Record bleiben als Integrationsgrenze beziehungsweise
-fachlicher Platzhalter erhalten. Was eine Abwesenheit ist, und die
-Unterscheidung von Trainerzuweisung, Vormerkung und Übernahmeanfrage stehen
-in [CONTEXT.md](CONTEXT.md).
+`abwesenheiten-umsetzung.rst`, Kürzel `ABW`). Das Eintragen einer eigenen
+Abwesenheit bleibt erhalten, weil dieser Ablauf bereits eine geprüfte
+Trainerfunktion des Benutzerkonten-Bereichs ist. Ändern und Löschen sind im
+historischen Aufgabenstand noch nicht umgesetzt; ausführbare
+`TEST_ABW_...`-Nachweise gibt es ebenfalls nicht. Das Datenbankschema, die
+lesende Konfliktprüfung der Terminplanung und das `Abwesenheit`-Record bleiben
+als Integrationsgrenze erhalten. Was eine Abwesenheit ist, und die
+Unterscheidung von Trainerzuweisung, Vormerkung und Übernahmeanfrage stehen in
+[CONTEXT.md](CONTEXT.md).
 
 ### Ziel
 
-Einen kleinen, vertikalen Ausschnitt der Trainerabwesenheiten nach den
-vorliegenden Needs umsetzen.
+Die vorhandene Erfassung um das Ändern einer eigenen Abwesenheit erweitern.
 
 ### Workshop-Scope
 
-**Kernumfang:** `STORY_ABW_ERF_01` mit `TEST_ABW_ERF_01`: Eine eigene
-Abwesenheit mit und ohne Grund über den vorhandenen Backend-Zugang anlegen und
-den Testnachweis herstellen. Eine neue Oberfläche gehört nicht zum
+**Kernumfang:** `STORY_ABW_ERF_02` mit `TEST_ABW_ERF_03`: Zeitraum oder Grund
+einer eigenen Abwesenheit über einen Backend-Endpunkt ändern und den
+Testnachweis herstellen. Eine Erweiterung der Oberfläche gehört nicht zum
 Kernumfang.
 
-**Optionale Erweiterung:** `TEST_ABW_ERF_02` zur Rollen- und
-Eigentümerprüfung oder, wenn noch Zeit bleibt, Ändern beziehungsweise Löschen
-aus derselben Gruppe. Die übrigen Gruppen sind Folgeaufgaben nach dem
-Workshop.
+**Optionale Erweiterung:** `STORY_ABW_ERF_03` mit `TEST_ABW_ERF_04` zum
+Löschen einer eigenen Abwesenheit. Die erneute Konfliktprüfung beim Ändern und
+die übrigen Gruppen sind Folgeaufgaben nach dem Workshop.
 
 ### Vorgehen
 
@@ -96,8 +95,8 @@ zerschnitten. Sie zeigen den weiteren Ausbau nach dem Workshop. Die
 Reihenfolge zwischen den Gruppen ist nicht beliebig -- eine spätere Gruppe
 setzt die vorherige voraus:
 
-1. **Grunderfassung** -- Abwesenheit anlegen, ändern, löschen, ganz ohne
-   Konfliktprüfung.
+1. **Grunderfassung** -- Abwesenheit anlegen (im Aufgabenstand bereits
+   vorhanden), ändern und löschen, zunächst ohne Konfliktprüfung.
 2. **Zuweisungskonflikt** -- kollidiert die Abwesenheit mit einem
    zugewiesenen Termin, entfällt die Zuweisung vorerst sofort. Das ist ein
    bewusster Zwischenstand.

@@ -32,5 +32,6 @@ verhindern die Aussage „alle Anforderungen umgesetzt“.
 Dieser Branch ist der absichtlich unvollständige Ausgangspunkt für Aufgabe 1
 aus `AUFGABEN.md`. Der Bereich Abwesenheiten wird nicht in
 `implemented-requirements.txt` aufgenommen und nicht als vollständig umgesetzt
-gemeldet. Im Workshop ist ausschließlich der dort genannte Kernumfang
-verbindlich; weitere `ABW`-Needs sind Folgearbeit.
+gemeldet. Im Workshop ist ausschließlich `STORY_ABW_ERF_02` mit
+`TEST_ABW_ERF_03` verbindlich; `STORY_ABW_ERF_03` mit `TEST_ABW_ERF_04` ist
+optional. Weitere `ABW`-Needs sind Folgearbeit.
