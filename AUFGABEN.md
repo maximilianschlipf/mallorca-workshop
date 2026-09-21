@@ -26,6 +26,17 @@ Er wird nicht als umgesetzter Fachbereich registriert, und die Teilnehmer
 melden keine Feature-Vollständigkeit. Erst eine spätere vollständige Umsetzung
 unterliegt wieder dem normalen kumulativen Abschluss-Gate.
 
+### Anwendung mit Demodaten starten
+
+Vor der Bearbeitung die Anwendung aus dem Repository-Wurzelverzeichnis mit
+reproduzierbaren Demodaten starten:
+
+```bash
+APP_DEMO_SEED=true ./start.sh
+```
+
+Dabei wird die lokale Datenbank bei jedem Start zurückgesetzt.
+
 ### Zeitlicher Rahmen
 
 Der **Kernumfang** ist auf etwa 50 bis 60 Minuten Arbeitszeit begrenzt.
