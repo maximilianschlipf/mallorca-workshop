@@ -554,8 +554,7 @@ public class TerminService {
 
     private void pruefeZeitraum(LocalDate start, LocalDate ende, boolean neu) {
         if (start == null || ende == null) throw fehler(HttpStatus.BAD_REQUEST, "ZEITRAUM_FEHLT", "Start- und Enddatum sind erforderlich.");
-        if (ende.isBefore(start)) throw fehler(HttpStatus.BAD_REQUEST, "ZEITRAUM_UNGUELTIG", "Das Enddatum darf nicht vor dem Startdatum liegen.");
-        if (neu && start.isBefore(LocalDate.now(clock))) throw fehler(HttpStatus.BAD_REQUEST, "STARTDATUM_VERGANGEN", "Das Startdatum darf nicht in der Vergangenheit liegen.");
+        if (!neu && ende.isBefore(start)) throw fehler(HttpStatus.BAD_REQUEST, "ZEITRAUM_UNGUELTIG", "Das Enddatum darf nicht vor dem Startdatum liegen.");
         if (!istWerktag(start) || !istWerktag(ende)) throw fehler(HttpStatus.BAD_REQUEST, "WOCHENENDE", "Start und Ende müssen auf einen Wochentag fallen.");
     }
 

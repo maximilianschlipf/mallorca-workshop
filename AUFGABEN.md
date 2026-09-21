@@ -143,13 +143,15 @@ sie erweitern den fachlichen Umfang dieser Aufgabe nicht. Maßgeblich sind die
 
 Im Referenzsystem sind Qualifikationen bereits spezifiziert und umgesetzt.
 Diese Aufgabe ist bewusst eine Rekonstruktionsübung, keine noch offene
-Produktentwicklung. Der Aufgaben-Branch behält nur die Anforderungen in
+Produktentwicklung. Der historische Aufgabenstand enthält bereits das Stellen
+einer Freigabeanfrage, weil dieser Ablauf eine geprüfte Trainerfunktion des
+Benutzerkonten-Bereichs ist. Der Aufgaben-Branch behält die Anforderungen in
 `docs/source/anforderungen/qualifikationen.rst` (Kürzel `QUA`). Die Datei
-`qualifikationen-umsetzung.rst`, die Verwaltungsabläufe für Qualifikationen
-und Freigabeanfragen sowie ihre ausführbaren Tests werden dort entfernt. Das
-Datenbankschema und die lesende Qualifikationsprüfung der Terminplanung
-bleiben als Integrationsgrenze erhalten. Benutzerkonten, Katalog und
-Terminplanung bleiben als Voraussetzungen erhalten.
+`qualifikationen-umsetzung.rst`, der administrative Entscheidungsablauf und
+seine ausführbaren Tests sind dort noch nicht vorhanden. Das Datenbankschema,
+die Bewerbung und die lesende Qualifikationsprüfung der Terminplanung bleiben
+als Integrationsgrenze erhalten. Benutzerkonten, Katalog und Terminplanung
+bleiben als Voraussetzungen erhalten.
 
 ### Ziel
 
@@ -162,14 +164,14 @@ darauf (Freigabeanfrage) -- beides ist in [CONTEXT.md](CONTEXT.md) definiert.
 
 ### Workshop-Scope
 
-**Kernumfang:** Für `REQ_QUA_BEW_01` eine Story und ein bis zwei Test-Needs
-entwerfen und anschließend genau den Backend-Ablauf zum Stellen einer
+**Kernumfang:** Für `REQ_QUA_BEW_02` eine Story und ein bis zwei Test-Needs
+entwerfen und anschließend den Backend-Ablauf zum Genehmigen einer
 Freigabeanfrage umsetzen. Die vollständige Qualifikationsverwaltung und eine
 neue Oberfläche gehören nicht zum Kernumfang.
 
-**Optionale Erweiterung:** Den Entscheidungsablauf aus `REQ_QUA_BEW_02`
-ergänzen oder nur die Stories und Tests dafür entwerfen. Die übrigen
-Qualifikationsanforderungen bleiben Folgearbeit.
+**Optionale Erweiterung:** Die Ablehnung mit Begründung aus
+`REQ_QUA_BEW_08` ergänzen oder nur Story und Tests dafür entwerfen. Die
+übrigen Qualifikationsanforderungen bleiben Folgearbeit.
 
 ### Vorgehen
 
@@ -197,15 +199,13 @@ werden wiederverwendet und nicht für diese Aufgabe neu implementiert.
 
 Für die Terminplanung bleiben Anforderungen, Stories und Tests als Needs
 vorhanden (`docs/source/anforderungen/terminplanung.rst` und
-`terminplanung-umsetzung.rst`, Kürzel `TER`). Datenbankschema, gemeinsame
-Typen, lesende Zugriffe und Integrationsmethoden bleiben erhalten, damit der
-Aufgaben-Branch von Beginn an baut. Die fachliche Schreiblogik der Abschnitte
-"Termine anlegen", "Zustände und Abschluss" sowie "Ändern, absagen,
-löschen" wird für `TEST_TER_ANL_01` bis `TEST_TER_ANL_08`,
-`TEST_TER_STAT_01` bis `TEST_TER_STAT_06` sowie `TEST_TER_AEND_04` und
-`TEST_TER_AEND_05` auf kompilierbare Platzhalter zurückgesetzt; die
-zugehörigen ausführbaren Testnachweise werden entfernt. Die Test-Needs bleiben
-als fachliche Testbeschreibungen erhalten.
+`terminplanung-umsetzung.rst`, Kürzel `TER`). Die Terminerstellung ist bis auf
+zwei bewusst entfernte Zeitraumprüfungen umgesetzt und der Aufgaben-Branch
+baut von Beginn an. Für `TEST_TER_ANL_04` fehlt die Prüfung "Ende vor Start",
+für `TEST_TER_ANL_05` die Prüfung "Start in der Vergangenheit". Ihre
+ausführbaren Testnachweise wurden entfernt; die Test-Needs bleiben als
+fachliche Testbeschreibungen erhalten. Alle anderen Terminregeln und Tests
+bleiben als Referenz und Integrationsgrenze bestehen.
 
 ### Ziel
 
@@ -216,11 +216,9 @@ Test-Need (`TEST_TER_...`) einen nachvollziehbaren Schritt erzeugt?
 
 ### Vorgehen
 
-Je ausgewähltem Test-Need aus `TEST_TER_ANL_01` bis `TEST_TER_ANL_08`,
-`TEST_TER_STAT_01` bis `TEST_TER_STAT_06`, `TEST_TER_AEND_04` und
-`TEST_TER_AEND_05`: Test zuerst schreiben (mit KI-Unterstützung aus der
-Formulierung des Needs ableiten), scheitern lassen, Implementierung nachziehen
-und am vollständigen ausführbaren Szenario
+Für `TEST_TER_ANL_04` und optional `TEST_TER_ANL_05`: Test zuerst schreiben
+(mit KI-Unterstützung aus der Formulierung des Needs ableiten), scheitern
+lassen, Implementierung nachziehen und am vollständigen ausführbaren Szenario
 `// verifies: TEST_TER_...` ergänzen. Ein Test-Need darf erst dann auf
 `verified` gesetzt werden, wenn der Test das gesamte beschriebene Szenario
 nachweist. Bewusst dokumentieren, an welchen Stellen die KI-generierten
@@ -228,22 +226,19 @@ Tests von Hand nachgeschärft werden mussten und warum.
 
 ### Workshop-Scope
 
-**Kernumfang:** Genau ein Test-Need aus `TEST_TER_ANL_01` bis
-`TEST_TER_ANL_08` auswählen und als vollständigen Rot-Grün-Zyklus bearbeiten.
-Empfohlen ist ein fachlich überschaubarer Fall aus `TEST_TER_ANL_01` bis
-`TEST_TER_ANL_04`.
+**Kernumfang:** `TEST_TER_ANL_04` als vollständigen Rot-Grün-Zyklus
+bearbeiten: Ende vor Start wird abgewiesen, Start und Ende am selben Tag
+werden angenommen.
 
-**Optionale Erweiterung:** Ein zweites Test-Need aus demselben Abschnitt oder
-ein Statusszenario bearbeiten. Die gesamte im Aufgaben-Branch entfernte
-Schreiblogik ist ausdrücklich nicht Workshop-Ziel.
+**Optionale Erweiterung:** `TEST_TER_ANL_05` als zweiten Rot-Grün-Zyklus
+bearbeiten: Start in der Vergangenheit wird abgewiesen, Start am heutigen Tag
+wird angenommen.
 
 ### Abgrenzung
 
-Fokus auf die Terminerstellung (Anlegen, Zeitraum, Zustand geplant/
-abgeschlossen/abgesagt). Trainerzuweisung, Assistenzplätze und
-Teilnehmerbuchungen werden als vorhandene Integrationsgrenzen und, wo ein
-ausgewähltes Testszenario sie verlangt, als Test-Fixtures wiederverwendet.
-Ihre fachliche Erweiterung ist nicht Teil dieser Aufgabe.
+Fokus auf die beiden Zeitraumregeln beim Anlegen. Weitere Schreiblogik,
+Trainerzuweisung, Assistenzplätze und Teilnehmerbuchungen bleiben unverändert
+und sind nicht Teil dieser Aufgabe.
 
 ---
 

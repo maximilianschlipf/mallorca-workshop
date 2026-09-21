@@ -2,5 +2,4 @@
 # Kumulatives Register: neue Bereiche mit ihrer Umsetzung ergänzen, nie für einzelne Tasks entfernen.
 docs/source/anforderungen/benutzerkonten.rst | docs/source/anforderungen/benutzerkonten-umsetzung.rst
 docs/source/anforderungen/katalog.rst | docs/source/anforderungen/katalog-umsetzung.rst
-docs/source/anforderungen/terminplanung.rst | docs/source/anforderungen/terminplanung-umsetzung.rst
 docs/source/anforderungen/qualifikationen.rst | docs/source/anforderungen/qualifikationen-umsetzung.rst
