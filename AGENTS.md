@@ -26,3 +26,11 @@ ausführen.
 
 Offene Findings, unvollständige Matrixzeilen oder ein fehlgeschlagenes Gate
 verhindern die Aussage „alle Anforderungen umgesetzt“.
+
+## Workshop-Ausnahme dieses Branches
+
+Dieser Branch ist der Ausgangspunkt für Aufgabe 5 aus `AUFGABEN.md`. Die
+Assistenz-Needs werden hier fachlich weiterentwickelt, aber nicht implementiert
+oder als vollständig nachgewiesen gemeldet. Verbindlicher Workshop-Umfang sind
+höchstens drei offene Fragen, eine dokumentierte Entscheidung und ein bis zwei
+abgeleitete Stories; Test-Needs und Produktcode sind nicht Teil der Aufgabe.
