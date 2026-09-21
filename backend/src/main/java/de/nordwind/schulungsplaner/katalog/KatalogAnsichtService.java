@@ -151,12 +151,13 @@ public class KatalogAnsichtService {
     private Map<String, List<Termin>> termineJeSchulung() {
         Map<String, List<Termin>> jeSchulung = new java.util.HashMap<>();
         jdbcTemplate.query("""
-                SELECT t.termin_id, t.schulung_id, t.startdatum, t.enddatum, t.ort, t.format,
+                SELECT t.termin_id, t.schulung_id, t.startdatum, t.enddatum, t.startzeit, t.endzeit, g.name AS gruppe_name, t.ort, t.format,
                        t.status, t.trainer_id,
                        COALESCE(k.name, t.trainer_name_snapshot) AS trainer_name
                 FROM termin t
                 LEFT JOIN benutzerkonto k ON k.id = t.trainer_id
-                ORDER BY startdatum, termin_id
+                LEFT JOIN gruppe g ON g.id = t.gruppe_id
+                ORDER BY startdatum, startzeit, termin_id
                 """, rs -> {
             jeSchulung.computeIfAbsent(rs.getString("schulung_id"), id -> new ArrayList<>())
                     .add(new Termin(
@@ -168,9 +169,16 @@ public class KatalogAnsichtService {
                             rs.getString("status"),
                             rs.getString("trainer_id"),
                             rs.getString("trainer_name"),
-                            assistenten(rs.getString("termin_id"))));
+                            assistenten(rs.getString("termin_id")),
+                            uhrzeit(rs.getTime("startzeit")),
+                            uhrzeit(rs.getTime("endzeit")),
+                            rs.getString("gruppe_name")));
         });
         return jeSchulung;
+    }
+
+    private static String uhrzeit(java.sql.Time zeit) {
+        return zeit == null ? null : zeit.toLocalTime().toString();
     }
 
     private List<String> assistenten(String terminId) {

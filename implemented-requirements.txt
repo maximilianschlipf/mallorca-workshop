@@ -4,3 +4,4 @@ docs/source/anforderungen/benutzerkonten.rst | docs/source/anforderungen/benutze
 docs/source/anforderungen/katalog.rst | docs/source/anforderungen/katalog-umsetzung.rst
 docs/source/anforderungen/terminplanung.rst | docs/source/anforderungen/terminplanung-umsetzung.rst
 docs/source/anforderungen/qualifikationen.rst | docs/source/anforderungen/qualifikationen-umsetzung.rst
+docs/source/anforderungen/gruppen.rst | docs/source/anforderungen/gruppen-umsetzung.rst

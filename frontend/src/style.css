@@ -2056,3 +2056,53 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.termin-uhrzeit {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.formular-hinweis {
+  margin: 0;
+  color: var(--muted, inherit);
+  font-size: 0.82rem;
+}
+
+.gruppen-formular {
+  margin-bottom: 24px;
+}
+
+.gruppen-mitglieder {
+  display: grid;
+  max-width: 460px;
+  margin: 4px 0 12px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.gruppen-mitglieder li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.gruppen-mitglieder li:last-child {
+  border-bottom: 0;
+}
+
+.gruppen-mitglieder .sekundaer-aktion {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+}
+
+.termin-gruppe {
+  display: block;
+  font-weight: 650;
+}

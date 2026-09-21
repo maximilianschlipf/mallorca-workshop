@@ -11,6 +11,9 @@ public record Termin(
         String status,
         String trainerId,
         String trainerName,
-        List<String> assistenten
+        List<String> assistenten,
+        String startzeit,
+        String endzeit,
+        String gruppeName
 ) {
 }

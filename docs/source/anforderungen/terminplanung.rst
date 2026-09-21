@@ -6,14 +6,15 @@ Terminplanung
 Ein Termin ist die konkret geplante Durchführung einer Schulung. Termine
 plant ausschließlich ein Administrator.
 
-.. decision:: Termine werden nur tageweise geplant
+.. decision:: Termine werden standardmäßig tageweise geplant
    :id: DEC_TER_ZEIT_01
    :status: approved
 
-   Ein Termin belegt jeden Schulungstag seines Zeitraums vollständig. Ein
-   Schulungstag liegt zwischen Montag und Freitag und entspricht einem
-   Arbeitstag von acht Stunden; Start- und Enduhrzeiten werden nicht geführt.
-   Zwei Termine am selben Schulungstag überschneiden sich daher immer.
+   Ein Termin ohne Uhrzeit belegt jeden Schulungstag seines Zeitraums
+   vollständig. Ein Schulungstag liegt zwischen Montag und Freitag und
+   entspricht einem Arbeitstag von acht Stunden. Zwei Termine am selben
+   Schulungstag überschneiden sich daher immer, sobald einer von ihnen keine
+   Uhrzeit trägt. Termine mit Uhrzeit folgen :need:`DEC_TER_ZEIT_02`.
 
    Am Wochenende finden keine Schulungen statt. Wochenenden innerhalb eines
    Terminzeitraums zählen nicht zur Schulungsdauer.
@@ -23,8 +24,28 @@ plant ausschließlich ein Administrator.
    sie bei der Planung selbst. Für das System zählt daher jeder Montag bis
    Freitag als möglicher Schulungstag.
 
-   Eine feinere Planung nach Uhrzeiten wird erst eingeführt, wenn tatsächlich
-   Schulungen unter einem Arbeitstag geplant werden müssen.
+   Die feinere Planung nach Uhrzeiten wurde eingeführt, weil tatsächlich
+   Schulungen unter einem Arbeitstag geplant werden müssen; sie ist in
+   :need:`DEC_TER_ZEIT_02` beschrieben.
+
+.. decision:: Uhrzeiten sind optional, Pausen sind Pflicht
+   :id: DEC_TER_ZEIT_02
+   :status: approved
+   :links: DEC_TER_ZEIT_01
+
+   Ein Termin kann zusätzlich eine Start- und eine Endzeit tragen. Sie
+   gelten an jedem Schulungstag seines Zeitraums. Ohne Uhrzeit bleibt der
+   Termin ganztägig und verhält sich wie zuvor.
+
+   Zwischen zwei Terminen derselben Person am selben Schulungstag liegt
+   mindestens eine Pause von 15 Minuten. Zeitzonen, Sommerzeit und
+   Feiertage werden nicht berücksichtigt: Uhrzeiten sind lokale Uhrzeiten
+   des Schulungsorts. Abwesenheiten bleiben tageweise; sie sperren den
+   ganzen Tag.
+
+   Ein Termin über mehrere Tage wiederholt dieselbe Uhrzeit an jedem
+   Schulungstag. Unterschiedliche Uhrzeiten je Tag werden über mehrere
+   Termine abgebildet.
 
 Termine anlegen
 ---------------
@@ -99,6 +120,53 @@ Termine anlegen
    Start- und Enddatum eines Termins müssen zwischen Montag und Freitag
    liegen. Ein Wochenende zwischen beiden Daten ist zulässig, zählt aber
    nicht als Schulungszeit.
+
+Uhrzeiten und Pausen
+--------------------
+
+.. req:: Termin mit optionaler Uhrzeit
+   :id: REQ_TER_ZEIT_02
+   :status: approved
+   :priority: high
+   :links: DEC_TER_ZEIT_02, REQ_TER_ANL_03
+
+   Ein Termin kann beim Anlegen oder später eine Startzeit und eine Endzeit
+   tragen. Fehlen beide, gilt der Termin als ganztägig. Die Uhrzeit ist in
+   der Monatsansicht, in den Termindetails und in der Belegung der Trainer
+   sichtbar; Termine desselben Tages erscheinen nach Startzeit sortiert.
+
+.. req:: Regeln für Uhrzeiten
+   :id: REQ_TER_ZEIT_03
+   :status: approved
+   :priority: high
+   :links: REQ_TER_ZEIT_02
+
+   Start- und Endzeit werden nur gemeinsam angegeben. Die Endzeit liegt nach
+   der Startzeit; beide fallen auf ein 5-Minuten-Raster. Andere Angaben
+   werden abgewiesen.
+
+.. req:: Keine Überschneidung und mindestens 15 Minuten Pause
+   :id: REQ_TER_ZEIT_04
+   :status: approved
+   :priority: high
+   :links: REQ_TER_ZEIT_02, REQ_TER_ZUW_03, DEC_TER_ZEIT_02
+
+   Ein Trainer oder Assistent kann einem Termin nicht zugewiesen werden,
+   wenn er an einem gemeinsamen Schulungstag bereits einem anderen geplanten
+   Termin zugewiesen ist, dessen Zeitfenster sich überschneidet oder weniger
+   als 15 Minuten davon entfernt liegt. Ein ganztägiger Termin blockiert den
+   ganzen Tag. Die Traineroptionen der Planung berücksichtigen das
+   gewünschte Zeitfenster und nennen den Grund.
+
+.. req:: Uhrzeit ändern
+   :id: REQ_TER_ZEIT_05
+   :status: approved
+   :links: REQ_TER_ZEIT_02, REQ_TER_AEND_01, REQ_TER_AEND_12
+
+   Vor dem Startdatum kann ein Administrator die Uhrzeit eines geplanten
+   Termins ändern oder entfernen. Dabei wird die Zuweisung von Trainer und
+   Assistenten erneut geprüft, und diese werden mit altem und neuem Wert
+   benachrichtigt. Ab dem Startdatum ist die Uhrzeit unveränderlich.
 
 Kennung
 -------
@@ -667,7 +735,8 @@ Auf diese Regel verweisen auch Vormerkung und Übernahme, damit sie nicht umgang
 
    Ein Trainer kann einem Termin nicht zugewiesen werden, wenn er im selben
    Zeitraum bereits einem anderen geplanten Termin zugewiesen ist -- als
-   Trainer oder als Assistent. Auch diese Regel lässt sich nicht übergehen.
+   Trainer oder als Assistent. Haben die Termine Uhrzeiten, gilt
+   :need:`REQ_TER_ZEIT_04`. Auch diese Regel lässt sich nicht übergehen.
    Zuordnungen an abgesagten Terminen blockieren nicht.
 
 .. req:: Zuweisung erfordert Qualifikation

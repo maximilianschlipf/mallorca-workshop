@@ -25,12 +25,24 @@ Ein wiederverwendbares Weiterbildungsangebot mit Titel, Inhalt, Kategorie und Vo
 _Avoid_: Kurs, Termin
 
 **Termin**:
-Eine konkret geplante, ganztägige Durchführung einer Schulung mit Datumsbereich, Zustand und optionaler Trainerzuweisung. Uhrzeiten werden nicht geplant. Zustände sind geplant, abgeschlossen und abgesagt.
+Eine konkret geplante Durchführung einer Schulung mit Datumsbereich, Zustand, optionaler Uhrzeit, optionaler Gruppe und optionaler Trainerzuweisung. Ohne Uhrzeit ist der Termin ganztägig. Zustände sind geplant, abgeschlossen und abgesagt.
 _Avoid_: Schulung, Buchung, Platzierung, ausgebucht als Zustand
 
 **Schulungstag**:
-Ein vollständig belegter Wochentag von Montag bis Freitag mit acht Stunden. Wochenenden innerhalb eines Terminzeitraums sind keine Schulungstage und zählen nicht zur Dauer; Feiertage werden nicht automatisch berücksichtigt.
+Ein Wochentag von Montag bis Freitag mit acht Stunden. Ein Termin ohne Uhrzeit belegt ihn vollständig. Wochenenden innerhalb eines Terminzeitraums sind keine Schulungstage und zählen nicht zur Dauer; Feiertage werden nicht automatisch berücksichtigt.
 _Avoid_: Kalendertag, Zeitfenster
+
+**Uhrzeit**:
+Die optionale Start- und Endzeit eines Termins, die an jedem Schulungstag seines Zeitraums gilt. Zwischen zwei Terminen derselben Person liegen mindestens 15 Minuten Pause.
+_Avoid_: Zeitfenster, Slot, Stunde
+
+**Gruppe**:
+Eine benannte Menge von Mitgliedern, die gemeinsam an Schulungen teilnimmt, etwa "Mallorca". Ein Termin kann einer Gruppe zugeordnet werden. Eine Gruppe ist keine Kundenfirma und keine Teilnehmerbuchung.
+_Avoid_: Team, Klasse, Kurs
+
+**Gruppentrainer**:
+Der eine Trainer, der die Termine einer Gruppe üblicherweise hält. Er ist kein Mitglied derselben Gruppe, und der Trainer eines Termins wird davon unabhängig zugewiesen.
+_Avoid_: Klassenlehrer, Gruppenleiter
 
 **Zugangsart**:
 Ob ein Termin **öffentlich** ist — einzeln buchbar für Teilnehmer verschiedener Firmen — oder **exklusiv** für eine Firma. Sie bestimmt, welche Teilnehmergrenze der Schulung gilt.

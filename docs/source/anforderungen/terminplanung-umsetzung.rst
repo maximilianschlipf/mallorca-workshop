@@ -886,3 +886,144 @@ Anforderungen dieses Bereichs ohne Test:
    :filter: id.split("_")[1] == "TER" and not verifies_back
    :columns: id, title, priority
    :style: table
+
+Uhrzeiten und Pausen
+--------------------
+
+.. story:: Ich plane einen Termin mit Uhrzeit
+   :id: STORY_TER_ZEIT_01
+   :status: approved
+   :priority: high
+   :implements: REQ_TER_ZEIT_02, REQ_TER_ZEIT_03
+
+   Als Administrator gebe ich zusätzlich Beginn und Ende an, etwa 9:00 bis
+   10:30, wenn eine Schulung weniger als einen Arbeitstag dauert. Ohne Angabe
+   bleibt der Termin ganztägig.
+
+.. story:: Ich plane Termine hintereinander mit Pause
+   :id: STORY_TER_ZEIT_02
+   :status: approved
+   :priority: high
+   :implements: REQ_TER_ZEIT_04
+
+   Ich lege für einen Trainer mehrere Termine an einem Tag an, etwa 9:00 bis
+   10:45 und danach 11:00 bis 12:30. Das System weist mich ab, wenn sich die
+   Termine überschneiden oder die Pause kürzer als 15 Minuten ist.
+
+.. story:: Ich verschiebe die Uhrzeit eines Termins
+   :id: STORY_TER_ZEIT_03
+   :status: approved
+   :implements: REQ_TER_ZEIT_05
+
+   Ich ändere Beginn oder Ende eines Termins vor seinem Start. Trainer und
+   Assistenten erfahren die neue Uhrzeit.
+
+.. test:: Termin mit Uhrzeit wird gespeichert
+   :id: TEST_TER_ZEIT_01
+   :status: approved
+   :automated: yes
+   :verifies: STORY_TER_ZEIT_01, REQ_TER_ZEIT_02
+
+   Ein Termin mit Startzeit 9:00 und Endzeit 10:30 wird angelegt. Beide
+   Zeiten werden gespeichert und in den Termindetails geliefert.
+
+.. test:: Termin ohne Uhrzeit bleibt ganztägig
+   :id: TEST_TER_ZEIT_02
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_02
+
+   Ein Termin ohne Start- und Endzeit trägt keine Uhrzeit.
+
+.. test:: Ungültige Uhrzeiten werden abgewiesen
+   :id: TEST_TER_ZEIT_03
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_03
+
+   Nur eine der beiden Zeiten, eine Endzeit vor oder gleich der Startzeit und
+   eine Zeit außerhalb des 5-Minuten-Rasters werden abgewiesen.
+
+.. test:: Termine ohne Pause werden abgewiesen
+   :id: TEST_TER_ZEIT_04
+   :status: approved
+   :automated: yes
+   :verifies: STORY_TER_ZEIT_02, REQ_TER_ZEIT_04
+
+   Auf einen Termin von 9:00 bis 10:45 kann derselbe Trainer nicht an einem
+   Termin ab 10:45 arbeiten.
+
+.. test:: Pause von 15 Minuten genügt
+   :id: TEST_TER_ZEIT_05
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_04
+
+   Auf einen Termin von 9:00 bis 10:45 kann derselbe Trainer einen Termin ab
+   11:00 übernehmen.
+
+.. test:: Überschneidung wird als solche gemeldet
+   :id: TEST_TER_ZEIT_06
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_04
+
+   Überschneidende Uhrzeiten werden mit dem Hinweis auf den bereits
+   zugewiesenen Termin abgewiesen.
+
+.. test:: Ganztägiger Termin blockiert den Tag
+   :id: TEST_TER_ZEIT_07
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_04
+
+   Ist ein Trainer einem ganztägigen Termin zugewiesen, kann er am selben Tag
+   keinem Termin mit Uhrzeit zugewiesen werden.
+
+.. test:: Traineroptionen berücksichtigen das Zeitfenster
+   :id: TEST_TER_ZEIT_08
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_04
+
+   Die Traineroptionen der Planung markieren einen Trainer als nicht
+   verfügbar, wenn das gewünschte Fenster die Pause verletzt, und als
+   verfügbar, wenn 15 Minuten Pause bleiben.
+
+.. test:: Uhrzeitänderung prüft die Zuweisung erneut
+   :id: TEST_TER_ZEIT_09
+   :status: approved
+   :automated: yes
+   :verifies: STORY_TER_ZEIT_03, REQ_TER_ZEIT_05
+
+   Wird die Uhrzeit so verschoben, dass sie die Pause zu einem anderen Termin
+   des Trainers verletzt, wird die Änderung abgewiesen. Mit ausreichender
+   Pause wird sie angenommen.
+
+.. test:: Uhrzeitänderung wird mitgeteilt
+   :id: TEST_TER_ZEIT_10
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_05
+
+   Der zugewiesene Trainer erhält eine Benachrichtigung mit alter und neuer
+   Uhrzeit.
+
+.. test:: Kalender zeigt Uhrzeiten sortiert
+   :id: TEST_TER_ZEIT_11
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_02
+
+   Die Monatsansicht zeigt die Uhrzeit an jedem Termin, sortiert Termine
+   desselben Tages nach Startzeit und nennt die Uhrzeit in den Details.
+
+.. test:: Planungsformular übermittelt Uhrzeiten
+   :id: TEST_TER_ZEIT_12
+   :status: approved
+   :automated: yes
+   :verifies: REQ_TER_ZEIT_04
+
+   Das Formular sendet Start- und Endzeit mit dem Termin und fragt die
+   Traineroptionen mit demselben Zeitfenster ab; der Pausenhinweis und die
+   Belegung mit Uhrzeit sind sichtbar.

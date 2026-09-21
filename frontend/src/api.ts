@@ -3,6 +3,7 @@ import type {
   Benachrichtigung,
   Benutzerkonto,
   Feldfehler,
+  Gruppe,
   Katalogantwort,
   Kennungsschema,
   EigenerQualifikationsstand,
@@ -156,6 +157,17 @@ export const passwortAendern = (
   headers: { "If-Match": String(aenderungsstand) },
   body: JSON.stringify({ bisherigesPasswort, neuesPasswort }),
 });
+export const fetchGruppen = () => api<Gruppe[]>("/api/gruppen");
+export const legeGruppeAn = (name: string, trainerId: string | null, mitgliederIds: string[]) =>
+  api<Gruppe>("/api/gruppen", { method: "POST", body: JSON.stringify({ name, trainerId, mitgliederIds }) });
+export const aendereGruppe = (id: string, name: string, trainerId: string | null) =>
+  api<Gruppe>(`/api/gruppen/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ name, trainerId }) });
+export const gruppeMitgliedHinzufuegen = (id: string, kontoId: string) =>
+  api<Gruppe>(`/api/gruppen/${encodeURIComponent(id)}/mitglieder/${encodeURIComponent(kontoId)}`, { method: "PUT" });
+export const gruppeMitgliedEntfernen = (id: string, kontoId: string) =>
+  api<Gruppe>(`/api/gruppen/${encodeURIComponent(id)}/mitglieder/${encodeURIComponent(kontoId)}`, { method: "DELETE" });
+export const loescheGruppe = (id: string) =>
+  api<void>(`/api/gruppen/${encodeURIComponent(id)}`, { method: "DELETE" });
 export const fetchKonten = () => api<Benutzerkonto[]>("/api/benutzerkonten");
 const stand = (aenderungsstand: number) => ({ "If-Match": String(aenderungsstand) });
 export const rolleErteilen = (id: string, rolle: Rolle, aenderungsstand: number) =>
@@ -229,5 +241,14 @@ export const zieheTrainerAb = (terminId: string) =>
   api<void>(`/api/termine/${encodeURIComponent(terminId)}/trainer`, { method: "DELETE" });
 export const fetchTrainerOptionen = (terminId: string) =>
   api<Trainer[]>(`/api/termine/${encodeURIComponent(terminId)}/traineroptionen`);
-export const fetchTrainerOptionenFuerPlanung = (schulungId: string, startdatum: string, enddatum: string) =>
-  api<Trainer[]>(`/api/termine/traineroptionen?${new URLSearchParams({ schulungId, startdatum, enddatum })}`);
+export const fetchTrainerOptionenFuerPlanung = (
+  schulungId: string, startdatum: string, enddatum: string,
+  startzeit?: string | null, endzeit?: string | null,
+) => {
+  const parameter = new URLSearchParams({ schulungId, startdatum, enddatum });
+  if (startzeit && endzeit) {
+    parameter.set("startzeit", startzeit);
+    parameter.set("endzeit", endzeit);
+  }
+  return api<Trainer[]>(`/api/termine/traineroptionen?${parameter}`);
+};

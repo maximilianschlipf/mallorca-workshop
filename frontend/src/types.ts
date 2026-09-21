@@ -2,6 +2,9 @@ export interface Termin {
   terminId: string;
   startdatum: string;
   enddatum: string;
+  startzeit?: string | null;
+  endzeit?: string | null;
+  gruppeName?: string | null;
   ort: string | null;
   format?: string | null;
   status: string;
@@ -12,6 +15,8 @@ export interface Termin {
 
 export interface TerminDetail extends Omit<Termin, "assistenten"> {
   schulungId: string;
+  gruppeId?: string | null;
+  gruppeName?: string | null;
   schulungTitel: string;
   schulungsTage: number;
   zugangsart?: "oeffentlich" | "exklusiv" | null;
@@ -32,13 +37,30 @@ export interface TerminEingabe {
   schulungId: string;
   startdatum: string;
   enddatum: string;
+  startzeit?: string | null;
+  endzeit?: string | null;
   zugangsart: string | null;
   durchfuehrungsart: string | null;
   ort: string | null;
   kundenfirma: string | null;
   onlineZugang: string | null;
   trainerId?: string | null;
+  gruppeId?: string | null;
   entfernenBestaetigt?: boolean;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Gruppe {
+  id: string;
+  name: string;
+  trainer: Person | null;
+  mitglieder: Person[];
+  anzahlTermine: number;
 }
 
 export interface DashboardTermin {
@@ -130,7 +152,7 @@ export interface Trainer {
   email?: string;
   verfuegbar?: boolean;
   grund?: string | null;
-  kalender?: Array<{ art: string; von: string; bis: string }>;
+  kalender?: Array<{ art: string; von: string; bis: string; startzeit?: string | null; endzeit?: string | null }>;
 }
 
 export type Rolle = "TRAINER" | "ADMINISTRATOR" | "EIGENTUEMER";

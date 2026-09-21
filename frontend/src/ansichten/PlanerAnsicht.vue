@@ -8,6 +8,7 @@ import {
   fetchTermin,
   fetchTerminDashboard,
   fetchTrainerOptionen,
+  fetchGruppen,
   fetchTrainerOptionenFuerPlanung,
   legeTerminAn,
   loescheTermin,
@@ -17,7 +18,7 @@ import {
   zieheTrainerAb,
 } from "../api";
 import { aktuellesKonto } from "../auth";
-import type { DashboardTermin, Schulung, Termin, TerminDetail, TerminEingabe, Trainer } from "../types";
+import type { DashboardTermin, Gruppe, Schulung, Termin, TerminDetail, TerminEingabe, Trainer } from "../types";
 
 interface KalenderTermin {
   schulungId: string;
@@ -41,9 +42,10 @@ const terminDetailDialogElement = ref<HTMLElement | null>(null);
 const terminTrainer = ref<Trainer[]>([]);
 const bearbeiteterTermin = ref<string | null>(null);
 const terminForm = ref<TerminEingabe>({
-  schulungId: "", startdatum: "", enddatum: "", zugangsart: null,
+  schulungId: "", startdatum: "", enddatum: "", startzeit: null, endzeit: null, gruppeId: null, zugangsart: null,
   durchfuehrungsart: null, ort: null, kundenfirma: null, onlineZugang: null,
 });
+const gruppen = ref<Gruppe[]>([]);
 const aktionsmeldung = ref("");
 const aktionsfehler = ref("");
 const assistenzbewerbungen = ref(new Set<string>());
@@ -83,8 +85,16 @@ const kalenderTermine = computed<KalenderTermin[]>(() =>
         termin,
       })),
     )
-    .sort((a, b) => a.termin.startdatum.localeCompare(b.termin.startdatum)),
+    .sort((a, b) => a.termin.startdatum.localeCompare(b.termin.startdatum) || nachUhrzeit(a, b)),
 );
+
+function nachUhrzeit(a: KalenderTermin, b: KalenderTermin) {
+  return (a.termin.startzeit ?? "").localeCompare(b.termin.startzeit ?? "");
+}
+
+function zeitText(termin: Pick<Termin, "startzeit" | "endzeit">) {
+  return termin.startzeit && termin.endzeit ? `${termin.startzeit}\u2013${termin.endzeit}` : "";
+}
 
 const aktiveSchulungen = computed(() => kalenderSchulungen.value.filter((s) => s.zustand !== "ARCHIVIERT"));
 
@@ -126,7 +136,7 @@ const kalenderTage = computed(() => {
       termine: kalenderTermine.value.filter(
         ({ termin }) => datum.getDay() !== 0 && datum.getDay() !== 6
           && termin.startdatum <= iso && termin.enddatum >= iso,
-      ),
+      ).sort(nachUhrzeit),
     };
   });
 });
@@ -207,7 +217,7 @@ async function terminAuswaehlen(eintrag: KalenderTermin) {
 function neuerTermin() {
   terminDetailDialog.value = false;
   bearbeiteterTermin.value = null;
-  terminForm.value = { schulungId: "", startdatum: "", enddatum: "", zugangsart: null,
+  terminForm.value = { schulungId: "", startdatum: "", enddatum: "", startzeit: null, endzeit: null, gruppeId: null, zugangsart: null,
     durchfuehrungsart: null, ort: null, kundenfirma: null, onlineZugang: null, trainerId: null };
   terminTrainer.value = [];
   terminDialog.value = true;
@@ -218,6 +228,7 @@ function terminBearbeiten() {
   const t = terminDetail.value;
   bearbeiteterTermin.value = t.terminId;
   terminForm.value = { schulungId: t.schulungId, startdatum: t.startdatum, enddatum: t.enddatum,
+    startzeit: t.startzeit ?? null, endzeit: t.endzeit ?? null, gruppeId: t.gruppeId ?? null,
     zugangsart: t.zugangsart ?? null, durchfuehrungsart: t.durchfuehrungsart ?? null,
     ort: t.ort || null, kundenfirma: t.kundenfirma ?? null, onlineZugang: t.onlineZugang ?? null };
   terminDetailDialog.value = false;
@@ -244,6 +255,9 @@ async function terminSpeichern() {
   await aktion(async () => {
     const eingabe: TerminEingabe = {
       ...terminForm.value,
+      gruppeId: terminForm.value.gruppeId || null,
+      startzeit: terminForm.value.startzeit || null,
+      endzeit: terminForm.value.endzeit || null,
       ort: ["vor_ort", "beim_kunden", "hybrid"].includes(terminForm.value.durchfuehrungsart || "")
         ? terminForm.value.ort : null,
       kundenfirma: terminForm.value.zugangsart === "exklusiv" ? terminForm.value.kundenfirma : null,
@@ -273,19 +287,40 @@ async function terminSpeichern() {
   }, bearbeiteterTermin.value ? "Termin geändert." : "Termin angelegt.");
 }
 
+function gruppentrainerVorschlagen() {
+  const trainerId = gruppen.value.find((g) => g.id === terminForm.value.gruppeId)?.trainer?.id;
+  if (trainerId && !terminForm.value.trainerId
+      && terminTrainer.value.some((p) => p.id === trainerId && p.verfuegbar !== false)) {
+    terminForm.value.trainerId = trainerId;
+  }
+}
+
+async function gruppeGewaehlt() {
+  if (bearbeiteterTermin.value) return;
+  await trainerFuerNeuanlageLaden();
+  gruppentrainerVorschlagen();
+}
+
 async function trainerFuerNeuanlageLaden() {
   if (bearbeiteterTermin.value || !terminForm.value.schulungId
       || !terminForm.value.startdatum || !terminForm.value.enddatum) return;
   const { schulungId, startdatum, enddatum } = terminForm.value;
+  const startzeit = terminForm.value.startzeit || null;
+  const endzeit = terminForm.value.endzeit || null;
+  if (!!startzeit !== !!endzeit) return;
+  const unveraendert = () => terminForm.value.schulungId === schulungId
+    && terminForm.value.startdatum === startdatum && terminForm.value.enddatum === enddatum
+    && (terminForm.value.startzeit || null) === startzeit && (terminForm.value.endzeit || null) === endzeit;
   terminTrainer.value = [];
   terminForm.value.trainerId = null;
   try {
-    const ergebnis = await fetchTrainerOptionenFuerPlanung(schulungId, startdatum, enddatum);
-    if (terminForm.value.schulungId === schulungId && terminForm.value.startdatum === startdatum
-        && terminForm.value.enddatum === enddatum) terminTrainer.value = ergebnis;
+    const ergebnis = await fetchTrainerOptionenFuerPlanung(schulungId, startdatum, enddatum, startzeit, endzeit);
+    if (unveraendert()) {
+      terminTrainer.value = ergebnis;
+      gruppentrainerVorschlagen();
+    }
   } catch {
-    if (terminForm.value.schulungId === schulungId && terminForm.value.startdatum === startdatum
-        && terminForm.value.enddatum === enddatum) terminTrainer.value = [];
+    if (unveraendert()) terminTrainer.value = [];
   }
 }
 
@@ -465,7 +500,19 @@ async function trainerSuchen() {
   }
 }
 
-onMounted(ladeKalender);
+async function ladeGruppen() {
+  try {
+    const ergebnis = await fetchGruppen();
+    gruppen.value = Array.isArray(ergebnis) ? ergebnis.filter((g) => g && g.name) : [];
+  } catch {
+    gruppen.value = [];
+  }
+}
+
+onMounted(() => {
+  ladeKalender();
+  ladeGruppen();
+});
 </script>
 
 <template>
@@ -555,10 +602,12 @@ onMounted(ladeKalender);
                 `status-${eintrag.termin.status}`,
                 { 'is-past': eintrag.termin.enddatum < heuteIso() },
               ]"
-              :aria-label="`${cleanText(eintrag.schulungTitel)}, ${datumText(tag.iso)}, ${statusText(eintrag.termin)}`"
+              :aria-label="`${cleanText(eintrag.schulungTitel)}, ${datumText(tag.iso)}${zeitText(eintrag.termin) ? `, ${zeitText(eintrag.termin)} Uhr` : ''}, ${statusText(eintrag.termin)}`"
               @click="terminAuswaehlen(eintrag)"
             >
               <span>{{ cleanText(eintrag.schulungTitel) }}</span>
+              <small v-if="eintrag.termin.gruppeName" class="termin-gruppe">{{ cleanText(eintrag.termin.gruppeName) }}</small>
+              <small v-if="zeitText(eintrag.termin)" class="termin-uhrzeit">{{ zeitText(eintrag.termin) }}</small>
               <small>{{ statusText(eintrag.termin) }}</small>
             </button>
           </div>
@@ -568,7 +617,7 @@ onMounted(ladeKalender);
           <li v-for="eintrag in termineImMonat" :key="eintrag.termin.terminId">
             <button type="button" @click="terminAuswaehlen(eintrag)">
               <time :datetime="eintrag.termin.startdatum">
-                {{ zeitraumText(eintrag.termin) }}
+                {{ zeitraumText(eintrag.termin) }}<template v-if="zeitText(eintrag.termin)">, {{ zeitText(eintrag.termin) }}</template>
               </time>
               <strong>{{ cleanText(eintrag.schulungTitel) }}</strong>
               <span>{{ statusText(eintrag.termin) }}</span>
@@ -603,6 +652,14 @@ onMounted(ladeKalender);
             <div>
               <dt>Zeitraum</dt>
               <dd>{{ zeitraumText(ausgewaehlterTermin.termin) }}</dd>
+            </div>
+            <div v-if="ausgewaehlterTermin.termin.gruppeName">
+              <dt>Gruppe</dt>
+              <dd>{{ cleanText(ausgewaehlterTermin.termin.gruppeName) }}</dd>
+            </div>
+            <div>
+              <dt>Uhrzeit</dt>
+              <dd>{{ zeitText(ausgewaehlterTermin.termin) ? `${zeitText(ausgewaehlterTermin.termin)} Uhr` : "Ganztägig" }}</dd>
             </div>
             <div>
               <dt>Ort</dt>
@@ -708,10 +765,11 @@ onMounted(ladeKalender);
                   <span v-if="person.grund">{{ person.grund }}</span>
                   <table v-if="person.kalender?.length" class="trainer-calendar">
                     <caption>Kalender von {{ person.name }}</caption>
-                    <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
+                    <thead><tr><th>Status</th><th>Von</th><th>Bis</th><th>Uhrzeit</th></tr></thead>
                     <tbody><tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
                       <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
                       <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
+                      <td>{{ zeitText(belegung) || "ganztägig" }}</td>
                     </tr></tbody>
                   </table>
                 </div>
@@ -743,12 +801,25 @@ onMounted(ladeKalender);
               <option v-for="schulung in aktiveSchulungen" :key="schulung.id" :value="schulung.id">{{ schulung.titel }}</option>
             </select>
           </label>
+          <label>Gruppe (optional)
+            <select v-model="terminForm.gruppeId" @change="gruppeGewaehlt">
+              <option :value="null">Keine Gruppe</option>
+              <option v-for="gruppe in gruppen" :key="gruppe.id" :value="gruppe.id">{{ gruppe.name }}</option>
+            </select>
+          </label>
           <label>Startdatum
             <input v-model="terminForm.startdatum" type="date" required @change="enddatumVorschlagen" />
           </label>
           <label>Enddatum
             <input v-model="terminForm.enddatum" type="date" required @change="trainerFuerNeuanlageLaden" />
           </label>
+          <label>Beginn (optional)
+            <input v-model="terminForm.startzeit" type="time" step="300" @change="trainerFuerNeuanlageLaden" />
+          </label>
+          <label>Ende (optional)
+            <input v-model="terminForm.endzeit" type="time" step="300" @change="trainerFuerNeuanlageLaden" />
+          </label>
+          <p class="formular-hinweis">Ohne Uhrzeit gilt der Termin als ganztägig. Zwischen zwei Terminen desselben Trainers sind mindestens 15 Minuten Pause nötig.</p>
           <label v-if="!bearbeiteterTermin">Trainer (optional)
             <select v-model="terminForm.trainerId">
               <option :value="null">Noch nicht zugewiesen</option>
@@ -761,13 +832,14 @@ onMounted(ladeKalender);
           <div v-if="!bearbeiteterTermin && terminTrainer.length" class="trainer-planung">
             <table v-for="person in terminTrainer" :key="person.id" class="trainer-calendar">
               <caption>{{ person.name }} - {{ person.verfuegbar === false ? person.grund : "verfügbar" }}</caption>
-              <thead><tr><th>Status</th><th>Von</th><th>Bis</th></tr></thead>
+              <thead><tr><th>Status</th><th>Von</th><th>Bis</th><th>Uhrzeit</th></tr></thead>
               <tbody>
                 <tr v-for="belegung in person.kalender" :key="`${belegung.art}-${belegung.von}-${belegung.bis}`">
                   <td>{{ belegung.art }}</td><td><time :datetime="belegung.von">{{ belegung.von }}</time></td>
                   <td><time :datetime="belegung.bis">{{ belegung.bis }}</time></td>
+                  <td>{{ zeitText(belegung) || "ganztägig" }}</td>
                 </tr>
-                <tr v-if="!person.kalender?.length"><td colspan="3">Keine Belegung im Planungsumfeld</td></tr>
+                <tr v-if="!person.kalender?.length"><td colspan="4">Keine Belegung im Planungsumfeld</td></tr>
               </tbody>
             </table>
           </div>

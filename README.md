@@ -160,7 +160,7 @@ make html SPHINXOPTS=
 ## Geplanter Ausbau
 
 - Freigabeanfragen für Trainerqualifikationen
-- Planung von Schulungsterminen und Zuweisung qualifizierter Trainer
+- Planung von Schulungsterminen (optional mit Uhrzeit und Gruppe) und Zuweisung qualifizierter Trainer
 - Assistenzplätze an Terminen als Weg zum Anlernen
 - Schulungs- und Abwesenheitskalender
 - Traineransicht für passende zukünftige Termine und Vormerkungen
@@ -192,7 +192,8 @@ Ein Benutzerkonto trägt eine **Menge** von Rollen: Trainer, Administrator, oder
 
 | Aktion                                  | Eigentümer | Administrator | Trainer |
 | --------------------------------------- | :--------: | :-----------: | :-----: |
-| Schulungen und Termine ansehen          |     ja     |      ja       |   ja    |
+| Schulungen, Termine und Gruppen ansehen |     ja     |      ja       |   ja    |
+| Gruppen verwalten                       |     ja     |      ja       |  nein   |
 | Schulungen verwalten                    |     ja     |      ja       |  nein   |
 | Termine planen und Trainer zuweisen     |     ja     |      ja       |  nein   |
 | Freigabeanfrage entscheiden             |     ja     |      ja       |  nein   |

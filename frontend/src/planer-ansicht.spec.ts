@@ -194,20 +194,20 @@ describe("Planer", () => {
     await selects[0].setValue("SCH-001");
     await dialog.get('input[type="date"]').setValue("2030-02-03");
     await flushPromises();
-    expect(selects[1].text()).toContain("Elena Fischer");
-    expect(selects[1].find('option[value="TRN-006"]').attributes("disabled")).toBeDefined();
+    expect(selects[2].text()).toContain("Elena Fischer");
+    expect(selects[2].find('option[value="TRN-006"]').attributes("disabled")).toBeDefined();
     expect(dialog.findAll(".trainer-calendar").some((kalender) => kalender.text().includes("zugewiesen"))).toBe(true);
-    await selects[1].setValue("TRN-005");
+    await selects[2].setValue("TRN-005");
     await dialog.findAll('input[type="date"]')[1].setValue("2030-02-05");
     await flushPromises();
-    expect((selects[1].element as HTMLSelectElement).selectedIndex).toBe(0);
-    await selects[1].setValue("TRN-005");
-    await selects[2].setValue("exklusiv");
+    expect((selects[2].element as HTMLSelectElement).selectedIndex).toBe(0);
+    await selects[2].setValue("TRN-005");
+    await selects[3].setValue("exklusiv");
     await dialog.get('input[type="text"]').setValue("Veraltete Firma");
-    await selects[3].setValue("vor_ort");
+    await selects[4].setValue("vor_ort");
     await dialog.get('input[type="text"]').setValue("Veralteter Ort");
-    await selects[2].setValue("oeffentlich");
-    await selects[3].setValue("remote");
+    await selects[3].setValue("oeffentlich");
+    await selects[4].setValue("remote");
     await dialog.get('input[type="url"]').setValue("https://example.org/raum");
     await dialog.get("form").trigger("submit");
     await flushPromises();
@@ -356,5 +356,173 @@ describe("Planer", () => {
 
     expect(wrapper.get(".calendar-detail").text()).toContain("Trainer Neu");
     expect(wrapper.get(".calendar-detail").text()).not.toContain("Trainer Alt");
+  });
+
+  // verifies: TEST_TER_ZEIT_11
+  it("zeigt Uhrzeiten im Kalender und sortiert Termine desselben Tages danach", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 21));
+    const termin = (id: string, startzeit: string | null, endzeit: string | null) => ({
+      terminId: id, startdatum: "2026-09-21", enddatum: "2026-09-21", ort: null, format: null,
+      status: "geplant", trainerId: null, startzeit, endzeit,
+    });
+    mockFetch(() => [{
+      ...schulung,
+      oeffentlicheTermine: [termin("T-SPAET", "11:00", "12:30"), termin("T-GANZ", null, null),
+        termin("T-FRUEH", "09:00", "10:45")],
+    }]);
+
+    const wrapper = mount(PlanerAnsicht);
+    await flushPromises();
+
+    const montag = wrapper.findAll(".calendar-day").find((tag) => tag.find("time").attributes("datetime") === "2026-09-21");
+    const eintraege = montag!.findAll(".calendar-event");
+    expect(eintraege).toHaveLength(3);
+    expect(eintraege[0].text()).not.toMatch(/\d{2}:\d{2}/);
+    expect(eintraege[1].text()).toContain("09:00\u201310:45");
+    expect(eintraege[1].attributes("aria-label")).toContain("09:00\u201310:45 Uhr");
+    expect(eintraege[2].text()).toContain("11:00\u201312:30");
+    await eintraege[1].trigger("click");
+    expect(wrapper.get(".calendar-detail").text()).toContain("09:00\u201310:45 Uhr");
+  });
+
+  // verifies: TEST_TER_ZEIT_12
+  it("sendet Uhrzeiten beim Anlegen und fragt die Traineroptionen mit dem Zeitfenster ab", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 0, 1));
+    aktuellesKonto.value = {
+      id: "ADMIN-1", email: "admin@example.de", name: "Admin", aenderungsstand: 0,
+      rollen: ["ADMINISTRATOR"], zustand: "AKTIV",
+    };
+    let payload: Record<string, unknown> | undefined;
+    let optionenUrl = "";
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/auth/csrf")) return jsonResponse({ token: "csrf" }) as Response;
+      if (url.includes("/api/termine/dashboard")) return jsonResponse([]) as Response;
+      if (url.includes("/api/termine/enddatum-vorschlag")) return jsonResponse({ enddatum: "2030-02-04" }) as Response;
+      if (url.includes("/api/termine/traineroptionen")) {
+        optionenUrl = url;
+        return jsonResponse([
+          { id: "TRN-005", name: "Elena Fischer", verfuegbar: false,
+            grund: "Zwischen zwei Terminen sind mindestens 15 Minuten Pause erforderlich.",
+            kalender: [{ art: "zugewiesen", von: "2030-02-04", bis: "2030-02-04", startzeit: "09:00", endzeit: "10:45" }] },
+        ]) as Response;
+      }
+      if (url === "/api/termine" && init?.method === "POST") {
+        payload = JSON.parse(String(init.body));
+        return jsonResponse({
+          terminId: "SCH-001-T00001", schulungId: "SCH-001", schulungTitel: schulung.titel,
+          startdatum: "2030-02-04", enddatum: "2030-02-04", startzeit: "10:50", endzeit: "12:00",
+          status: "geplant", schulungsTage: 1, anzahlBuchungen: 0, assistenten: [], teilnehmer: [], warnungen: [],
+        }) as Response;
+      }
+      return jsonResponse([schulung]) as Response;
+    });
+
+    const wrapper = mount(PlanerAnsicht, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.get("button.primary-action").trigger("click");
+    await flushPromises();
+    const dialog = wrapper.get("[role=dialog]");
+    await dialog.findAll("select")[0].setValue("SCH-001");
+    const daten = dialog.findAll('input[type="date"]');
+    await daten[0].setValue("2030-02-04");
+    await daten[1].setValue("2030-02-04");
+    const zeiten = dialog.findAll('input[type="time"]');
+    await zeiten[0].setValue("10:50");
+    await zeiten[1].setValue("12:00");
+    await flushPromises();
+
+    expect(optionenUrl).toContain("startzeit=10%3A50");
+    expect(optionenUrl).toContain("endzeit=12%3A00");
+    expect(dialog.text()).toContain("15 Minuten Pause");
+    expect(dialog.text()).toContain("09:00\u201310:45");
+    await dialog.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(payload).toMatchObject({ startzeit: "10:50", endzeit: "12:00" });
+    wrapper.unmount();
+  });
+
+  // verifies: TEST_GRP_UI_03
+  it("schlägt den Gruppentrainer vor und sendet die Gruppe mit dem Termin", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 0, 1));
+    aktuellesKonto.value = {
+      id: "ADMIN-1", email: "admin@example.de", name: "Admin", aenderungsstand: 0,
+      rollen: ["ADMINISTRATOR"], zustand: "AKTIV",
+    };
+    let payload: Record<string, unknown> | undefined;
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/auth/csrf")) return jsonResponse({ token: "csrf" }) as Response;
+      if (url.includes("/api/termine/dashboard")) return jsonResponse([]) as Response;
+      if (url.includes("/api/gruppen")) {
+        return jsonResponse([{
+          id: "G-1", name: "Mallorca", anzahlTermine: 0,
+          trainer: { id: "TRN-005", name: "Trener", email: "trener@mailinator.com" },
+          mitglieder: [{ id: "M-1", name: "Anna", email: "anna@mailinator.com" }],
+        }]) as Response;
+      }
+      if (url.includes("/api/termine/traineroptionen")) {
+        return jsonResponse([
+          { id: "TRN-005", name: "Trener", verfuegbar: true, kalender: [] },
+          { id: "TRN-006", name: "Andere Person", verfuegbar: true, kalender: [] },
+        ]) as Response;
+      }
+      if (url === "/api/termine" && init?.method === "POST") {
+        payload = JSON.parse(String(init.body));
+        return jsonResponse({
+          terminId: "SCH-001-T00001", schulungId: "SCH-001", schulungTitel: schulung.titel,
+          gruppeId: "G-1", gruppeName: "Mallorca", startdatum: "2030-02-04", enddatum: "2030-02-04",
+          status: "geplant", schulungsTage: 1, anzahlBuchungen: 0, assistenten: [], teilnehmer: [], warnungen: [],
+        }) as Response;
+      }
+      return jsonResponse([schulung]) as Response;
+    });
+
+    const wrapper = mount(PlanerAnsicht, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.get("button.primary-action").trigger("click");
+    await flushPromises();
+    const dialog = wrapper.get("[role=dialog]");
+    const selects = dialog.findAll("select");
+    await selects[0].setValue("SCH-001");
+    const daten = dialog.findAll('input[type="date"]');
+    await daten[0].setValue("2030-02-04");
+    await daten[1].setValue("2030-02-04");
+    await flushPromises();
+    await selects[1].setValue("G-1");
+    await flushPromises();
+
+    expect((selects[2].element as HTMLSelectElement).value).toBe("TRN-005");
+    await dialog.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(payload).toMatchObject({ gruppeId: "G-1", trainerId: "TRN-005" });
+    wrapper.unmount();
+  });
+
+  // verifies: TEST_GRP_UI_04
+  it("zeigt den Gruppennamen im Kalender und in den Details", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 21));
+    mockFetch((url) => url.includes("/api/gruppen") ? [] : [{
+      ...schulung,
+      oeffentlicheTermine: [{
+        terminId: "T-G", startdatum: "2026-09-21", enddatum: "2026-09-21", ort: null, format: null,
+        status: "geplant", trainerId: null, gruppeName: "Mallorca",
+      }],
+    }]);
+
+    const wrapper = mount(PlanerAnsicht);
+    await flushPromises();
+
+    const eintrag = wrapper.get(".calendar-event");
+    expect(eintrag.text()).toContain("Mallorca");
+    await eintrag.trigger("click");
+    expect(wrapper.get(".calendar-detail").text()).toContain("Gruppe");
+    expect(wrapper.get(".calendar-detail").text()).toContain("Mallorca");
   });
 });

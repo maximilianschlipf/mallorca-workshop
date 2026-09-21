@@ -20,6 +20,7 @@ Kürzel     Bereich
 ``VOR``    Vormerkungen
 ``UEB``    Übernahmeanfragen zwischen Trainern
 ``TLN``    Teilnehmerbuchungen
+``GRP``    Gruppen
 =========  ============================================
 
 .. toctree::
@@ -41,6 +42,8 @@ Kürzel     Bereich
    vormerkungen
    uebernahme
    teilnehmerbuchungen
+   gruppen
+   gruppen-umsetzung
    traceability
 
 Gesamtübersicht

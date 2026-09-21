@@ -18,6 +18,7 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -28,6 +29,8 @@ import java.util.Set;
 
 @Service
 public class TerminService {
+    /** Mindestpause zwischen zwei Terminen derselben Person am selben Tag. */
+    static final int PAUSE_MINUTEN = 15;
     private static final Set<String> ZUGANGSARTEN = Set.of("oeffentlich", "exklusiv");
     private static final Set<String> DURCHFUEHRUNGSARTEN =
             Set.of("remote", "vor_ort", "beim_kunden", "hybrid");
@@ -68,16 +71,20 @@ public class TerminService {
         }
         schulung(eingabe.schulungId(), true);
         pruefeZeitraum(eingabe.startdatum(), eingabe.enddatum(), true);
+        pruefeZeiten(eingabe.startzeit(), eingabe.endzeit());
+        String gruppeId = leerZuNull(eingabe.gruppeId());
+        pruefeGruppe(gruppeId, eingabe.startdatum(), eingabe.enddatum(), eingabe.startzeit(), eingabe.endzeit(), null);
         NormalisierteFelder felder = normalisiereFelder(eingabe, null);
         String id = naechsteId(eingabe.schulungId());
         jdbc.update("""
                 INSERT INTO termin
                 (termin_id, schulung_id, startdatum, enddatum, ort, format, status,
-                 zugangsart, durchfuehrungsart, kundenfirma, online_zugang)
-                VALUES (?, ?, ?, ?, ?, ?, 'geplant', ?, ?, ?, ?)
+                 zugangsart, durchfuehrungsart, kundenfirma, online_zugang, startzeit, endzeit, gruppe_id)
+                VALUES (?, ?, ?, ?, ?, ?, 'geplant', ?, ?, ?, ?, ?, ?, ?)
                 """, id, eingabe.schulungId(), eingabe.startdatum(), eingabe.enddatum(),
                 felder.ort(), formatText(felder.durchfuehrungsart()), felder.zugangsart(),
-                felder.durchfuehrungsart(), felder.kundenfirma(), felder.onlineZugang());
+                felder.durchfuehrungsart(), felder.kundenfirma(), felder.onlineZugang(),
+                eingabe.startzeit(), eingabe.endzeit(), gruppeId);
         if (eingabe.trainerId() != null && !eingabe.trainerId().isBlank()) {
             trainerZuweisen(administratorId, id, eingabe.trainerId(), false);
         }
@@ -97,17 +104,26 @@ public class TerminService {
         LocalDate neuStart = eingabe.startdatum() == null ? alt.startdatum() : eingabe.startdatum();
         LocalDate neuEnde = eingabe.enddatum() == null ? alt.enddatum() : eingabe.enddatum();
         pruefeAenderbarenZeitraum(alt, neuStart, neuEnde);
-        if (!neuStart.equals(alt.startdatum()) || !neuEnde.equals(alt.enddatum())) {
-            pruefeZuweisungen(terminId, neuStart, neuEnde);
+        pruefeZeiten(eingabe.startzeit(), eingabe.endzeit());
+        boolean zeitGeaendert = !Objects.equals(alt.startzeit(), eingabe.startzeit())
+                || !Objects.equals(alt.endzeit(), eingabe.endzeit());
+        if (zeitGeaendert && !LocalDate.now(clock).isBefore(alt.startdatum())) {
+            throw fehler(HttpStatus.CONFLICT, "ZEIT_UNVERAENDERLICH",
+                    "Die Uhrzeit eines bereits begonnenen Termins kann nicht mehr geändert werden.");
         }
+        String neueGruppe = leerZuNull(eingabe.gruppeId());
+        if (zeitGeaendert || !neuStart.equals(alt.startdatum()) || !neuEnde.equals(alt.enddatum())) {
+            pruefeZuweisungen(terminId, neuStart, neuEnde, eingabe.startzeit(), eingabe.endzeit());
+        }
+        pruefeGruppe(neueGruppe, neuStart, neuEnde, eingabe.startzeit(), eingabe.endzeit(), terminId);
         NormalisierteFelder felder = normalisiereFelder(eingabe, alt);
         pruefeBuchungsfirmen(terminId, alt, felder, eingabe);
-        List<String> nachrichten = aenderungsnachrichten(alt, neuStart, neuEnde, felder);
+        List<String> nachrichten = aenderungsnachrichten(alt, neuStart, neuEnde, eingabe.startzeit(), eingabe.endzeit(), neueGruppe, felder);
         jdbc.update("""
-                UPDATE termin SET startdatum=?, enddatum=?, ort=?, format=?, zugangsart=?,
-                    durchfuehrungsart=?, kundenfirma=?, online_zugang=?, version=version+1
+                UPDATE termin SET startdatum=?, enddatum=?, startzeit=?, endzeit=?, gruppe_id=?, ort=?, format=?,
+                    zugangsart=?, durchfuehrungsart=?, kundenfirma=?, online_zugang=?, version=version+1
                 WHERE termin_id=?
-                """, neuStart, neuEnde, felder.ort(), formatText(felder.durchfuehrungsart()),
+                """, neuStart, neuEnde, eingabe.startzeit(), eingabe.endzeit(), neueGruppe, felder.ort(), formatText(felder.durchfuehrungsart()),
                 felder.zugangsart(), felder.durchfuehrungsart(), felder.kundenfirma(),
                 felder.onlineZugang(), terminId);
         if ("exklusiv".equals(felder.zugangsart()) && felder.kundenfirma() != null
@@ -127,7 +143,8 @@ public class TerminService {
         pruefeAdministrator(administratorId);
         TerminZeile termin = lade(terminId, true);
         verlangeGeplant(termin);
-        pruefeTrainer(trainerId, termin.schulungId(), termin.startdatum(), termin.enddatum(), terminId);
+        pruefeTrainer(trainerId, termin.schulungId(), termin.startdatum(), termin.enddatum(),
+                termin.startzeit(), termin.endzeit(), terminId);
         boolean istAssistent = existiert("""
                 SELECT COUNT(*) FROM termin_assistent
                 WHERE termin_id=? AND benutzerkonto_id=?
@@ -169,7 +186,7 @@ public class TerminService {
             throw fehler(HttpStatus.CONFLICT, "BEREITS_TRAINER",
                     "Der ausführende Trainer kann nicht zugleich Assistent sein.");
         }
-        pruefeVerfuegbar(trainerId, termin.startdatum(), termin.enddatum(), terminId);
+        pruefeVerfuegbar(trainerId, termin.startdatum(), termin.enddatum(), termin.startzeit(), termin.endzeit(), terminId);
         List<Integer> belegt = jdbc.queryForList(
                 "SELECT platz FROM termin_assistent WHERE termin_id=?", Integer.class, terminId);
         int platz = java.util.stream.IntStream.rangeClosed(1, 3).filter(i -> !belegt.contains(i))
@@ -350,7 +367,9 @@ public class TerminService {
         if (schulung != null && "exklusiv".equals(t.zugangsart()) && anzahl < schulung.mindestteilnehmerExklusiv())
             warnungen.add("Mindestteilnehmerzahl nicht erreicht");
         return new TerminAnsicht(t.terminId(), t.schulungId(),
-                schulung == null ? t.schulungTitel() : schulung.titel(), t.startdatum(), t.enddatum(),
+                schulung == null ? t.schulungTitel() : schulung.titel(), t.gruppeId(),
+                t.gruppeId() == null ? null : gruppenName(t.gruppeId()), t.startdatum(), t.enddatum(),
+                t.startzeit(), t.endzeit(),
                 schulungsTage(t.startdatum(), t.enddatum()), t.zugangsart(), t.durchfuehrungsart(), t.ort(),
                 t.kundenfirma(), online, t.status(), t.trainerId(), name(t.trainerId()),
                 assistenten(terminId), buchungen, anzahl, t.abschlussart(), t.abgeschlossenAm(),
@@ -390,21 +409,31 @@ public class TerminService {
         nachziehen();
         pruefeAdministrator(kontoId);
         TerminZeile termin = lade(terminId, false);
-        return trainerOptionen(termin.schulungId(), termin.startdatum(), termin.enddatum(), terminId);
+        return trainerOptionen(termin.schulungId(), termin.startdatum(), termin.enddatum(),
+                termin.startzeit(), termin.endzeit(), terminId);
     }
 
     @Transactional
     public List<TrainerOption> trainerOptionen(String kontoId, String schulungId,
                                                 LocalDate startdatum, LocalDate enddatum) {
+        return trainerOptionen(kontoId, schulungId, startdatum, enddatum, null, null);
+    }
+
+    @Transactional
+    public List<TrainerOption> trainerOptionen(String kontoId, String schulungId,
+                                                LocalDate startdatum, LocalDate enddatum,
+                                                LocalTime startzeit, LocalTime endzeit) {
         nachziehen();
         pruefeAdministrator(kontoId);
         schulung(schulungId, true);
         pruefeZeitraum(startdatum, enddatum, true);
-        return trainerOptionen(schulungId, startdatum, enddatum, null);
+        pruefeZeiten(startzeit, endzeit);
+        return trainerOptionen(schulungId, startdatum, enddatum, startzeit, endzeit, null);
     }
 
     private List<TrainerOption> trainerOptionen(String schulungId, LocalDate startdatum,
-                                                 LocalDate enddatum, String ausnahmeTermin) {
+                                                 LocalDate enddatum, LocalTime startzeit,
+                                                 LocalTime endzeit, String ausnahmeTermin) {
         return jdbc.query("""
                 SELECT k.id, k.name, k.email FROM benutzerkonto k
                 JOIN benutzerkonto_rolle r ON r.benutzerkonto_id=k.id AND r.rolle='TRAINER'
@@ -412,7 +441,7 @@ public class TerminService {
                 WHERE k.aktiv=TRUE AND q.schulung_id=? ORDER BY LOWER(k.name), k.name
                 """, (rs, row) -> {
             String id = rs.getString("id");
-            String grund = nichtVerfuegbarGrund(id, startdatum, enddatum, ausnahmeTermin);
+            String grund = nichtVerfuegbarGrund(id, startdatum, enddatum, startzeit, endzeit, ausnahmeTermin);
             return new TrainerOption(id, rs.getString("name"), rs.getString("email"), grund == null, grund,
                     belegungen(id, startdatum.minusWeeks(2), enddatum.plusWeeks(2)));
         }, schulungId);
@@ -559,37 +588,95 @@ public class TerminService {
         if (!istWerktag(start) || !istWerktag(ende)) throw fehler(HttpStatus.BAD_REQUEST, "WOCHENENDE", "Start und Ende müssen auf einen Wochentag fallen.");
     }
 
-    private void pruefeZuweisungen(String terminId, LocalDate start, LocalDate ende) {
-        TerminZeile termin = lade(terminId, false);
-        if (termin.trainerId() != null) pruefeVerfuegbar(termin.trainerId(), start, ende, terminId);
-        for (String id : beteiligteAssistentenIds(terminId)) pruefeVerfuegbar(id, start, ende, terminId);
+    private void pruefeZeiten(LocalTime start, LocalTime ende) {
+        if ((start == null) != (ende == null)) throw fehler(HttpStatus.BAD_REQUEST, "ZEIT_UNVOLLSTAENDIG",
+                "Start- und Endzeit müssen gemeinsam angegeben werden.");
+        if (start == null) return;
+        if (!ende.isAfter(start)) throw fehler(HttpStatus.BAD_REQUEST, "ZEIT_UNGUELTIG",
+                "Die Endzeit muss nach der Startzeit liegen.");
+        if (start.getMinute() % 5 != 0 || ende.getMinute() % 5 != 0 || start.getSecond() != 0 || ende.getSecond() != 0)
+            throw fehler(HttpStatus.BAD_REQUEST, "ZEIT_RASTER", "Uhrzeiten werden in 5-Minuten-Schritten angegeben.");
     }
 
-    private void pruefeTrainer(String trainerId, String schulungId, LocalDate start, LocalDate ende, String ausnahmeTermin) {
+    private void pruefeZuweisungen(String terminId, LocalDate start, LocalDate ende,
+                                   LocalTime startzeit, LocalTime endzeit) {
+        TerminZeile termin = lade(terminId, false);
+        if (termin.trainerId() != null) pruefeVerfuegbar(termin.trainerId(), start, ende, startzeit, endzeit, terminId);
+        for (String id : beteiligteAssistentenIds(terminId)) pruefeVerfuegbar(id, start, ende, startzeit, endzeit, terminId);
+    }
+
+    private void pruefeTrainer(String trainerId, String schulungId, LocalDate start, LocalDate ende,
+                               LocalTime startzeit, LocalTime endzeit, String ausnahmeTermin) {
         pruefeAktivenTrainer(trainerId);
         if (!existiert("SELECT COUNT(*) FROM trainer_qualifikation WHERE benutzerkonto_id=? AND schulung_id=?",
                 trainerId, schulungId)) throw fehler(HttpStatus.CONFLICT, "QUALIFIKATION_ERFORDERLICH",
                 "Der Trainer ist für diese Schulung nicht qualifiziert.");
-        pruefeVerfuegbar(trainerId, start, ende, ausnahmeTermin);
+        pruefeVerfuegbar(trainerId, start, ende, startzeit, endzeit, ausnahmeTermin);
     }
 
-    private void pruefeVerfuegbar(String kontoId, LocalDate start, LocalDate ende, String ausnahmeTermin) {
+    private void pruefeVerfuegbar(String kontoId, LocalDate start, LocalDate ende,
+                                  LocalTime startzeit, LocalTime endzeit, String ausnahmeTermin) {
         jdbc.queryForObject("SELECT id FROM benutzerkonto WHERE id=? FOR UPDATE", String.class, kontoId);
-        String grund = nichtVerfuegbarGrund(kontoId, start, ende, ausnahmeTermin);
+        String grund = nichtVerfuegbarGrund(kontoId, start, ende, startzeit, endzeit, ausnahmeTermin);
         if (grund != null) throw fehler(HttpStatus.CONFLICT, "TRAINER_NICHT_VERFUEGBAR", grund);
     }
 
-    private String nichtVerfuegbarGrund(String kontoId, LocalDate start, LocalDate ende, String ausnahmeTermin) {
+    private String nichtVerfuegbarGrund(String kontoId, LocalDate start, LocalDate ende,
+                                        LocalTime startzeit, LocalTime endzeit, String ausnahmeTermin) {
         if (existiert("SELECT COUNT(*) FROM abwesenheit WHERE benutzerkonto_id=? AND von<=? AND bis>=?",
                 kontoId, ende, start)) return "Der Trainer ist im Zeitraum abwesend.";
-        if (existiert("""
-                SELECT COUNT(*) FROM termin t WHERE t.status='geplant' AND t.termin_id<>?
+        List<LocalTime[]> andere = jdbc.query("""
+                SELECT t.startzeit, t.endzeit FROM termin t WHERE t.status='geplant' AND t.termin_id<>?
                   AND t.startdatum<=? AND t.enddatum>=?
                   AND (t.trainer_id=? OR EXISTS (SELECT 1 FROM termin_assistent a
                        WHERE a.termin_id=t.termin_id AND a.benutzerkonto_id=?))
-                """, Objects.toString(ausnahmeTermin, ""), ende, start, kontoId, kontoId))
-            return "Der Trainer ist im Zeitraum bereits einem anderen Termin zugewiesen.";
-        return null;
+                """, (rs, row) -> new LocalTime[] {zeit(rs, "startzeit"), zeit(rs, "endzeit")},
+                Objects.toString(ausnahmeTermin, ""), ende, start, kontoId, kontoId);
+        int konflikt = zeitkonflikt(andere, startzeit, endzeit);
+        if (konflikt == UEBERSCHNEIDUNG) return "Der Trainer ist im Zeitraum bereits einem anderen Termin zugewiesen.";
+        return konflikt == PAUSE_ZU_KURZ
+                ? "Zwischen zwei Terminen sind mindestens " + PAUSE_MINUTEN + " Minuten Pause erforderlich." : null;
+    }
+
+    private static final int KEIN_KONFLIKT = 0;
+    private static final int UEBERSCHNEIDUNG = 1;
+    private static final int PAUSE_ZU_KURZ = 2;
+
+    /** Vergleicht ein Zeitfenster (null = ganztägig) mit den Fenstern anderer Termine am selben Tag. */
+    private static int zeitkonflikt(List<LocalTime[]> andere, LocalTime startzeit, LocalTime endzeit) {
+        int ergebnis = KEIN_KONFLIKT;
+        for (LocalTime[] fenster : andere) {
+            int vonA = minuten(startzeit, 0), bisA = minuten(endzeit, 24 * 60);
+            int vonB = minuten(fenster[0], 0), bisB = minuten(fenster[1], 24 * 60);
+            if (vonA < bisB && vonB < bisA) return UEBERSCHNEIDUNG;
+            if (vonA < bisB + PAUSE_MINUTEN && vonB < bisA + PAUSE_MINUTEN) ergebnis = PAUSE_ZU_KURZ;
+        }
+        return ergebnis;
+    }
+
+    private void pruefeGruppe(String gruppeId, LocalDate start, LocalDate ende,
+                              LocalTime startzeit, LocalTime endzeit, String ausnahmeTermin) {
+        if (gruppeId == null) return;
+        if (!existiert("SELECT COUNT(*) FROM gruppe WHERE id=?", gruppeId)) {
+            throw fehler(HttpStatus.NOT_FOUND, "GRUPPE_NICHT_GEFUNDEN", "Die Gruppe wurde nicht gefunden.");
+        }
+        List<LocalTime[]> andere = jdbc.query("""
+                SELECT startzeit, endzeit FROM termin
+                WHERE gruppe_id=? AND status='geplant' AND termin_id<>? AND startdatum<=? AND enddatum>=?
+                """, (rs, row) -> new LocalTime[] {zeit(rs, "startzeit"), zeit(rs, "endzeit")},
+                gruppeId, Objects.toString(ausnahmeTermin, ""), ende, start);
+        int konflikt = zeitkonflikt(andere, startzeit, endzeit);
+        if (konflikt == UEBERSCHNEIDUNG) throw fehler(HttpStatus.CONFLICT, "GRUPPE_NICHT_VERFUEGBAR",
+                "Die Gruppe hat im Zeitraum bereits einen anderen Termin.");
+        if (konflikt == PAUSE_ZU_KURZ) throw fehler(HttpStatus.CONFLICT, "GRUPPE_NICHT_VERFUEGBAR",
+                "Zwischen zwei Terminen der Gruppe sind mindestens " + PAUSE_MINUTEN + " Minuten Pause erforderlich.");
+    }
+
+    private static int minuten(LocalTime zeit, int ersatz) { return zeit == null ? ersatz : zeit.toSecondOfDay() / 60; }
+
+    private static LocalTime zeit(java.sql.ResultSet rs, String name) throws java.sql.SQLException {
+        java.sql.Time wert = rs.getTime(name);
+        return wert == null ? null : wert.toLocalTime();
     }
 
     private void pruefeTeilnehmerpflege(String kontoId, TerminZeile termin) {
@@ -625,7 +712,7 @@ public class TerminService {
                 rs.getString("kundenfirma"), rs.getString("online_zugang"), rs.getString("status"),
                 rs.getString("trainer_id"), rs.getString("abschlussart"), datum(rs, "abgeschlossen_am"),
                 rs.getString("bestaetigt_von"), datum(rs, "abgesagt_am"), rs.getString("abgesagt_von"),
-                rs.getString("absagegrund"));
+                rs.getString("absagegrund"), zeit(rs, "startzeit"), zeit(rs, "endzeit"), rs.getString("gruppe_id"));
     }
 
     private static LocalDate datum(java.sql.ResultSet rs, String name) throws java.sql.SQLException {
@@ -660,13 +747,14 @@ public class TerminService {
     private List<Belegung> belegungen(String kontoId, LocalDate von, LocalDate bis) {
         List<Belegung> result = new ArrayList<>();
         result.addAll(jdbc.query("SELECT von, bis FROM abwesenheit WHERE benutzerkonto_id=? AND von<=? AND bis>=?",
-                (rs, row) -> new Belegung("abwesend", rs.getDate(1).toLocalDate(), rs.getDate(2).toLocalDate()),
+                (rs, row) -> new Belegung("abwesend", rs.getDate(1).toLocalDate(), rs.getDate(2).toLocalDate(), null, null),
                 kontoId, bis, von));
         result.addAll(jdbc.query("""
-                SELECT startdatum, enddatum FROM termin t WHERE t.status='geplant'
+                SELECT startdatum, enddatum, startzeit, endzeit FROM termin t WHERE t.status='geplant'
                 AND t.startdatum<=? AND t.enddatum>=? AND
                 (t.trainer_id=? OR EXISTS (SELECT 1 FROM termin_assistent a WHERE a.termin_id=t.termin_id AND a.benutzerkonto_id=?))
-                """, (rs, row) -> new Belegung("zugewiesen", rs.getDate(1).toLocalDate(), rs.getDate(2).toLocalDate()),
+                """, (rs, row) -> new Belegung("zugewiesen", rs.getDate(1).toLocalDate(), rs.getDate(2).toLocalDate(),
+                        zeit(rs, "startzeit"), zeit(rs, "endzeit")),
                 bis, von, kontoId, kontoId));
         return result;
     }
@@ -683,14 +771,29 @@ public class TerminService {
     }
 
     private List<String> aenderungsnachrichten(TerminZeile alt, LocalDate start, LocalDate ende,
+                                               LocalTime startzeit, LocalTime endzeit, String gruppeId,
                                                NormalisierteFelder neu) {
         List<String> texte = new ArrayList<>();
+        if (!Objects.equals(alt.gruppeId(), gruppeId))
+            texte.add("Gruppe: " + gruppenName(alt.gruppeId()) + " → " + gruppenName(gruppeId));
+        if (!Objects.equals(alt.startzeit(), startzeit) || !Objects.equals(alt.endzeit(), endzeit))
+            texte.add("Uhrzeit: " + uhrzeitText(alt.startzeit(), alt.endzeit()) + " → " + uhrzeitText(startzeit, endzeit));
         if (!alt.startdatum().equals(start) || !alt.enddatum().equals(ende)) texte.add("Zeitraum: " + alt.startdatum() + " bis " + alt.enddatum() + " → " + start + " bis " + ende);
         if (!Objects.equals(alt.ort(), neu.ort())) texte.add("Ort: " + alt.ort() + " → " + neu.ort());
         if (!Objects.equals(alt.durchfuehrungsart(), neu.durchfuehrungsart())) texte.add("Durchführungsart: " + alt.durchfuehrungsart() + " → " + neu.durchfuehrungsart());
         if (!Objects.equals(alt.kundenfirma(), neu.kundenfirma())) texte.add("Kundenfirma: " + alt.kundenfirma() + " → " + neu.kundenfirma());
         if (!Objects.equals(alt.onlineZugang(), neu.onlineZugang())) texte.add("Online-Zugang: " + Objects.toString(neu.onlineZugang(), "entfernt"));
         return texte;
+    }
+
+    private String gruppenName(String gruppeId) {
+        if (gruppeId == null) return "keine";
+        List<String> namen = jdbc.queryForList("SELECT name FROM gruppe WHERE id=?", String.class, gruppeId);
+        return namen.isEmpty() ? "keine" : namen.getFirst();
+    }
+
+    private static String uhrzeitText(LocalTime start, LocalTime ende) {
+        return start == null ? "ganztägig" : start + "–" + ende;
     }
 
     private void pruefeAdministrator(String id) {
@@ -731,14 +834,34 @@ public class TerminService {
     private KontoFehler bestaetigung(String feld) { return fehler(HttpStatus.CONFLICT, "ENTFERNEN_BESTAETIGEN", "Das Entfernen von " + feld + " muss bestätigt werden."); }
     private KontoFehler fehler(HttpStatus status, String code, String text) { return new KontoFehler(status, code, text); }
 
+    /** Ohne Start- und Endzeit gilt der Termin als ganztägig (alle Schulungstage vollständig belegt). */
     public record TerminEingabe(String schulungId, LocalDate startdatum, LocalDate enddatum,
+            LocalTime startzeit, LocalTime endzeit,
             String zugangsart, String durchfuehrungsart, String ort, String kundenfirma,
-            String onlineZugang, String trainerId, boolean entfernenBestaetigt) {}
+            String onlineZugang, String trainerId, boolean entfernenBestaetigt, String gruppeId) {
+        public TerminEingabe(String schulungId, LocalDate startdatum, LocalDate enddatum,
+                LocalTime startzeit, LocalTime endzeit,
+                String zugangsart, String durchfuehrungsart, String ort, String kundenfirma,
+                String onlineZugang, String trainerId, boolean entfernenBestaetigt) {
+            this(schulungId, startdatum, enddatum, startzeit, endzeit, zugangsart, durchfuehrungsart, ort,
+                    kundenfirma, onlineZugang, trainerId, entfernenBestaetigt, null);
+        }
+
+        public TerminEingabe(String schulungId, LocalDate startdatum, LocalDate enddatum,
+                String zugangsart, String durchfuehrungsart, String ort, String kundenfirma,
+                String onlineZugang, String trainerId, boolean entfernenBestaetigt) {
+            this(schulungId, startdatum, enddatum, null, null, zugangsart, durchfuehrungsart, ort,
+                    kundenfirma, onlineZugang, trainerId, entfernenBestaetigt, null);
+        }
+    }
     public record BuchungEingabe(String name, String firma, String bemerkung, String teilnahmestatus) {}
     public record Teilnehmerbuchung(Long id, String name, String firma, String bemerkung, String teilnahmestatus) {}
     public record Beteiligter(String id, String name, int platz) {}
     public record TerminAnsicht(String terminId, String schulungId, String schulungTitel,
-            LocalDate startdatum, LocalDate enddatum, int schulungsTage, String zugangsart,
+            String gruppeId, String gruppeName,
+            LocalDate startdatum, LocalDate enddatum,
+            @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") LocalTime startzeit, @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") LocalTime endzeit,
+            int schulungsTage, String zugangsart,
             String durchfuehrungsart, String ort, String kundenfirma, String onlineZugang,
             String status, String trainerId, String trainerName, List<Beteiligter> assistenten,
             List<Teilnehmerbuchung> teilnehmer, int anzahlBuchungen, String abschlussart,
@@ -750,7 +873,8 @@ public class TerminService {
             boolean mindestteilnehmerUnterschritten) {}
     public record TrainerOption(String id, String name, String email, boolean verfuegbar,
             String grund, List<Belegung> kalender) {}
-    public record Belegung(String art, LocalDate von, LocalDate bis) {}
+    public record Belegung(String art, LocalDate von, LocalDate bis,
+            @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") LocalTime startzeit, @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") LocalTime endzeit) {}
     public record Auswertung(int bestaetigteTermine, int teilgenommen) {}
     private record NormalisierteFelder(String zugangsart, String durchfuehrungsart, String ort,
             String kundenfirma, String onlineZugang) {}
@@ -758,5 +882,6 @@ public class TerminService {
             LocalDate enddatum, String zugangsart, String durchfuehrungsart, String ort,
             String kundenfirma, String onlineZugang, String status, String trainerId,
             String abschlussart, LocalDate abgeschlossenAm, String bestaetigtVon,
-            LocalDate abgesagtAm, String abgesagtVon, String absagegrund) {}
+            LocalDate abgesagtAm, String abgesagtVon, String absagegrund,
+            LocalTime startzeit, LocalTime endzeit, String gruppeId) {}
 }

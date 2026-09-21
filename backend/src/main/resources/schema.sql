@@ -105,6 +105,9 @@ ALTER TABLE termin ADD COLUMN IF NOT EXISTS abgesagt_am DATE;
 ALTER TABLE termin ADD COLUMN IF NOT EXISTS abgesagt_von VARCHAR(36);
 ALTER TABLE termin ADD COLUMN IF NOT EXISTS absagegrund VARCHAR(1000);
 ALTER TABLE termin ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 0;
+-- Optionale Uhrzeiten je Schulungstag; beide NULL = ganztägig.
+ALTER TABLE termin ADD COLUMN IF NOT EXISTS startzeit TIME;
+ALTER TABLE termin ADD COLUMN IF NOT EXISTS endzeit TIME;
 ALTER TABLE termin ALTER COLUMN ort DROP NOT NULL;
 UPDATE termin SET status='geplant' WHERE status='ausgebucht';
 ALTER TABLE termin ADD CONSTRAINT IF NOT EXISTS ck_termin_status
@@ -175,3 +178,27 @@ CREATE TABLE IF NOT EXISTS teilnehmerbuchung (
     CONSTRAINT fk_buchung_termin FOREIGN KEY (termin_id)
         REFERENCES termin(termin_id) ON DELETE CASCADE
 );
+
+-- Gruppen: eine Teilnehmergruppe (z. B. "Mallorca") mit Mitgliedern und einem Gruppentrainer.
+CREATE TABLE IF NOT EXISTS gruppe (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    trainer_id VARCHAR(36),
+    CONSTRAINT uq_gruppe_name UNIQUE (name),
+    CONSTRAINT fk_gruppe_trainer FOREIGN KEY (trainer_id)
+        REFERENCES benutzerkonto(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS gruppe_mitglied (
+    gruppe_id VARCHAR(36) NOT NULL,
+    benutzerkonto_id VARCHAR(36) NOT NULL,
+    PRIMARY KEY (gruppe_id, benutzerkonto_id),
+    CONSTRAINT fk_gruppe_mitglied_gruppe FOREIGN KEY (gruppe_id)
+        REFERENCES gruppe(id) ON DELETE CASCADE,
+    CONSTRAINT fk_gruppe_mitglied_konto FOREIGN KEY (benutzerkonto_id)
+        REFERENCES benutzerkonto(id) ON DELETE CASCADE
+);
+
+ALTER TABLE termin ADD COLUMN IF NOT EXISTS gruppe_id VARCHAR(36);
+ALTER TABLE termin ADD CONSTRAINT IF NOT EXISTS fk_termin_gruppe
+    FOREIGN KEY (gruppe_id) REFERENCES gruppe(id) ON DELETE SET NULL;

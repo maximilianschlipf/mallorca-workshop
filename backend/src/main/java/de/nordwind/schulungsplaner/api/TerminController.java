@@ -98,8 +98,10 @@ public class TerminController {
             @AuthenticationPrincipal KontoPrincipal konto,
             @RequestParam String schulungId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startdatum,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate enddatum) {
-        return termine.trainerOptionen(konto.id(), schulungId, startdatum, enddatum);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate enddatum,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime startzeit,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime endzeit) {
+        return termine.trainerOptionen(konto.id(), schulungId, startdatum, enddatum, startzeit, endzeit);
     }
 
     @PostMapping("/{terminId}/buchungen")
@@ -137,13 +139,15 @@ public class TerminController {
     }
 
     public record TerminAnfrage(String terminId, String schulungId, LocalDate startdatum, LocalDate enddatum,
+            @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") java.time.LocalTime startzeit,
+            @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") java.time.LocalTime endzeit,
             String zugangsart, String durchfuehrungsart, @Size(max = 255) String ort,
             @Size(max = 255) String kundenfirma, @Size(max = 1000) String onlineZugang,
-            String trainerId, Boolean entfernenBestaetigt) {
+            String trainerId, Boolean entfernenBestaetigt, String gruppeId) {
         TerminService.TerminEingabe alsEingabe() {
-            return new TerminService.TerminEingabe(schulungId, startdatum, enddatum, zugangsart,
+            return new TerminService.TerminEingabe(schulungId, startdatum, enddatum, startzeit, endzeit, zugangsart,
                     durchfuehrungsart, ort, kundenfirma, onlineZugang, trainerId,
-                    Boolean.TRUE.equals(entfernenBestaetigt));
+                    Boolean.TRUE.equals(entfernenBestaetigt), gruppeId);
         }
     }
     public record Absage(@Size(max = 1000) String grund) {}
