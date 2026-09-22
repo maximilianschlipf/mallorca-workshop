@@ -117,6 +117,21 @@ public class TrainereinsatzController {
         einsaetze.abwesenheitEintragen(konto.id(), anfrage.von(), anfrage.bis(), anfrage.grund());
     }
 
+    @PutMapping("/ich/abwesenheiten/{abwesenheitId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void abwesenheitAendern(@AuthenticationPrincipal KontoPrincipal konto,
+                                   @PathVariable long abwesenheitId,
+                                   @Valid @RequestBody NeueAbwesenheit anfrage) {
+        einsaetze.abwesenheitAendern(konto.id(), abwesenheitId, anfrage.von(), anfrage.bis(), anfrage.grund());
+    }
+
+    @DeleteMapping("/ich/abwesenheiten/{abwesenheitId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void abwesenheitLoeschen(@AuthenticationPrincipal KontoPrincipal konto,
+                                    @PathVariable long abwesenheitId) {
+        einsaetze.abwesenheitLoeschen(konto.id(), abwesenheitId);
+    }
+
     @GetMapping("/ich/termine")
     public List<TrainereinsatzService.TrainerTermin> meineTermine(
             @AuthenticationPrincipal KontoPrincipal konto) {

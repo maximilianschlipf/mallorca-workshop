@@ -61,7 +61,7 @@ Grunderfassung
    :implements: REQ_ABW_ERF_03
 
    Als Trainer ändere ich den Zeitraum oder den Grund einer eigenen
-   Abwesenheit.
+   Abwesenheit über ``PUT /api/ich/abwesenheiten/{abwesenheitId}``.
 
 .. test:: Nur die eigene Abwesenheit wird geändert
    :id: TEST_ABW_ERF_03
@@ -79,7 +79,8 @@ Grunderfassung
    :status: approved
    :implements: REQ_ABW_ERF_04
 
-   Als Trainer lösche ich eine eigene Abwesenheit und gelte danach im
+   Als Trainer lösche ich eine eigene Abwesenheit über
+   ``DELETE /api/ich/abwesenheiten/{abwesenheitId}`` und gelte danach im
    betroffenen Zeitraum wieder als verfügbar.
 
 .. test:: Löschen macht wieder verfügbar

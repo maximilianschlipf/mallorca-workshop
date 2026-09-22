@@ -261,6 +261,36 @@ public class TrainereinsatzService {
                 """, kontoId, von, bis, grund);
     }
 
+    /** Ändert Zeitraum oder Grund einer eigenen Abwesenheit. Fremde Abwesenheiten sind nicht erreichbar. */
+    @Transactional
+    public void abwesenheitAendern(String kontoId, long abwesenheitId, LocalDate von, LocalDate bis, String grund) {
+        pruefeAktivenTrainer(kontoId);
+        if (von.isAfter(bis)) {
+            throw fehler(HttpStatus.BAD_REQUEST, "UNGUELTIGER_ZEITRAUM",
+                    "Das Anfangsdatum darf nicht nach dem Enddatum liegen.");
+        }
+        int betroffen = jdbc.update("""
+                UPDATE abwesenheit SET von=?, bis=?, grund=?
+                WHERE id=? AND benutzerkonto_id=?
+                """, von, bis, grund, abwesenheitId, kontoId);
+        if (betroffen == 0) {
+            throw fehler(HttpStatus.NOT_FOUND, "ABWESENHEIT_NICHT_GEFUNDEN",
+                    "Die Abwesenheit wurde nicht gefunden.");
+        }
+    }
+
+    /** Löscht eine eigene Abwesenheit. Fremde Abwesenheiten sind nicht erreichbar. */
+    @Transactional
+    public void abwesenheitLoeschen(String kontoId, long abwesenheitId) {
+        pruefeAktivenTrainer(kontoId);
+        int betroffen = jdbc.update(
+                "DELETE FROM abwesenheit WHERE id=? AND benutzerkonto_id=?", abwesenheitId, kontoId);
+        if (betroffen == 0) {
+            throw fehler(HttpStatus.NOT_FOUND, "ABWESENHEIT_NICHT_GEFUNDEN",
+                    "Die Abwesenheit wurde nicht gefunden.");
+        }
+    }
+
     @Transactional
     public List<TrainerTermin> meineTermine(String kontoId) {
         termine.nachziehen();
