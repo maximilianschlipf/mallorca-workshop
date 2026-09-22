@@ -21,7 +21,8 @@ async function logout() {
           </span>
         </RouterLink>
         <div v-if="aktuellesKonto" class="nav-links" aria-label="Benutzerbereich">
-          <RouterLink class="nav-link" to="/">Planer</RouterLink>
+          <RouterLink class="nav-link" to="/">Dashboard</RouterLink>
+          <RouterLink class="nav-link" to="/planer">Planer</RouterLink>
           <RouterLink class="nav-link" to="/katalog">Katalog</RouterLink>
           <RouterLink class="nav-link" to="/profil">Profil</RouterLink>
           <RouterLink
