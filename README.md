@@ -28,12 +28,34 @@ npx playwright install chromium
 
 ## Lokal starten
 
+macOS/Linux:
+
+```bash
+./start.sh
+```
+
+Windows (PowerShell):
+
+```powershell
+.\start.ps1
+```
+
+Mit reproduzierbaren Workshop-Demodaten:
+
+```powershell
+$env:APP_DEMO_SEED = 'true'; .\start.ps1
+```
+
+Alternativ lassen sich Backend und Frontend getrennt starten:
+
 Terminal 1:
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
+
+Unter Windows wird dafür `./mvnw` durch `.\mvnw.cmd` ersetzt.
 
 Terminal 2:
 
@@ -67,6 +89,12 @@ Der vollständige Abschluss-Check wird aus dem Projektverzeichnis gestartet:
 
 ```bash
 ./verify.sh
+```
+
+Unter Windows (PowerShell):
+
+```powershell
+.\verify.ps1
 ```
 
 Er erzeugt zuerst die Traceability-Matrix aus den freigegebenen Requirements
