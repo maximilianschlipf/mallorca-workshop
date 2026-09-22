@@ -47,5 +47,7 @@ try {
     while (-not $backend.HasExited -and -not $frontend.HasExited) { Start-Sleep -Seconds 1 }
     throw 'Ein Serverprozess wurde unerwartet beendet.'
 } finally {
-    $processes | Where-Object { $_ -and -not $_.HasExited } | Stop-Process -Force
+    $processes | Where-Object { $_ -and -not $_.HasExited } | ForEach-Object {
+        & taskkill.exe /PID $_.Id /T /F 2>$null | Out-Null
+    }
 }
