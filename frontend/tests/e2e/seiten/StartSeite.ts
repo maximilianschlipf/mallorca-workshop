@@ -3,7 +3,7 @@ import { Seite } from "./Seite";
 
 export class StartSeite extends Seite {
   protected get pfad(): string {
-    return "/";
+    return "/planer";
   }
 
   protected get kennzeichen(): Locator {

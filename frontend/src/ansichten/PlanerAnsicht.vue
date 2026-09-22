@@ -6,7 +6,6 @@ import {
   bestaetigeTermin,
   fetchSchulungen,
   fetchTermin,
-  fetchTerminDashboard,
   fetchTrainerOptionen,
   fetchTrainerOptionenFuerPlanung,
   legeTerminAn,
@@ -17,7 +16,7 @@ import {
   zieheTrainerAb,
 } from "../api";
 import { aktuellesKonto } from "../auth";
-import type { DashboardTermin, Schulung, Termin, TerminDetail, TerminEingabe, Trainer } from "../types";
+import type { Schulung, Termin, TerminDetail, TerminEingabe, Trainer } from "../types";
 
 interface KalenderTermin {
   schulungId: string;
@@ -33,7 +32,6 @@ const kalenderMonat = ref(
 );
 const ausgewaehlterTermin = ref<KalenderTermin | null>(null);
 const terminDetail = ref<TerminDetail | null>(null);
-const dashboard = ref<DashboardTermin[]>([]);
 const terminDialog = ref(false);
 const terminDialogElement = ref<HTMLElement | null>(null);
 const terminDetailDialog = ref(false);
@@ -422,21 +420,10 @@ async function ladeKalender() {
   kalenderError.value = null;
   try {
     kalenderSchulungen.value = await fetchSchulungen();
-    await ladeDashboard();
   } catch (err) {
     kalenderError.value = err instanceof Error ? err.message : "Unbekannter Fehler";
   } finally {
     kalenderLoading.value = false;
-  }
-}
-
-async function ladeDashboard() {
-  try {
-    const eintraege = await fetchTerminDashboard();
-    dashboard.value = Array.isArray(eintraege)
-      ? eintraege.filter((eintrag) => typeof eintrag?.terminId === "string") : [];
-  } catch {
-    dashboard.value = [];
   }
 }
 
@@ -470,22 +457,6 @@ onMounted(ladeKalender);
 
 <template>
   <div>
-
-    <section v-if="dashboard.length" class="dashboard-section" aria-labelledby="dashboard-heading">
-      <div class="section-heading compact-heading">
-        <h1 id="dashboard-heading">Offene Aufgaben</h1>
-        <p>Überfällige Termine zuerst, danach die nächsten Planungslücken.</p>
-      </div>
-      <ul class="dashboard-list">
-        <li v-for="eintrag in dashboard" :key="eintrag.terminId" :class="{ dringend: eintrag.dringend || eintrag.ueberfaellig }">
-          <strong>{{ cleanText(eintrag.schulungTitel) }}</strong>
-          <span>{{ zeitraumText(eintrag) }}</span>
-          <span v-if="eintrag.ueberfaellig">Durchführungsbestätigung ausstehend</span>
-          <span v-else-if="eintrag.ohneTrainer">Ohne Trainer</span>
-          <span v-if="eintrag.mindestteilnehmerUnterschritten">Mindestteilnehmerzahl nicht erreicht</span>
-        </li>
-      </ul>
-    </section>
 
     <section
       id="kalender"

@@ -191,12 +191,12 @@ test("Teilnehmerdetails bleiben für Assistenten in Oberfläche und Schnittstell
   await expect(page.locator(".teilnehmerliste")).toContainText("Geheime Person");
 
   await trainerSeite.clock.setFixedTime(new Date("2031-03-03T12:00:00"));
-  await trainerSeite.goto("/");
+  await trainerSeite.goto("/planer");
   await trainerSeite.getByRole("button", { name: /Scrum Master/ }).first().click();
   await expect(trainerSeite.locator(".teilnehmerliste")).toContainText("Geheime Person");
 
   await assistenzSeite.clock.setFixedTime(new Date("2031-03-03T12:00:00"));
-  await assistenzSeite.goto("/");
+  await assistenzSeite.goto("/planer");
   await assistenzSeite.getByRole("button", { name: /Scrum Master/ }).first().click();
   await expect(assistenzSeite.locator(".teilnehmerliste")).toHaveCount(0);
   await expect(assistenzSeite.getByText("Geheime Person")).toHaveCount(0);
