@@ -14,7 +14,7 @@ async function login(
   await page.getByLabel("E-Mail-Adresse").fill(email);
   await page.getByLabel("Passwort").fill(passwort);
   await page.getByRole("button", { name: "Anmelden" }).click();
-  await expect(page.getByRole("heading", { name: "Schulungskalender" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Was liegt bei mir?" })).toBeVisible();
 }
 
 async function registrieren(

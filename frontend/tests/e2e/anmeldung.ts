@@ -13,9 +13,9 @@ export async function eigentuemerAnmelden(page: Page): Promise<void> {
   await page.getByLabel("Passwort").fill(eigentuemerPasswort);
   await page.getByRole("button", { name: "Anmelden" }).click();
 
-  const kalender = page.getByRole("heading", { name: "Schulungskalender" });
+  const dashboard = page.getByRole("heading", { name: "Was liegt bei mir?" });
   try {
-    await kalender.waitFor({ timeout: 2_000 });
+    await dashboard.waitFor({ timeout: 2_000 });
   } catch {
     await page.goto("/registrieren");
     await page.getByLabel("Name").fill("E2E Eigentümer");
@@ -28,6 +28,6 @@ export async function eigentuemerAnmelden(page: Page): Promise<void> {
     await page.getByRole("button", { name: "Anmelden" }).click();
   }
 
-  await expect(kalender).toBeVisible();
+  await expect(dashboard).toBeVisible();
   angemeldeteSeiten.add(page);
 }

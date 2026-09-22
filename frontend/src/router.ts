@@ -4,7 +4,8 @@ import { ladeKonto } from "./auth";
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: () => import("./ansichten/PlanerAnsicht.vue"), meta: { auth: true } },
+    { path: "/", component: () => import("./ansichten/DashboardAnsicht.vue"), meta: { auth: true } },
+    { path: "/planer", component: () => import("./ansichten/PlanerAnsicht.vue"), meta: { auth: true } },
     { path: "/anmelden", component: () => import("./ansichten/AnmeldenAnsicht.vue"), meta: { gast: true } },
     { path: "/registrieren", component: () => import("./ansichten/RegistrierenAnsicht.vue"), meta: { gast: true } },
     { path: "/profil", component: () => import("./ansichten/ProfilAnsicht.vue"), meta: { auth: true } },
